@@ -34,6 +34,19 @@ document.querySelectorAll('[data-compare]').forEach(compare => {
 document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {
   const slide = tabGroup.closest('.review-page');
   const feedbackPanels = slide.querySelectorAll("[data-feedback-size]");
+  const shotSizes = slide.querySelectorAll('[data-shots-size]');
+
+  function showSize(size) {
+    slide.dataset.previewSize = size;
+
+    feedbackPanels.forEach(panel => {
+      panel.classList.toggle('active', panel.dataset.feedbackSize === size);
+    });
+
+    shotSizes.forEach(block => {
+      block.classList.toggle('active', block.dataset.shotsSize === size);
+    });
+  }
 
   tabGroup.addEventListener('click', event => {
     const button = event.target.closest('button[data-size]');
@@ -45,10 +58,11 @@ document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {
       btn.classList.toggle('active', btn === button);
     });
 
-    feedbackPanels.forEach(panel => {
-      panel.classList.toggle('active', panel.dataset.feedbackSize === size);
-    });
+    showSize(size);
   });
+
+  const initial = tabGroup.querySelector('button.active[data-size]') || tabGroup.querySelector('button[data-size]');
+  if (initial) showSize(initial.dataset.size);
 });
 
 document.querySelectorAll('.place-dot-button').forEach(button => {

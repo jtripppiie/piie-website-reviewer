@@ -134,3 +134,112 @@
   font-size: 12px;
   cursor: pointer;
 }
+
+/* Auto screenshot display on the review page. */
+.shots-stage {
+  grid-column: 1 / -1;
+}
+
+.shots-size {
+  display: none;
+}
+
+.shots-size.active {
+  display: block;
+}
+
+.shots-size__caption {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.shots-pair {
+  display: grid;
+  gap: 16px;
+}
+
+.shots-pair--col {
+  grid-template-columns: 1fr;
+}
+
+.shots-pair--row {
+  grid-template-columns: 1fr 1fr;
+  max-width: 900px;
+  margin-inline: auto;
+}
+
+@media (max-width: 700px) {
+  .shots-pair--row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.shot-card {
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.shot-card figcaption {
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #f9fafb;
+  border-bottom: 1px solid var(--border);
+}
+
+.shot-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fff;
+}
+
+.shot-empty {
+  padding: 24px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Auto screenshot controls on the edit page. */
+.capture-block {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.capture-block h4 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.capture-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.capture-cell {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
+}
+
+.capture-cell__label {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.capture-thumbs {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+}

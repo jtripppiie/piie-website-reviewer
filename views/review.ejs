@@ -128,7 +128,43 @@
                   These labels represent common laptop-class viewport presets, not guaranteed physical screen-inch measurements. Browser zoom, Windows display scaling, browser chrome, and monitor resolution can change what fits on a real device. The review is based on the CSS viewport size shown for each preset.
                 </p>
 
-                <% if (page.devScreenshotPath && page.liveScreenshotPath) { %>
+                <% if (page.devShots || page.liveShots) { %>
+                  <%
+                    const shotSizes = page.screenSizes.filter(size => size !== "tablet");
+                    const cssDims = {
+                      desktop: '1440 x 900',
+                      'laptop-15-6': '1366 x 768',
+                      'laptop-14-5': '1280 x 760',
+                      'laptop-13': '1180 x 720',
+                      mobile: '390 x 844'
+                    };
+                  %>
+                  <div class="shots-stage" data-shots-stage>
+                    <% shotSizes.forEach((size, shotIndex) => { %>
+                      <div class="shots-size <%= shotIndex === 0 ? 'active' : '' %>" data-shots-size="<%= size %>">
+                        <p class="shots-size__caption">Captured at <%= screenSizeLabel(size) %> (<%= cssDims[size] || '' %> CSS px), full page</p>
+                        <div class="shots-pair shots-pair--<%= size === 'mobile' ? 'row' : 'col' %>">
+                          <figure class="shot-card">
+                            <figcaption>Dev: <%= screenSizeLabel(size) %></figcaption>
+                            <% if (page.devShots && page.devShots[size]) { %>
+                              <img src="<%= page.devShots[size] %>" alt="Dev screenshot at <%= screenSizeLabel(size) %>">
+                            <% } else { %>
+                              <div class="shot-empty">No Dev screenshot for this size.</div>
+                            <% } %>
+                          </figure>
+                          <figure class="shot-card">
+                            <figcaption>Live: <%= screenSizeLabel(size) %></figcaption>
+                            <% if (page.liveShots && page.liveShots[size]) { %>
+                              <img src="<%= page.liveShots[size] %>" alt="Live screenshot at <%= screenSizeLabel(size) %>">
+                            <% } else { %>
+                              <div class="shot-empty">No Live screenshot for this size.</div>
+                            <% } %>
+                          </figure>
+                        </div>
+                      </div>
+                    <% }) %>
+                  </div>
+                <% } else if (page.devScreenshotPath && page.liveScreenshotPath) { %>
                   <div class="compare wide-compare" data-compare data-annotatable>
                     <img class="before" src="<%= page.liveScreenshotPath %>" alt="Live screenshot">
                     <img class="after" src="<%= page.devScreenshotPath %>" alt="Dev screenshot">

@@ -14,6 +14,8 @@ const {
   makeId
 } = require('./storage');
 
+const { captureUrlAllPresets } = require('./screenshot');
+
 const app = express();
 
 // PIIE_WEB_REVIEWER_REQUEST_LOGGER
@@ -226,6 +228,52 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
   res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
 });
 
+
+app.post('/admin/packets/:packetId/pages/:pageId/capture', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const packet = packets.find(p => p.packetId === req.params.packetId);
+  if (!packet) return res.status(404).send('Packet not found');
+
+  const page = packet.pages.find(p => p.pageId === req.params.pageId);
+  if (!page) return res.status(404).send('Page not found');
+
+  if (page.type !== 'urlCompare') {
+    return res.status(400).send('Screenshot capture is only available for Dev vs Live pages.');
+  }
+
+  if (!page.devUrl && !page.liveUrl) {
+    return res.status(400).send('Enter a Dev URL or Live URL before capturing screenshots.');
+  }
+
+  try {
+    if (page.devUrl) {
+      page.devShots = await captureUrlAllPresets(page.devUrl, 'dev');
+      page.devScreenshotPath = page.devShots['laptop-15-6'] || page.devShots.desktop || '';
+    }
+
+    if (page.liveUrl) {
+      page.liveShots = await captureUrlAllPresets(page.liveUrl, 'live');
+      page.liveScreenshotPath = page.liveShots['laptop-15-6'] || page.liveShots.desktop || '';
+    }
+
+    page.capturedAt = new Date().toISOString();
+    page.updatedAt = new Date().toISOString();
+    packet.updatedAt = new Date().toISOString();
+
+    await savePackets(packets);
+
+    res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}#page-${page.pageId}`);
+  } catch (error) {
+    console.error('Screenshot capture failed:', error.message);
+    res.status(500).type('html').send(`
+      <p>Screenshot capture failed: ${error.message.replace(/[<>&]/g, '')}</p>
+      <p>Make sure the URLs load in a browser and that the headless browser system libraries are installed.</p>
+      <p><a href="/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}#page-${page.pageId}">Back to edit</a></p>
+    `);
+  }
+});
 
 app.post('/admin/packets/:packetId/cover', async (req, res) => {
   if (!isAdmin(req)) return res.status(403).send('Forbidden');

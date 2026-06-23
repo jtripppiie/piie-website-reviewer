@@ -191,6 +191,48 @@
 
               <button type="submit">Save Page Changes</button>
             </form>
+
+            <% if (page.type === 'urlCompare') { %>
+              <div class="capture-block">
+                <h4>Auto screenshots</h4>
+                <p class="muted">Capture full page screenshots of the Dev and Live URLs at every preset (Desktop, 15.6, 14.5, 13, Mobile). Save the URLs above first. Recapture any time after the site updates.</p>
+
+                <form method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/capture">
+                  <input type="hidden" name="key" value="<%= key %>">
+                  <button type="submit">
+                    <%= (page.devShots || page.liveShots) ? 'Recapture screenshots from URLs' : 'Capture screenshots from URLs' %>
+                  </button>
+                </form>
+
+                <% if (page.capturedAt) { %>
+                  <p class="muted">Last captured: <%= page.capturedAt %></p>
+                <% } %>
+
+                <% const presetList = [['desktop','Desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
+
+                <% if (page.devShots || page.liveShots) { %>
+                  <div class="capture-grid">
+                    <% presetList.forEach(([sizeKey, sizeLabel]) => { %>
+                      <div class="capture-cell">
+                        <p class="capture-cell__label"><%= sizeLabel %></p>
+                        <div class="capture-thumbs">
+                          <% if (page.devShots && page.devShots[sizeKey]) { %>
+                            <a href="<%= page.devShots[sizeKey] %>" target="_blank" rel="noopener">Dev</a>
+                          <% } else { %>
+                            <span class="muted">No Dev</span>
+                          <% } %>
+                          <% if (page.liveShots && page.liveShots[sizeKey]) { %>
+                            <a href="<%= page.liveShots[sizeKey] %>" target="_blank" rel="noopener">Live</a>
+                          <% } else { %>
+                            <span class="muted">No Live</span>
+                          <% } %>
+                        </div>
+                      </div>
+                    <% }) %>
+                  </div>
+                <% } %>
+              </div>
+            <% } %>
           </article>
         <% }) %>
 
