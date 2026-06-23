@@ -26,6 +26,13 @@ const debugOutput = document.querySelector('#debugOutput');
 const versionLabel = document.querySelector('#appVersion');
 if (versionLabel) versionLabel.textContent = 'v' + APP_VERSION;
 
+document.addEventListener('DOMContentLoaded', function () {
+  var badge = document.createElement('div');
+  badge.className = 'app-version-badge';
+  badge.textContent = 'PIIE Reviewer v' + APP_VERSION + ' (demo)';
+  document.body.appendChild(badge);
+});
+
 function saveNotes() {
   localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes));
 }

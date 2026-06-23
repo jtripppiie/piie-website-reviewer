@@ -105,3 +105,18 @@
   display: block;
   background: #fff;
 }
+
+.app-version-badge {
+  position: fixed;
+  bottom: 8px;
+  right: 10px;
+  z-index: 9999;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #111827;
+  color: #fff;
+  font: 700 11px system-ui, sans-serif;
+  letter-spacing: .03em;
+  opacity: .75;
+  pointer-events: none;
+}
