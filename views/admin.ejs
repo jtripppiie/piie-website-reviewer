@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <%- include('partials/head', { title: 'Admin Dashboard' }) %>
+  <body>
+    <main class="shell">
+      <h1>Design Review Packets</h1>
+
+      <form class="card" method="post" action="/admin/packets">
+        <input type="hidden" name="key" value="<%= key %>">
+
+        <label>
+          New packet title
+          <input type="text" name="title" placeholder="Example: Key Takeaways Design Review" required>
+        </label>
+
+        <button type="submit">Create Packet</button>
+      </form>
+
+      <section class="stack">
+        <% packets.forEach(packet => { %>
+          <article class="card">
+            <h2><%= packet.title %></h2>
+            <p>Status: <strong><%= packet.published ? 'Published' : 'Draft' %></strong></p>
+            <p>Pages: <%= packet.pages.length %></p>
+
+            <div class="actions">
+              <a class="button" href="/admin/packets/<%= packet.packetId %>/edit?key=<%= key %>">Edit</a>
+              <a class="button" href="/admin/packets/<%= packet.packetId %>/results?key=<%= key %>">Results</a>
+              <% if (packet.published) { %>
+                <a class="button" href="/r/<%= packet.shareToken %>">Review Link</a>
+              <% } %>
+            </div>
+          </article>
+        <% }) %>
+      </section>
+    </main>
+  </body>
+</html>

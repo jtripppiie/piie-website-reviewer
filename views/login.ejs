@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <%- include('partials/head', { title: 'Admin Login' }) %>
+  <body>
+    <main class="shell narrow">
+      <h1>Design Review Admin</h1>
+
+      <% if (error) { %>
+        <p class="notice error"><%= error %></p>
+      <% } %>
+
+      <form class="card" method="post" action="/admin/login">
+        <label>
+          Admin password
+          <input type="password" name="password" required>
+        </label>
+
+        <button type="submit">Log in</button>
+      </form>
+    </main>
+  </body>
+</html>

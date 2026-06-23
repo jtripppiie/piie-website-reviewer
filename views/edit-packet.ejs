@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <%- include('partials/head', { title: 'Edit Packet' }) %>
+  <body>
+    <main class="shell">
+      <p><a href="/admin?key=<%= key %>">Back to admin</a></p>
+
+      <h1><%= packet.title %></h1>
+
+      <section class="card">
+        <p>Status: <strong><%= packet.published ? 'Published' : 'Draft' %></strong></p>
+
+        <form method="post" action="/admin/packets/<%= packet.packetId %>/publish">
+          <input type="hidden" name="key" value="<%= key %>">
+          <input type="hidden" name="published" value="<%= packet.published ? 'false' : 'true' %>">
+          <button type="submit"><%= packet.published ? 'Unpublish' : 'Publish' %></button>
+        </form>
+
+        <% if (packet.published) { %>
+          <p>Share link: <a href="/r/<%= packet.shareToken %>">/r/<%= packet.shareToken %></a></p>
+        <% } %>
+      </section>
+
+      <section class="grid">
+        <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/cover">
+          <input type="hidden" name="key" value="<%= key %>">
+          <h2>Add Cover Page</h2>
+
+          <label>Title <input type="text" name="title" required></label>
+          <label>Subtitle <input type="text" name="subtitle"></label>
+          <label>Body <textarea name="body"></textarea></label>
+
+          <button type="submit">Add Cover</button>
+        </form>
+
+        <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/image-compare" enctype="multipart/form-data">
+          <input type="hidden" name="key" value="<%= key %>">
+          <h2>Add Screenshot Comparison</h2>
+
+          <label>Title <input type="text" name="title" required></label>
+          <label>Instructions <textarea name="instructions"></textarea></label>
+          <label>Before image <input type="file" name="beforeImage" accept="image/*" required></label>
+          <label>After image <input type="file" name="afterImage" accept="image/*" required></label>
+
+          <button type="submit">Add Images</button>
+        </form>
+
+        <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/url-compare">
+          <input type="hidden" name="key" value="<%= key %>">
+          <h2>Add Dev vs Live URL</h2>
+
+          <label>Title <input type="text" name="title" required></label>
+          <label>Instructions <textarea name="instructions"></textarea></label>
+          <label>Dev URL <input type="url" name="devUrl" placeholder="https://dev-example.pantheonsite.io"></label>
+          <label>Live URL <input type="url" name="liveUrl" placeholder="https://www.example.com"></label>
+
+          <button type="submit">Add URLs</button>
+        </form>
+      </section>
+
+      <h2>Pages</h2>
+
+      <section class="stack">
+        <% packet.pages.forEach((page, index) => { %>
+          <article class="card">
+            <p class="eyebrow">Page <%= index + 1 %>: <%= page.type %></p>
+            <h3><%= page.title %></h3>
+            <% if (page.instructions) { %>
+              <p><%= page.instructions %></p>
+            <% } %>
+          </article>
+        <% }) %>
+      </section>
+    </main>
+  </body>
+</html>

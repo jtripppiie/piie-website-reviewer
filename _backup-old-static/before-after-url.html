@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Before ↔ After Slider (Images or Webpages)</title>
+  <style>
+    :root { --reveal: 50; --accent-color: #1a73e8; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", sans-serif;
+      line-height: 1.45;
+      margin: 0;
+      padding: 24px;
+      background: #f6f7f9;
+      color: #0a0a0a;
+    }
+
+    .wrap { max-width: 1060px; margin: 0 auto; }
+    h1 { font-size: 24px; margin: 0 0 12px; font-weight: 600; }
+    p.hint { margin: 0 0 16px; font-size: 14px; opacity: .85; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .tabs button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #d0d7de;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .tabs button.active {
+      background: var(--accent-color);
+      color: #fff;
+      border-color: var(--accent-color);
+    }
+    .tabs button:hover:not(.active) { background: #f6f7f9; }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+      background: #fff;
+      padding: 16px;
+      border-radius: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.08);
+      margin-bottom: 16px;
+      display: none;
+    }
+    .controls.active { display: grid; }
+    .controls label {
+      font-size: 13px;
+      font-weight: 500;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .controls input[type="file"],
+    .controls input[type="url"],
+    .controls input[type="text"],
+    .controls input[type="password"] {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .controls button {
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid #d0d7de;
+      background: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .controls button:hover { background: #f6f7f9; }
+    .controls button:active { transform: translateY(1px); }
+
+    .compare {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.08);
+      padding: 16px;
+      position: relative;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #eef1f4;
+      border-radius: 12px;
+      overflow: hidden;
+      user-select: none;
+      transition: box-shadow 0.2s;
+    }
+    .stage:hover { box-shadow: 0 0 0 2px var(--accent-color); }
+    .stage img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    .stage img.before {
+      clip-path: inset(0 calc(100% - (var(--reveal) * 1%)) 0 0);
+      z-index: 2;
+      -webkit-clip-path: inset(0 calc(100% - (var(--reveal) * 1%)) 0 0);
+    }
+    .stage img.after {
+      clip-path: inset(0 0 0 calc(var(--reveal) * 1%));
+      z-index: 1;
+      -webkit-clip-path: inset(0 0 0 calc(var(--reveal) * 1%));
+    }
+
+    .divider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: calc(var(--reveal) * 1%);
+      width: 2px;
+      background: var(--accent-color);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.8);
+      transform: translateX(-1px);
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .badge {
+      position: absolute;
+      top: 12px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 999px;
+      background: rgba(0,0,0,.75);
+      color: #fff;
+      user-select: none;
+      z-index: 7;
+      transition: opacity 0.2s;
+    }
+    .badge.before { left: 12px; }
+    .badge.after { right: 12px; }
+    .stage:hover .badge { opacity: 0.7; }
+
+    .handle {
+      position: absolute;
+      top: 50%;
+      left: calc(var(--reveal) * 1%);
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid #b6bfc8;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
+      cursor: ew-resize;
+      z-index: 8;
+      touch-action: none;
+      display: grid;
+      place-items: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .handle:hover {
+      border-color: var(--accent-color);
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+    .handle:before, .handle:after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-top: 2px solid #667085;
+      border-right: 2px solid #667085;
+    }
+    .handle:before { transform: translate(-6px,0) rotate(225deg); left: 8px; }
+    .handle:after { transform: translate(6px,0) rotate(45deg); right: 8px; }
+    .handle:focus { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+
+    .footer {
+      font-size: 12px;
+      color: #556070;
+      margin-top: 12px;
+      text-align: center;
+    }
+    .footer code {
+      background: #eef1f4;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      background: #1a73e8;
+      color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 10;
+    }
+    .notification.show {
+      opacity: 1;
+    }
+
+    @media (max-width: 600px) {
+      .controls { grid-template-columns: 1fr; }
+      .controls button { width: 100%; }
+      .wrap { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Before ↔ After Slider</h1>
+
+    <div class="tabs">
+      <button id="imageTab" class="tab active">Images</button>
+      <button id="webpageTab" class="tab">Webpages</button>
+    </div>
+
+    <div id="imageControls" class="controls active" role="group" aria-label="Image inputs">
+      <div>
+        <label for="beforeFile">Before image</label>
+        <input id="beforeFile" type="file" accept="image/*" />
+      </div>
+      <div>
+        <label for="afterFile">After image</label>
+        <input id="afterFile" type="file" accept="image/*" />
+      </div>
+      <div>
+        <button id="swapBtn" type="button" aria-label="Swap before and after images">Swap Images</button>
+        <button id="imageShareBtn" type="button" style="margin-top: 8px;">Share Link</button>
+      </div>
+    </div>
+
+    <div id="webpageControls" class="controls" role="group" aria-label="Webpage inputs">
+      <div>
+        <label for="beforeUrl">Before webpage URL</label>
+        <input id="beforeUrl" type="url" placeholder="https://example.com/before" />
+      </div>
+      <div>
+        <label for="afterUrl">After webpage URL</label>
+        <input id="afterUrl" type="url" placeholder="https://www.piie.com" />
+        <label for="authUsername" style="margin-top: 8px;">Username (for protected page)</label>
+        <input id="authUsername" type="text" placeholder="Username (optional)" />
+        <label for="authPassword" style="margin-top: 8px;">Password (for protected page)</label>
+        <input id="authPassword" type="password" placeholder="Password (optional)" />
+      </div>
+      <div>
+        <button id="loadUrlsBtn" type="button">Load Webpages</button>
+        <button id="webpageShareBtn" type="button" style="margin-top: 8px;">Share Link</button>
+      </div>
+    </div>
+
+    <div class="compare">
+      <div class="stage" id="stage" role="region" aria-label="Comparison viewer">
+        <span class="badge before">Before</span>
+        <span class="badge after">After</span>
+        <img id="beforeImg" class="before" alt="Before image or webpage" loading="lazy" />
+        <img id="afterImg" class="after" alt="After image or webpage" loading="lazy" />
+        <div class="divider" aria-hidden="true"></div>
+        <button class="handle" id="handle" aria-label="Drag to adjust comparison" title="Drag to adjust comparison"></button>
+      </div>
+      <div class="footer">
+        Tip: Use images with the same resolution for best alignment. Webpages are rendered server-side to bypass restrictions (e.g., <code>www.piie.com</code>). Shareable links expire after 24 hours.
+      </div>
+    </div>
+
+    <div id="notification" class="notification" role="alert"></div>
+  </div>
+
+  <script>
+    const root = document.documentElement;
+    const stage = document.getElementById('stage');
+    const beforeImg = document.getElementById('beforeImg');
+    const afterImg = document.getElementById('afterImg');
+    const beforeFile = document.getElementById('beforeFile');
+    const afterFile = document.getElementById('afterFile');
+    const swapBtn = document.getElementById('swapBtn');
+    const beforeUrl = document.getElementById('beforeUrl');
+    const afterUrl = document.getElementById('afterUrl');
+    const authUsername = document.getElementById('authUsername');
+    const authPassword = document.getElementById('authPassword');
+    const loadUrlsBtn = document.getElementById('loadUrlsBtn');
+    const imageShareBtn = document.getElementById('imageShareBtn');
+    const webpageShareBtn = document.getElementById('webpageShareBtn');
+    const imageTab = document.getElementById('imageTab');
+    const webpageTab = document.getElementById('webpageTab');
+    const imageControls = document.getElementById('imageControls');
+    const webpageControls = document.getElementById('webpageControls');
+    const handle = document.getElementById('handle');
+    const notification = document.getElementById('notification');
+
+    function setReveal(p) {
+      const clamped = Math.max(0, Math.min(100, Number(p) || 0));
+      root.style.setProperty('--reveal', clamped);
+    }
+    setReveal(50);
+
+    function showNotification(message, duration = 3000) {
+      notification.textContent = message;
+      notification.classList.add('show');
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, duration);
+    }
+
+    function clearInputsAndImages() {
+      beforeImg.src = '';
+      afterImg.src = '';
+      beforeFile.value = '';
+      afterFile.value = '';
+      beforeUrl.value = '';
+      afterUrl.value = '';
+      authUsername.value = '';
+      authPassword.value = '';
+      imageShareBtn.dataset.renderId = '';
+      webpageShareBtn.dataset.renderId = '';
+      stage.style.aspectRatio = '16 / 9';
+    }
+
+    function toggleTabs(activeTab) {
+      clearInputsAndImages();
+      imageTab.classList.toggle('active', activeTab === 'image');
+      webpageTab.classList.toggle('active', activeTab === 'webpage');
+      imageControls.classList.toggle('active', activeTab === 'image');
+      webpageControls.classList.toggle('active', activeTab === 'webpage');
+    }
+    imageTab.addEventListener('click', () => toggleTabs('image'));
+    webpageTab.addEventListener('click', () => toggleTabs('webpage'));
+
+    function readFileToImg(inputEl, imgEl) {
+      const f = inputEl.files?.[0];
+      if (!f) return;
+      if (!f.type.startsWith('image/')) {
+        showNotification('Please select a valid image file.');
+        inputEl.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = e => {
+        imgEl.src = e.target.result;
+        showNotification('Image loaded. Use server-side upload for sharing.');
+      };
+      reader.onerror = () => {
+        showNotification('Error reading the file. Please try again.');
+      };
+      reader.readAsDataURL(f);
+    }
+    beforeFile.addEventListener('change', () => readFileToImg(beforeFile, beforeImg));
+    afterFile.addEventListener('change', () => readFileToImg(afterFile, afterImg));
+
+    async function loadWebpages() {
+      const before = beforeUrl.value.trim();
+      const after = afterUrl.value.trim();
+      if (!before || !after) {
+        showNotification('Please enter both webpage URLs.');
+        return;
+      }
+      if (!before.match(/^https?:\/\//) || !after.match(/^https?:\/\//)) {
+        showNotification('Please enter valid URLs starting with http:// or https://');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:3000/render', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            beforeUrl: before,
+            afterUrl: after,
+            username: authUsername.value,
+            password: authPassword.value
+          })
+        });
+        if (!response.ok) {
+          throw new Error(`Server responded with status ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.error) {
+          showNotification(data.error);
+          return;
+        }
+        beforeImg.src = data.beforeImage;
+        afterImg.src = data.afterImage;
+        webpageShareBtn.dataset.renderId = data.renderId;
+        showNotification('Webpages loaded successfully.');
+      } catch (error) {
+        showNotification(`Failed to connect to server: ${error.message}. Ensure the backend is running at http://localhost:3000.`);
+      }
+    }
+    loadUrlsBtn.addEventListener('click', loadWebpages);
+
+    function updateAspectFrom(img) {
+      if (img.naturalWidth && img.naturalHeight) {
+        stage.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+      }
+    }
+    beforeImg.addEventListener('load', () => updateAspectFrom(beforeImg));
+    afterImg.addEventListener('load', () => updateAspectFrom(afterImg));
+
+    let dragging = false;
+    function setRevealFromPointer(clientX) {
+      const rect = stage.getBoundingClientRect();
+      const p = ((clientX - rect.left) / rect.width) * 100;
+      const v = Math.max(0, Math.min(100, p));
+      setReveal(v);
+    }
+
+    stage.addEventListener('pointerdown', e => {
+      dragging = true;
+      setRevealFromPointer(e.clientX);
+      stage.setPointerCapture(e.pointerId);
+    });
+    stage.addEventListener('pointermove', e => {
+      if (dragging) setRevealFromPointer(e.clientX);
+    });
+    stage.addEventListener('pointerup', () => { dragging = false; });
+    stage.addEventListener('pointercancel', () => { dragging = false; });
+
+    handle.addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      dragging = true;
+      setRevealFromPointer(e.clientX);
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener('pointermove', e => {
+      if (dragging) setRevealFromPointer(e.clientX);
+    });
+    handle.addEventListener('pointerup', () => { dragging = false; });
+
+    handle.addEventListener('keydown', e => {
+      const current = parseFloat(getComputedStyle(root).getPropertyValue('--reveal')) || 0;
+      const step = e.shiftKey ? 10 : 1;
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setReveal(current - step);
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setReveal(current + step);
+      }
+      if (e.key === 'Home') {
+        e.preventDefault();
+        setReveal(0);
+      }
+      if (e.key === 'End') {
+        e.preventDefault();
+        setReveal(100);
+      }
+    });
+
+    swapBtn.addEventListener('click', () => {
+      const tmpSrc = beforeImg.src;
+      beforeImg.src = afterImg.src;
+      afterImg.src = tmpSrc;
+      beforeFile.value = '';
+      afterFile.value = '';
+      updateAspectFrom(beforeImg.src ? beforeImg : afterImg);
+      showNotification('Images swapped.');
+    });
+
+    async function uploadImagesForSharing() {
+      if (!beforeImg.src || !afterImg.src) {
+        showNotification('Please load both images first.');
+        return null;
+      }
+      try {
+        const response = await fetch('http://localhost:3000/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            beforeImage: beforeImg.src,
+            afterImage: afterImg.src
+          })
+        });
+        if (!response.ok) {
+          throw new Error(`Server responded with status ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.error) {
+          showNotification(data.error);
+          return null;
+        }
+        return data.renderId;
+      } catch (error) {
+        showNotification(`Failed to upload images: ${error.message}. Ensure the backend is running.`);
+        return null;
+      }
+    }
+
+    imageShareBtn.addEventListener('click', async () => {
+      const renderId = await uploadImagesForSharing();
+      if (renderId) {
+        const shareUrl = `${window.location.origin}${window.location.pathname}?id=${renderId}&type=image`;
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showNotification('Shareable link copied to clipboard!');
+        }).catch(() => {
+          showNotification('Failed to copy link. Please try again.');
+        });
+      }
+    });
+
+    webpageShareBtn.addEventListener('click', () => {
+      const renderId = webpageShareBtn.dataset.renderId;
+      if (!renderId) {
+        showNotification('Please load webpages first.');
+        return;
+      }
+      const shareUrl = `${window.location.origin}${window.location.pathname}?id=${renderId}&type=webpage`;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        showNotification('Shareable link copied to clipboard!');
+      }).catch(() => {
+        showNotification('Failed to copy link. Please try again.');
+      });
+    });
+
+    async function loadFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      const type = params.get('type');
+      if (id && type) {
+        try {
+          const response = await fetch(`http://localhost:3000/view/${id}`);
+          if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+          }
+          const data = await response.json();
+          if (data.error) {
+            showNotification('Invalid or expired share link.');
+            return;
+          }
+          beforeImg.src = data.beforeImage;
+          afterImg.src = data.afterImage;
+          if (type === 'webpage') {
+            beforeUrl.value = data.beforeUrl;
+            afterUrl.value = data.afterUrl;
+            webpageShareBtn.dataset.renderId = id;
+            toggleTabs('webpage');
+          } else {
+            toggleTabs('image');
+          }
+          showNotification('Share link loaded successfully.');
+        } catch (error) {
+          showNotification(`Failed to load share link: ${error.message}. Ensure the backend is running.`);
+        }
+      }
+    }
+    window.addEventListener('load', loadFromQuery);
+  </script>
+</body>
+</html>

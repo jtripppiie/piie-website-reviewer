@@ -1,0 +1,26 @@
+<form class="feedback" method="post" action="/r/<%= packet.shareToken %>/feedback">
+  <input type="hidden" name="pageId" value="<%= page.pageId %>">
+  <input type="hidden" name="screenSize" value="<%= screenSize %>">
+
+  <label>
+    Initials
+    <input type="text" name="initials" maxlength="10" required>
+  </label>
+
+  <label>
+    Status
+    <select name="status">
+      <option value="approved">Approved</option>
+      <option value="approved-with-changes">Approved with changes</option>
+      <option value="needs-changes">Needs changes</option>
+      <option value="not-approved">Not approved</option>
+    </select>
+  </label>
+
+  <label>
+    Comment
+    <textarea name="comment" placeholder="Add feedback here"></textarea>
+  </label>
+
+  <button type="submit">Save Feedback</button>
+</form>

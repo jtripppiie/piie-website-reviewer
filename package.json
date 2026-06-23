@@ -1,0 +1,16 @@
+{
+  "name": "before-after-design-review",
+  "version": "0.1.0",
+  "description": "No-database before/after design review deck",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

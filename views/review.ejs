@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <%- include('partials/head', { title: packet.title }) %>
+  <body>
+    <main class="review-deck">
+      <% packet.pages.forEach((page, index) => { %>
+        <% if (page.type === 'cover') { %>
+          <section class="review-slide cover-slide" id="<%= page.pageId %>">
+            <p class="eyebrow">Page <%= index + 1 %></p>
+            <h1><%= page.title %></h1>
+            <% if (page.subtitle) { %><h2><%= page.subtitle %></h2><% } %>
+            <% if (page.body) { %><p><%= page.body %></p><% } %>
+          </section>
+        <% } %>
+
+        <% if (page.type === 'imageCompare') { %>
+          <section class="review-slide" id="<%= page.pageId %>">
+            <h2><%= page.title %></h2>
+            <% if (page.instructions) { %><p><%= page.instructions %></p><% } %>
+
+            <div class="compare" data-compare>
+              <img class="before" src="<%= page.beforeImagePath %>" alt="Before">
+              <img class="after" src="<%= page.afterImagePath %>" alt="After">
+              <span class="badge before-label">Before</span>
+              <span class="badge after-label">After</span>
+              <div class="divider"></div>
+              <button class="handle" type="button" aria-label="Drag comparison handle"></button>
+            </div>
+
+            <%- include('partials/feedback-form', { packet, page, screenSize: '' }) %>
+          </section>
+        <% } %>
+
+        <% if (page.type === 'urlCompare') { %>
+          <section class="review-slide" id="<%= page.pageId %>">
+            <h2><%= page.title %></h2>
+            <% if (page.instructions) { %><p><%= page.instructions %></p><% } %>
+
+            <div class="screen-tabs" data-url-tabs>
+              <% page.screenSizes.forEach((size, sizeIndex) => { %>
+                <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= size %></button>
+              <% }) %>
+            </div>
+
+            <div class="url-review" data-url-review>
+              <div class="frame-card">
+                <h3>Dev</h3>
+                <iframe src="<%= page.devUrl %>" title="Dev URL"></iframe>
+              </div>
+              <div class="frame-card">
+                <h3>Live</h3>
+                <iframe src="<%= page.liveUrl %>" title="Live URL"></iframe>
+              </div>
+            </div>
+
+            <% page.screenSizes.forEach((size, sizeIndex) => { %>
+              <div class="screen-feedback <%= sizeIndex === 0 ? 'active' : '' %>" data-feedback-size="<%= size %>">
+                <h3>Feedback for <%= size %></h3>
+                <%- include('partials/feedback-form', { packet, page, screenSize: size }) %>
+              </div>
+            <% }) %>
+          </section>
+        <% } %>
+      <% }) %>
+    </main>
+
+    <script src="/public/js/compare.js"></script>
+    <script src="/public/js/url-tabs.js"></script>
+  </body>
+</html>

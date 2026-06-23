@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <%- include('partials/head', { title: 'Results' }) %>
+  <body>
+    <main class="shell">
+      <p><a href="/admin/packets/<%= packet.packetId %>/edit?key=<%= key %>">Back to packet</a></p>
+
+      <h1>Results: <%= packet.title %></h1>
+
+      <p>
+        <a class="button" href="/admin/packets/<%= packet.packetId %>/export.json?key=<%= key %>">Export JSON</a>
+      </p>
+
+      <section class="stack">
+        <% responses.forEach(response => { %>
+          <article class="card">
+            <p class="eyebrow"><%= response.createdAt %></p>
+            <p><strong>Page:</strong> <%= response.pageId %></p>
+            <% if (response.screenSize) { %>
+              <p><strong>Screen size:</strong> <%= response.screenSize %></p>
+            <% } %>
+            <p><strong>Initials:</strong> <%= response.initials %></p>
+            <p><strong>Status:</strong> <%= response.status %></p>
+            <p><strong>Comment:</strong> <%= response.comment %></p>
+          </article>
+        <% }) %>
+
+        <% if (!responses.length) { %>
+          <p>No feedback yet.</p>
+        <% } %>
+      </section>
+    </main>
+  </body>
+</html>
