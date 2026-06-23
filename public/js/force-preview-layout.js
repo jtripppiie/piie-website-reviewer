@@ -149,7 +149,7 @@
     stage.style.setProperty('flex-wrap', 'wrap', 'important');
     stage.style.setProperty('gap', `${STAGE_GAP}px`, 'important');
     stage.style.setProperty('align-items', 'flex-start', 'important');
-    stage.style.setProperty('justify-content', cardCount === 2 ? 'center' : 'flex-start', 'important');
+    stage.style.setProperty('justify-content', state.size === 'desktop' ? 'flex-start' : 'center', 'important');
     stage.style.setProperty('width', '100%', 'important');
     stage.style.setProperty('max-width', 'none', 'important');
     stage.style.setProperty('overflow-x', 'auto', 'important');

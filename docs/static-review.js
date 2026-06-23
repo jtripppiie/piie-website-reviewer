@@ -1,6 +1,6 @@
 const NOTES_KEY = 'piieWebReviewerNotes';
 
-const APP_VERSION = '0.2.2';
+const APP_VERSION = '0.2.3';
 
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
@@ -295,7 +295,7 @@ function applyLayout(pageEl) {
   stage.style.setProperty('flex-wrap', 'wrap', 'important');
   stage.style.setProperty('gap', `${STAGE_GAP}px`, 'important');
   stage.style.setProperty('align-items', 'flex-start', 'important');
-  stage.style.setProperty('justify-content', cardCount === 2 ? 'center' : 'flex-start', 'important');
+  stage.style.setProperty('justify-content', size === 'desktop' ? 'flex-start' : 'center', 'important');
   stage.style.setProperty('width', '100%', 'important');
   stage.style.setProperty('max-width', 'none', 'important');
   stage.style.setProperty('overflow-x', 'auto', 'important');
@@ -315,6 +315,15 @@ function applyLayout(pageEl) {
       if (w && !screenshotLine) {
         const match = w === preset.w && h === preset.h;
         screenshotLine = `Uploaded screenshot: ${w} x ${h} px. Selected preset: ${preset.w} x ${preset.h} CSS px. Match: ${match ? 'yes' : 'no'}`;
+      }
+      // Size and center screenshots the same way as the iframe previews so the
+      // fallback looks consistent with the live preview layout.
+      card.style.setProperty('width', `${Math.round(preset.w * scale)}px`, 'important');
+      card.style.setProperty('max-width', '100%', 'important');
+      const shot = card.querySelector('img.preview-screenshot');
+      if (shot) {
+        shot.style.setProperty('width', '100%', 'important');
+        shot.style.setProperty('height', 'auto', 'important');
       }
       return;
     }

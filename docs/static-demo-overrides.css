@@ -27,8 +27,6 @@
   display: block;
   width: 100%;
   height: auto;
-  min-height: 520px;
-  object-fit: cover;
   background: #fff;
 }
 
