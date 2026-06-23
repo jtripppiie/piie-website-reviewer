@@ -1,0 +1,37 @@
+/* Static demo overrides. The review panel should not stay pinned while scrolling. */
+.app-header {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+}
+
+.feedback-panel {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.note-summary {
+  margin: 0 0 8px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.frame-card--screenshot iframe {
+  display: none;
+}
+
+.preview-screenshot {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 520px;
+  object-fit: cover;
+  background: #fff;
+}
+
+.frame-empty {
+  padding: 24px;
+}

@@ -8,10 +8,59 @@
       "pageId": "public_demo_page",
       "type": "urlCompare",
       "title": "Safe Dev vs Live Layout Demo",
-      "instructions": "Use this public demo to test desktop, laptop, and mobile review layouts without exposing real packet data.",
+      "instructions": "Same-origin demo pages. This is the most reliable layout test because GitHub Pages can iframe these files.",
       "devUrl": "demo-dev.html",
       "liveUrl": "demo-live.html",
       "screenSizes": ["desktop", "laptop", "mobile"]
+    },
+    {
+      "pageId": "example_iframe_page",
+      "type": "urlCompare",
+      "title": "Real Website Load Test",
+      "instructions": "Uses a stable public website that should load in a browser. If iframe behavior changes, the Open links still work.",
+      "devUrl": "https://example.com/",
+      "liveUrl": "https://example.com/",
+      "screenSizes": ["desktop", "laptop", "mobile"]
+    },
+    {
+      "pageId": "screenshot_fallback_page",
+      "type": "urlCompare",
+      "title": "Screenshot Fallback Review",
+      "instructions": "Uses saved screenshots so reviewers can still compare work when Dev or Live blocks iframe embedding.",
+      "devUrl": "https://example.com/",
+      "liveUrl": "https://example.com/",
+      "devScreenshotPath": "demo-dev-screenshot.svg",
+      "liveScreenshotPath": "demo-live-screenshot.svg",
+      "screenSizes": ["desktop", "laptop", "mobile"]
+    }
+  ],
+  "seedNotes": [
+    {
+      "noteId": "demo_note_1",
+      "pageId": "public_demo_page",
+      "screenSize": "desktop",
+      "reviewerName": "JT",
+      "status": "approved-after-these-changes",
+      "comment": "Layout works. Review results should stay at the top of the page section, not follow me while scrolling.",
+      "createdAt": "2026-06-23T20:00:00.000Z"
+    },
+    {
+      "noteId": "demo_note_2",
+      "pageId": "public_demo_page",
+      "screenSize": "desktop",
+      "reviewerName": "Design",
+      "status": "needs-design-changes",
+      "comment": "Multiple reviewer notes need to be visible together so we can compare feedback quickly.",
+      "createdAt": "2026-06-23T20:05:00.000Z"
+    },
+    {
+      "noteId": "demo_note_3",
+      "pageId": "screenshot_fallback_page",
+      "screenSize": "mobile",
+      "reviewerName": "Content",
+      "status": "approved",
+      "comment": "Screenshot fallback is useful when the iframe does not load.",
+      "createdAt": "2026-06-23T20:10:00.000Z"
     }
   ]
 }

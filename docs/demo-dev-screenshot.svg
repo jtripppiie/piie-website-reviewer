@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1100" viewBox="0 0 1440 1100">
+  <rect width="1440" height="1100" fill="#f5f7fa"/>
+  <rect x="90" y="80" width="1260" height="900" rx="28" fill="#ffffff" stroke="#d8dee6" stroke-width="4"/>
+  <rect x="90" y="80" width="1260" height="120" rx="28" fill="#407ca7"/>
+  <text x="130" y="155" font-family="Arial, sans-serif" font-size="46" font-weight="700" fill="#ffffff">Dev Screenshot</text>
+  <text x="130" y="290" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#111827">Example review page</text>
+  <text x="130" y="355" font-family="Arial, sans-serif" font-size="28" fill="#475569">This is a saved screenshot fallback for the static demo.</text>
+  <rect x="130" y="430" width="560" height="220" rx="18" fill="#eef6fb" stroke="#407ca7" stroke-width="3"/>
+  <text x="170" y="545" font-family="Arial, sans-serif" font-size="32" fill="#111827">Dev content card</text>
+  <rect x="750" y="430" width="560" height="220" rx="18" fill="#f9fafb" stroke="#d8dee6" stroke-width="3"/>
+  <text x="790" y="545" font-family="Arial, sans-serif" font-size="32" fill="#111827">Updated spacing</text>
+</svg>
