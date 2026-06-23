@@ -1,14 +1,16 @@
+const NOTES_KEY = 'piieWebReviewerNotes';
+
 const state = {
   packet: null,
   activeSizes: {},
-  notes: JSON.parse(localStorage.getItem('piieWebReviewerNotes') || '[]')
+  notes: JSON.parse(localStorage.getItem(NOTES_KEY) || '[]')
 };
 
 const app = document.querySelector('#app');
 const debugOutput = document.querySelector('#debugOutput');
 
 function saveNotes() {
-  localStorage.setItem('piieWebReviewerNotes', JSON.stringify(state.notes));
+  localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes));
 }
 
 function statusLabel(status) {
@@ -30,8 +32,13 @@ function statusIcon(status) {
   return '!';
 }
 
+function allNotes() {
+  const demoNotes = Array.isArray(state.packet?.seedNotes) ? state.packet.seedNotes : [];
+  return [...demoNotes, ...state.notes];
+}
+
 function pageNotes(pageId, screenSize) {
-  return state.notes.filter(note => note.pageId === pageId && note.screenSize === screenSize);
+  return allNotes().filter(note => note.pageId === pageId && note.screenSize === screenSize);
 }
 
 function updateDebug() {
@@ -43,7 +50,9 @@ function updateDebug() {
     packetId: state.packet?.packetId,
     pageCount: state.packet?.pages?.length || 0,
     activeSizes: state.activeSizes,
+    demoNoteCount: state.packet?.seedNotes?.length || 0,
     localNoteCount: state.notes.length,
+    totalVisibleNoteCount: allNotes().length,
     limitations: [
       'No Express server on GitHub Pages',
       'Notes save only to this browser localStorage',
@@ -60,7 +69,7 @@ function renderNotes(page, screenSize) {
     return '<p>No saved notes in this browser yet.</p>';
   }
 
-  return '<ol class="notes-list">' + notes.map(note => `
+  return `<p class="note-summary">${notes.length} saved ${notes.length === 1 ? 'result' : 'results'} for ${escapeHtml(screenSize)}.</p>` + '<ol class="notes-list">' + notes.map(note => `
     <li class="note ${note.status}">
       <span class="note-icon" aria-hidden="true">${statusIcon(note.status)}</span>
       <div>
@@ -121,7 +130,7 @@ function renderPage(page, index) {
         </div>
 
         <div class="url-note">
-          <p>GitHub Pages demo mode. Notes save only in this browser. Use Export Notes JSON to share them.</p>
+          <p>GitHub Pages demo mode. Seeded notes show multiple reviewers. New notes save only in this browser.</p>
           <div class="actions">
             ${page.devUrl ? `<a class="button" href="${escapeHtml(page.devUrl)}" target="_blank" rel="noopener">Open Dev</a>` : ''}
             ${page.liveUrl ? `<a class="button" href="${escapeHtml(page.liveUrl)}" target="_blank" rel="noopener">Open Live</a>` : ''}
@@ -129,7 +138,7 @@ function renderPage(page, index) {
         </div>
 
         <aside class="feedback-panel">
-          <h3>Review Notes</h3>
+          <h3>Review Results</h3>
           <div data-notes-for="${escapeHtml(page.pageId)}">${renderNotes(page, activeSize)}</div>
 
           <form class="feedback-form" data-note-form="${escapeHtml(page.pageId)}">
@@ -172,7 +181,7 @@ function renderPage(page, index) {
               <strong>Dev preview</strong>
               ${page.devUrl ? `<a href="${escapeHtml(page.devUrl)}" target="_blank" rel="noopener">Open Dev</a>` : ''}
             </div>
-            ${page.devUrl ? `<iframe src="${escapeHtml(page.devUrl)}" title="Dev preview"></iframe>` : '<p>No Dev URL</p>'}
+            ${page.devScreenshotPath ? `<img class="preview-screenshot" src="${escapeHtml(page.devScreenshotPath)}" alt="Dev screenshot">` : page.devUrl ? `<iframe src="${escapeHtml(page.devUrl)}" title="Dev preview"></iframe>` : '<p>No Dev URL</p>'}
           </article>
 
           <article class="frame-card">
@@ -180,7 +189,7 @@ function renderPage(page, index) {
               <strong>Live preview</strong>
               ${page.liveUrl ? `<a href="${escapeHtml(page.liveUrl)}" target="_blank" rel="noopener">Open Live</a>` : ''}
             </div>
-            ${page.liveUrl ? `<iframe src="${escapeHtml(page.liveUrl)}" title="Live preview"></iframe>` : '<p>No Live URL</p>'}
+            ${page.liveScreenshotPath ? `<img class="preview-screenshot" src="${escapeHtml(page.liveScreenshotPath)}" alt="Live screenshot">` : page.liveUrl ? `<iframe src="${escapeHtml(page.liveUrl)}" title="Live preview"></iframe>` : '<p>No Live URL</p>'}
           </article>
         </div>
       </div>
@@ -190,13 +199,6 @@ function renderPage(page, index) {
 
 function render() {
   app.innerHTML = `
-    <section class="review-page">
-      <div class="page-heading">
-        <p class="eyebrow">Packet</p>
-        <h2>${escapeHtml(state.packet.title || 'Untitled Packet')}</h2>
-        <p>Static GitHub Pages demo. This is for layout testing, not full server-side review collection.</p>
-      </div>
-    </section>
     ${(state.packet.pages || []).map(renderPage).join('')}
   `;
   updateDebug();
@@ -252,7 +254,7 @@ app.addEventListener('submit', event => {
 });
 
 document.querySelector('#exportNotes').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(state.notes, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(allNotes(), null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -262,7 +264,7 @@ document.querySelector('#exportNotes').addEventListener('click', () => {
 });
 
 document.querySelector('#clearNotes').addEventListener('click', () => {
-  if (!confirm('Clear notes saved in this browser?')) return;
+  if (!confirm('Clear notes saved in this browser? Demo notes will remain visible.')) return;
   state.notes = [];
   saveNotes();
   render();
