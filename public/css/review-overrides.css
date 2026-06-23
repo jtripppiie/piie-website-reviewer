@@ -135,6 +135,18 @@
   cursor: pointer;
 }
 
+/* Danger button used on the admin packet list. */
+.button.danger {
+  border: 1px solid #b91c1c;
+  color: #b91c1c;
+  background: #fff;
+}
+
+.actions form {
+  display: inline;
+  margin: 0;
+}
+
 /* Auto screenshot display on the review page. */
 .shots-stage {
   grid-column: 1 / -1;

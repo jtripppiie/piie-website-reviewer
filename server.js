@@ -585,6 +585,21 @@ app.get('/admin/packets/:packetId/results', async (req, res) => {
   });
 });
 
+app.post('/admin/packets/:packetId/clear-results', async (req, res) => {
+  // Admin only. Clears every review note for this packet.
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const packet = packets.find(p => p.packetId === req.params.packetId);
+  if (!packet) return res.status(404).send('Packet not found');
+
+  const responses = await getResponses();
+  const kept = responses.filter(response => response.packetId !== packet.packetId);
+  await saveResponses(kept);
+
+  res.redirect(`/admin?key=${encodeURIComponent(adminKey(req))}`);
+});
+
 app.get('/admin/packets/:packetId/export.json', async (req, res) => {
   if (!isAdmin(req)) return res.status(403).send('Forbidden');
 

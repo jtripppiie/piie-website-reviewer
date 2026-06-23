@@ -29,6 +29,10 @@
               <% if (packet.published) { %>
                 <a class="button" href="/r/<%= packet.shareToken %>">Review Link</a>
               <% } %>
+              <form method="post" action="/admin/packets/<%= packet.packetId %>/clear-results" onsubmit="return confirm('Clear all review results for this packet? This cannot be undone.');">
+                <input type="hidden" name="key" value="<%= key %>">
+                <button type="submit" class="button danger">Clear review results</button>
+              </form>
             </div>
           </article>
         <% }) %>
