@@ -1,5 +1,5 @@
 {
-  "name": "piie-web-reviewer",
+  "name": "piie-website-reviewer",
   "version": "0.1.0",
   "description": "No-database web review tool for PIIE design and content QA",
   "main": "server.js",
