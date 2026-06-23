@@ -80,3 +80,28 @@
   color: #475569;
   font-size: 13px;
 }
+
+/* Force static demo laptop preview widths.
+   Without explicit width rules, iframe previews can collapse to the browser default width. */
+.review-page[data-preview-size="laptop-15-6"] .preview-stage,
+.review-page[data-preview-size="laptop-14-5"] .preview-stage,
+.review-page[data-preview-size="laptop-13"] .preview-stage {
+  width: 100% !important;
+  justify-self: stretch !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.review-page[data-preview-size="laptop-15-6"] .frame-card,
+.review-page[data-preview-size="laptop-14-5"] .frame-card,
+.review-page[data-preview-size="laptop-13"] .frame-card {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.review-page[data-preview-size="laptop-15-6"] iframe,
+.review-page[data-preview-size="laptop-14-5"] iframe,
+.review-page[data-preview-size="laptop-13"] iframe {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+}
