@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Before ↔ After Screenshot Slider (Side-by-Side)</title>
+  <style>
+    :root { --reveal: 50; --accent-color: #1a73e8; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", sans-serif;
+      line-height: 1.45;
+      margin: 0;
+      padding: 24px;
+      background: #f6f7f9;
+      color: #0a0a0a;
+    }
+
+    .wrap { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 24px; margin: 0 0 12px; font-weight: 600; }
+    p.hint { margin: 0 0 16px; font-size: 14px; opacity: .85; }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+      background: #fff;
+      padding: 16px;
+      border-radius: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.08);
+      margin-bottom: 16px;
+    }
+    .controls label {
+      font-size: 13px;
+      font-weight: 500;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .controls input[type="file"],
+    .controls input[type="url"] {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .controls button {
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid #d0d7de;
+      background: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .controls button:hover { background: #f6f7f9; }
+    .controls button:active { transform: translateY(1px); }
+
+    .compare {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.08);
+      padding: 16px;
+      position: relative;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #eef1f4;
+      border-radius: 12px;
+      overflow: hidden;
+      user-select: none;
+      transition: box-shadow 0.2s;
+    }
+    .stage:hover { box-shadow: 0 0 0 2px var(--accent-color); }
+    .stage img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    .stage img.before {
+      clip-path: inset(0 calc(100% - (var(--reveal) * 1%)) 0 0);
+      z-index: 2;
+      -webkit-clip-path: inset(0 calc(100% - (var(--reveal) * 1%)) 0 0);
+    }
+    .stage img.after {
+      clip-path: inset(0 0 0 calc(var(--reveal) * 1%));
+      z-index: 1;
+      -webkit-clip-path: inset(0 0 0 calc(var(--reveal) * 1%));
+    }
+
+    .divider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: calc(var(--reveal) * 1%);
+      width: 2px;
+      background: var(--accent-color);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.8);
+      transform: translateX(-1px);
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .badge {
+      position: absolute;
+      top: 12px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 999px;
+      background: rgba(0,0,0,.75);
+      color: #fff;
+      user-select: none;
+      z-index: 7;
+      transition: opacity 0.2s;
+    }
+    .badge.before { left: 12px; }
+    .badge.after { right: 12px; }
+    .stage:hover .badge { opacity: 0.7; }
+
+    .handle {
+      position: absolute;
+      top: 50%;
+      left: calc(var(--reveal) * 1%);
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid #b6bfc8;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
+      cursor: ew-resize;
+      z-index: 8;
+      touch-action: none;
+      display: grid;
+      place-items: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .handle:hover {
+      border-color: var(--accent-color);
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+    .handle:before, .handle:after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-top: 2px solid #667085;
+      border-right: 2px solid #667085;
+    }
+    .handle:before { transform: translate(-6px,0) rotate(225deg); left: 8px; }
+    .handle:after  { transform: translate(6px,0) rotate(45deg); right: 8px; }
+    .handle:focus { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+
+    .footer {
+      font-size: 12px;
+      color: #556070;
+      margin-top: 12px;
+      text-align: center;
+    }
+    .footer code {
+      background: #eef1f4;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      background: #1a73e8;
+      color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 10;
+    }
+    .notification.show {
+      opacity: 1;
+    }
+
+    @media (max-width: 600px) {
+      .controls { grid-template-columns: 1fr; }
+      .controls button { width: 100%; }
+      .wrap { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Before ↔ After Screenshot Slider</h1>
+    <p class="hint">Upload or paste URLs for two images, then drag the handle to compare. Share the link to view without re-uploading.</p>
+
+    <div class="controls" role="group" aria-label="Image inputs">
+      <div>
+        <label for="beforeFile">Before image</label>
+        <input id="beforeFile" type="file" accept="image/*" />
+      </div>
+      <div>
+        <label for="afterFile">After image</label>
+        <input id="afterFile" type="file" accept="image/*" />
+      </div>
+      <div>
+        <button id="swapBtn" type="button" aria-label="Swap before and after images">Swap Images</button>
+      </div>
+    </div>
+
+    <div class="controls" role="group" aria-label="Load by URL">
+      <div>
+        <label for="beforeUrl">Before image URL</label>
+        <input id="beforeUrl" type="url" placeholder="https://example.com/before.png" />
+      </div>
+      <div>
+        <label for="afterUrl">After image URL</label>
+        <input id="afterUrl" type="url" placeholder="https://example.com/after.png" />
+      </div>
+      <div>
+        <button id="loadUrlsBtn" type="button">Load URLs</button>
+        <button id="shareBtn" type="button" style="margin-top: 8px;">Share Link</button>
+      </div>
+    </div>
+
+    <div class="compare">
+      <div class="stage" id="stage" role="region" aria-label="Image comparison viewer">
+        <span class="badge before">Before</span>
+        <span class="badge after">After</span>
+        <img id="beforeImg" class="before" alt="Before image" loading="lazy" />
+        <img id="afterImg" class="after" alt="After image" loading="lazy" />
+        <div class="divider" aria-hidden="true"></div>
+        <button class="handle" id="handle" aria-label="Drag to adjust comparison" title="Drag to adjust comparison"></button>
+      </div>
+      <div class="footer">
+        Tip: For best results, use images with the same resolution. Images are scaled with <code>object-fit: contain</code>. Use hosted image URLs for sharing.
+      </div>
+    </div>
+
+    <div id="notification" class="notification" role="alert"></div>
+  </div>
+
+  <script>
+    const root = document.documentElement;
+    const stage = document.getElementById('stage');
+    const beforeFile = document.getElementById('beforeFile');
+    const afterFile = document.getElementById('afterFile');
+    const beforeImg = document.getElementById('beforeImg');
+    const afterImg = document.getElementById('afterImg');
+    const swapBtn = document.getElementById('swapBtn');
+    const beforeUrl = document.getElementById('beforeUrl');
+    const afterUrl = document.getElementById('afterUrl');
+    const loadUrlsBtn = document.getElementById('loadUrlsBtn');
+    const shareBtn = document.getElementById('shareBtn');
+    const handle = document.getElementById('handle');
+    const notification = document.getElementById('notification');
+
+    function setReveal(p) {
+      const clamped = Math.max(0, Math.min(100, Number(p) || 0));
+      root.style.setProperty('--reveal', clamped);
+    }
+    setReveal(50);
+
+    function showNotification(message, duration = 3000) {
+      notification.textContent = message;
+      notification.classList.add('show');
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, duration);
+    }
+
+    function readFileToImg(inputEl, imgEl) {
+      const f = inputEl.files?.[0];
+      if (!f) return;
+      if (!f.type.startsWith('image/')) {
+        showNotification('Please select a valid image file.');
+        inputEl.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = e => {
+        imgEl.src = e.target.result;
+        if (e.target.result.startsWith('data:')) {
+          showNotification('Note: Locally uploaded images cannot be shared. Use hosted image URLs for sharing.');
+        }
+      };
+      reader.onerror = () => {
+        showNotification('Error reading the file. Please try again.');
+      };
+      reader.readAsDataURL(f);
+    }
+    beforeFile.addEventListener('change', () => readFileToImg(beforeFile, beforeImg));
+    afterFile.addEventListener('change', () => readFileToImg(afterFile, afterImg));
+
+    function setImgFromURL(inputEl, imgEl, isFromQuery = false) {
+      const url = inputEl.value.trim();
+      if (!url) return;
+      if (!url.match(/\.(jpeg|jpg|png|gif|webp)$/i)) {
+        if (!isFromQuery) {
+          showNotification('Please enter a valid image URL (e.g., .jpg, .png, .gif, .webp).');
+        }
+        return;
+      }
+      const probe = new Image();
+      probe.crossOrigin = 'anonymous';
+      probe.onload = () => {
+        imgEl.src = url;
+        if (!isFromQuery) {
+          showNotification('Image loaded successfully.');
+        }
+      };
+      probe.onerror = () => {
+        if (!isFromQuery) {
+          showNotification('Could not load image from URL. Ensure it is a valid image and accessible.');
+        }
+      };
+      probe.src = url;
+    }
+    loadUrlsBtn.addEventListener('click', () => {
+      setImgFromURL(beforeUrl, beforeImg);
+      setImgFromURL(afterUrl, afterImg);
+    });
+
+    function updateAspectFrom(img) {
+      if (img.naturalWidth && img.naturalHeight) {
+        stage.style.aspectRatio = `${img.naturalWidth} / ${img.naturalHeight}`;
+      }
+    }
+    beforeImg.addEventListener('load', () => updateAspectFrom(beforeImg));
+    afterImg.addEventListener('load', () => updateAspectFrom(afterImg));
+
+    let dragging = false;
+    function setRevealFromPointer(clientX) {
+      const rect = stage.getBoundingClientRect();
+      const p = ((clientX - rect.left) / rect.width) * 100;
+      const v = Math.max(0, Math.min(100, p));
+      setReveal(v);
+    }
+
+    stage.addEventListener('pointerdown', e => {
+      dragging = true;
+      setRevealFromPointer(e.clientX);
+      stage.setPointerCapture(e.pointerId);
+    });
+    stage.addEventListener('pointermove', e => {
+      if (dragging) setRevealFromPointer(e.clientX);
+    });
+    stage.addEventListener('pointerup', () => { dragging = false; });
+    stage.addEventListener('pointercancel', () => { dragging = false; });
+
+    handle.addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      dragging = true;
+      setRevealFromPointer(e.clientX);
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener('pointermove', e => {
+      if (dragging) setRevealFromPointer(e.clientX);
+    });
+    handle.addEventListener('pointerup', () => { dragging = false; });
+
+    handle.addEventListener('keydown', e => {
+      const current = parseFloat(getComputedStyle(root).getPropertyValue('--reveal')) || 0;
+      const step = e.shiftKey ? 10 : 1;
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setReveal(current - step);
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setReveal(current + step);
+      }
+      if (e.key === 'Home') {
+        e.preventDefault();
+        setReveal(0);
+      }
+      if (e.key === 'End') {
+        e.preventDefault();
+        setReveal(100);
+      }
+    });
+
+    swapBtn.addEventListener('click', () => {
+      const tmpSrc = beforeImg.src;
+      beforeImg.src = afterImg.src;
+      afterImg.src = tmpSrc;
+      const tmpUrl = beforeUrl.value;
+      beforeUrl.value = afterUrl.value;
+      afterUrl.value = tmpUrl;
+      beforeFile.value = '';
+      afterFile.value = '';
+      updateAspectFrom(beforeImg.src ? beforeImg : afterImg);
+      showNotification('Images swapped.');
+    });
+
+    // Load images from query parameters on page load
+    function loadImagesFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const before = params.get('before');
+      const after = params.get('after');
+      if (before) {
+        beforeUrl.value = before;
+        setImgFromURL(beforeUrl, beforeImg, true);
+      }
+      if (after) {
+        afterUrl.value = after;
+        setImgFromURL(afterUrl, afterImg, true);
+      }
+    }
+    window.addEventListener('load', loadImagesFromQuery);
+
+    // Generate and copy shareable link
+    shareBtn.addEventListener('click', () => {
+      if (!beforeImg.src || !afterImg.src) {
+        showNotification('Please load both images before sharing.');
+        return;
+      }
+      if (beforeImg.src.startsWith('data:') || afterImg.src.startsWith('data:')) {
+        showNotification('Cannot share locally uploaded images. Please use hosted image URLs.');
+        return;
+      }
+      const params = new URLSearchParams();
+      params.set('before', beforeImg.src);
+      params.set('after', afterImg.src);
+      const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        showNotification('Shareable link copied to clipboard!');
+      }).catch(() => {
+        showNotification('Failed to copy link. Please try again.');
+      });
+    });
+  </script>
+</body>
+</html>
