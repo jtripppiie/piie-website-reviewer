@@ -1,5 +1,7 @@
 const NOTES_KEY = 'piieWebReviewerNotes';
 
+const APP_VERSION = '0.2.0';
+
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
   'laptop-15-6': { label: '15.6 display', w: 1366, h: 768 },
@@ -20,6 +22,9 @@ const state = {
 
 const app = document.querySelector('#app');
 const debugOutput = document.querySelector('#debugOutput');
+
+const versionLabel = document.querySelector('#appVersion');
+if (versionLabel) versionLabel.textContent = 'v' + APP_VERSION;
 
 function saveNotes() {
   localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes));
@@ -67,6 +72,7 @@ function updateDebug() {
   debugOutput.textContent = JSON.stringify({
     app: 'PIIE Web Reviewer Static Demo',
     mode: 'GitHub Pages static',
+    version: APP_VERSION,
     time: new Date().toISOString(),
     packetTitle: state.packet?.title,
     packetId: state.packet?.packetId,

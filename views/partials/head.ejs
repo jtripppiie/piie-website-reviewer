@@ -6,4 +6,30 @@
   <link rel="stylesheet" href="/public/css/debug-layout.css">
   <link rel="stylesheet" href="/public/css/review-layout.css">
   <link rel="stylesheet" href="/public/css/review-overrides.css">
+  <style>
+    .app-version-badge {
+      position: fixed;
+      bottom: 8px;
+      right: 10px;
+      z-index: 9999;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #111827;
+      color: #fff;
+      font: 700 11px system-ui, sans-serif;
+      letter-spacing: .03em;
+      opacity: .75;
+      pointer-events: none;
+    }
+  </style>
+  <script>
+    window.__APP_VERSION__ = <%- JSON.stringify(typeof appVersion !== 'undefined' ? appVersion : '') %>;
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.__APP_VERSION__) return;
+      var badge = document.createElement('div');
+      badge.className = 'app-version-badge';
+      badge.textContent = 'PIIE Reviewer v' + window.__APP_VERSION__;
+      document.body.appendChild(badge);
+    });
+  </script>
 </head>

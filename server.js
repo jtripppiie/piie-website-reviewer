@@ -16,6 +16,8 @@ const {
 
 const { captureUrlAllPresets } = require('./screenshot');
 
+const APP_VERSION = require('./package.json').version;
+
 const app = express();
 
 // PIIE_WEB_REVIEWER_REQUEST_LOGGER
@@ -52,6 +54,8 @@ if (process.env.NODE_ENV === 'production' && (!REVIEW_USERNAME || !REVIEW_PASSWO
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+app.locals.appVersion = APP_VERSION;
 
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
