@@ -11,24 +11,35 @@
         <a class="button" href="/admin/packets/<%= packet.packetId %>/export.json?key=<%= key %>">Export JSON</a>
       </p>
 
-      <section class="stack">
-        <% responses.forEach(response => { %>
-          <article class="card">
-            <p class="eyebrow"><%= response.createdAt %></p>
-            <p><strong>Page:</strong> <%= response.pageId %></p>
-            <% if (response.screenSize) { %>
-              <p><strong>Screen size:</strong> <%= response.screenSize %></p>
-            <% } %>
-            <p><strong>Initials:</strong> <%= response.initials %></p>
-            <p><strong>Status:</strong> <%= response.status %></p>
-            <p><strong>Comment:</strong> <%= response.comment %></p>
-          </article>
-        <% }) %>
+      <% packet.pages.forEach(page => { %>
+        <% const pageResponses = responses.filter(response => response.pageId === page.pageId); %>
 
-        <% if (!responses.length) { %>
-          <p>No feedback yet.</p>
-        <% } %>
-      </section>
+        <section class="card">
+          <p class="eyebrow"><%= page.type %></p>
+          <h2><%= page.title %></h2>
+
+          <% if (pageResponses.length) { %>
+            <div class="stack">
+              <% pageResponses.forEach((response, index) => { %>
+                <article class="result-item">
+                  <p class="eyebrow">Feedback <%= index + 1 %> · <%= response.createdAt %></p>
+                  <p><strong>Reviewer:</strong> <%= response.reviewerName || response.initials || 'Unknown' %></p>
+                  <% if (response.screenSize) { %>
+                    <p><strong>Screen size:</strong> <%= response.screenSize %></p>
+                  <% } %>
+                  <p><strong>Status:</strong> <%= response.status %></p>
+                  <% if (response.dotX && response.dotY) { %>
+                    <p><strong>Dot:</strong> <%= response.dotX %>%, <%= response.dotY %>%</p>
+                  <% } %>
+                  <p><strong>Comment:</strong> <%= response.comment || 'No comment' %></p>
+                </article>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <p>No feedback for this page yet.</p>
+          <% } %>
+        </section>
+      <% }) %>
     </main>
   </body>
 </html>

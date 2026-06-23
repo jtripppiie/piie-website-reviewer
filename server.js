@@ -25,9 +25,17 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads')));
 
+const uploadStorage = multer.diskStorage({
+  destination: path.join(__dirname, 'data', 'uploads'),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase() || '.png';
+    cb(null, `${makeId('upload')}${ext}`);
+  }
+});
+
 const upload = multer({
-  dest: path.join(__dirname, 'data', 'uploads'),
-  limits: { fileSize: 8 * 1024 * 1024 },
+  storage: uploadStorage,
+  limits: { fileSize: 12 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
     if (!allowed.includes(file.mimetype)) {
@@ -43,6 +51,10 @@ function isAdmin(req) {
 
 function adminKey(req) {
   return req.query.key || req.body.key || '';
+}
+
+function uploadPath(file) {
+  return file ? `/uploads/${file.filename}` : '';
 }
 
 app.get('/', (req, res) => {
@@ -148,8 +160,10 @@ app.post('/admin/packets/:packetId/image-compare', upload.fields([
     type: 'imageCompare',
     title: req.body.title || 'Before and After',
     instructions: req.body.instructions || '',
-    beforeImagePath: `/uploads/${before.filename}`,
-    afterImagePath: `/uploads/${after.filename}`,
+    beforeLabel: req.body.beforeLabel || 'Before',
+    afterLabel: req.body.afterLabel || 'After',
+    beforeImagePath: uploadPath(before),
+    afterImagePath: uploadPath(after),
     order: packet.pages.length
   });
 
@@ -159,12 +173,18 @@ app.post('/admin/packets/:packetId/image-compare', upload.fields([
   res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
 });
 
-app.post('/admin/packets/:packetId/url-compare', async (req, res) => {
+app.post('/admin/packets/:packetId/url-compare', upload.fields([
+  { name: 'devScreenshot', maxCount: 1 },
+  { name: 'liveScreenshot', maxCount: 1 }
+]), async (req, res) => {
   if (!isAdmin(req)) return res.status(403).send('Forbidden');
 
   const packets = await getPackets();
   const packet = packets.find(p => p.packetId === req.params.packetId);
   if (!packet) return res.status(404).send('Packet not found');
+
+  const devScreenshot = req.files.devScreenshot?.[0];
+  const liveScreenshot = req.files.liveScreenshot?.[0];
 
   packet.pages.push({
     pageId: makeId('page'),
@@ -173,6 +193,8 @@ app.post('/admin/packets/:packetId/url-compare', async (req, res) => {
     instructions: req.body.instructions || '',
     devUrl: req.body.devUrl || '',
     liveUrl: req.body.liveUrl || '',
+    devScreenshotPath: uploadPath(devScreenshot),
+    liveScreenshotPath: uploadPath(liveScreenshot),
     screenSizes: ['desktop', 'laptop', 'tablet', 'mobile'],
     order: packet.pages.length
   });
@@ -203,7 +225,13 @@ app.get('/r/:shareToken', async (req, res) => {
 
   if (!packet) return res.status(404).send('Review packet not found or not published.');
 
-  res.render('review', { packet });
+  const responses = await getResponses();
+  const packetResponses = responses.filter(r => r.packetId === packet.packetId);
+
+  res.render('review', {
+    packet,
+    responses: packetResponses
+  });
 });
 
 app.post('/r/:shareToken/feedback', async (req, res) => {
@@ -219,15 +247,19 @@ app.post('/r/:shareToken/feedback', async (req, res) => {
     packetId: packet.packetId,
     pageId: req.body.pageId,
     screenSize: req.body.screenSize || '',
-    initials: req.body.initials || '',
+    reviewerName: req.body.reviewerName || req.body.initials || '',
+    initials: req.body.initials || req.body.reviewerName || '',
     status: req.body.status || 'needs-review',
     comment: req.body.comment || '',
+    dotX: req.body.dotX || '',
+    dotY: req.body.dotY || '',
     createdAt: new Date().toISOString()
   });
 
   await saveResponses(responses);
 
-  res.redirect(`/r/${packet.shareToken}#${req.body.pageId}`);
+  const hash = req.body.pageId ? `#${req.body.pageId}` : '';
+  res.redirect(`/r/${packet.shareToken}${hash}`);
 });
 
 app.get('/admin/packets/:packetId/results', async (req, res) => {

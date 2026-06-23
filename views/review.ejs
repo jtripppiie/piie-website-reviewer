@@ -1,11 +1,26 @@
 <!doctype html>
 <html lang="en">
   <%- include('partials/head', { title: packet.title }) %>
-  <body>
+  <body class="review-body">
+    <header class="review-topbar">
+      <div>
+        <p class="eyebrow">Design Review Deck</p>
+        <h1><%= packet.title %></h1>
+      </div>
+
+      <div class="review-nav">
+        <span id="pageCounter">Page 1 of <%= packet.pages.length %></span>
+        <button class="button secondary" type="button" id="prevPage">Previous</button>
+        <button class="button secondary" type="button" id="nextPage">Next</button>
+      </div>
+    </header>
+
     <main class="review-deck">
       <% packet.pages.forEach((page, index) => { %>
+        <% const pageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
+
         <% if (page.type === 'cover') { %>
-          <section class="review-slide cover-slide" id="<%= page.pageId %>">
+          <section class="review-page cover-slide" id="<%= page.pageId %>" data-page-title="<%= page.title %>">
             <p class="eyebrow">Page <%= index + 1 %></p>
             <h1><%= page.title %></h1>
             <% if (page.subtitle) { %><h2><%= page.subtitle %></h2><% } %>
@@ -14,57 +29,118 @@
         <% } %>
 
         <% if (page.type === 'imageCompare') { %>
-          <section class="review-slide" id="<%= page.pageId %>">
-            <h2><%= page.title %></h2>
-            <% if (page.instructions) { %><p><%= page.instructions %></p><% } %>
+          <section class="review-page review-page--work" id="<%= page.pageId %>" data-page-title="<%= page.title %>">
+            <div class="review-workspace">
+              <div class="review-canvas">
+                <div class="page-heading">
+                  <p class="eyebrow">Page <%= index + 1 %></p>
+                  <h2><%= page.title %></h2>
+                  <% if (page.instructions) { %><p><%= page.instructions %></p><% } %>
+                </div>
 
-            <div class="compare" data-compare>
-              <img class="before" src="<%= page.beforeImagePath %>" alt="Before">
-              <img class="after" src="<%= page.afterImagePath %>" alt="After">
-              <span class="badge before-label">Before</span>
-              <span class="badge after-label">After</span>
-              <div class="divider"></div>
-              <button class="handle" type="button" aria-label="Drag comparison handle"></button>
+                <div class="compare wide-compare" data-compare data-annotatable>
+                  <img class="before" src="<%= page.beforeImagePath %>" alt="<%= page.beforeLabel || 'Before' %>">
+                  <img class="after" src="<%= page.afterImagePath %>" alt="<%= page.afterLabel || 'After' %>">
+                  <span class="badge before-label"><%= page.beforeLabel || 'Before' %></span>
+                  <span class="badge after-label"><%= page.afterLabel || 'After' %></span>
+                  <div class="divider"></div>
+                  <button class="handle" type="button" aria-label="Drag comparison handle"></button>
+
+                  <% pageDots.forEach((dot, dotIndex) => { %>
+                    <button
+                      class="comment-dot"
+                      type="button"
+                      style="left: <%= dot.dotX %>%; top: <%= dot.dotY %>%"
+                      title="<%= (dot.reviewerName || dot.initials || 'Reviewer') + ': ' + dot.status + (dot.comment ? ' - ' + dot.comment : '') %>">
+                      <%= dotIndex + 1 %>
+                    </button>
+                  <% }) %>
+                </div>
+
+                <p class="muted">For best results, upload before and after screenshots with the same dimensions.</p>
+              </div>
+
+              <aside class="feedback-panel">
+                <h3>Feedback</h3>
+                <p class="muted">Use the dot button if your comment refers to a specific part of the design.</p>
+                <%- include('partials/feedback-form', { packet, page, screenSize: '' }) %>
+              </aside>
             </div>
-
-            <%- include('partials/feedback-form', { packet, page, screenSize: '' }) %>
           </section>
         <% } %>
 
         <% if (page.type === 'urlCompare') { %>
-          <section class="review-slide" id="<%= page.pageId %>">
-            <h2><%= page.title %></h2>
-            <% if (page.instructions) { %><p><%= page.instructions %></p><% } %>
+          <section class="review-page review-page--work" id="<%= page.pageId %>" data-page-title="<%= page.title %>">
+            <div class="review-workspace">
+              <div class="review-canvas">
+                <div class="page-heading">
+                  <p class="eyebrow">Page <%= index + 1 %></p>
+                  <h2><%= page.title %></h2>
+                  <% if (page.instructions) { %><p><%= page.instructions %></p><% } %>
+                </div>
 
-            <div class="screen-tabs" data-url-tabs>
-              <% page.screenSizes.forEach((size, sizeIndex) => { %>
-                <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= size %></button>
-              <% }) %>
+                <div class="url-note">
+                  <p>Some Dev/Test/Live sites block embedded previews for security reasons. Open each URL in a new tab, then review the uploaded screenshots below.</p>
+                  <div class="actions">
+                    <% if (page.devUrl) { %>
+                      <a class="button" href="<%= page.devUrl %>" target="_blank" rel="noopener">Open Dev in new tab</a>
+                    <% } %>
+                    <% if (page.liveUrl) { %>
+                      <a class="button" href="<%= page.liveUrl %>" target="_blank" rel="noopener">Open Live in new tab</a>
+                    <% } %>
+                  </div>
+                </div>
+
+                <div class="screen-tabs" data-url-tabs>
+                  <% page.screenSizes.forEach((size, sizeIndex) => { %>
+                    <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= size %></button>
+                  <% }) %>
+                </div>
+
+                <% if (page.devScreenshotPath && page.liveScreenshotPath) { %>
+                  <div class="compare wide-compare" data-compare data-annotatable>
+                    <img class="before" src="<%= page.liveScreenshotPath %>" alt="Live screenshot">
+                    <img class="after" src="<%= page.devScreenshotPath %>" alt="Dev screenshot">
+                    <span class="badge before-label">Live</span>
+                    <span class="badge after-label">Dev</span>
+                    <div class="divider"></div>
+                    <button class="handle" type="button" aria-label="Drag comparison handle"></button>
+
+                    <% pageDots.forEach((dot, dotIndex) => { %>
+                      <button
+                        class="comment-dot"
+                        type="button"
+                        style="left: <%= dot.dotX %>%; top: <%= dot.dotY %>%"
+                        title="<%= (dot.reviewerName || dot.initials || 'Reviewer') + ': ' + dot.status + (dot.comment ? ' - ' + dot.comment : '') %>">
+                        <%= dotIndex + 1 %>
+                      </button>
+                    <% }) %>
+                  </div>
+                <% } else { %>
+                  <div class="empty-preview">
+                    <h3>No screenshots uploaded for this URL comparison</h3>
+                    <p>Use the Dev and Live buttons above to open the pages directly. For side-by-side review, add screenshots from the admin screen.</p>
+                  </div>
+                <% } %>
+              </div>
+
+              <aside class="feedback-panel">
+                <h3>Feedback by screen size</h3>
+                <p class="muted">Select a screen size, then save feedback for that specific size.</p>
+
+                <% page.screenSizes.forEach((size, sizeIndex) => { %>
+                  <div class="screen-feedback <%= sizeIndex === 0 ? 'active' : '' %>" data-feedback-size="<%= size %>">
+                    <h4><%= size %></h4>
+                    <%- include('partials/feedback-form', { packet, page, screenSize: size }) %>
+                  </div>
+                <% }) %>
+              </aside>
             </div>
-
-            <div class="url-review" data-url-review>
-              <div class="frame-card">
-                <h3>Dev</h3>
-                <iframe src="<%= page.devUrl %>" title="Dev URL"></iframe>
-              </div>
-              <div class="frame-card">
-                <h3>Live</h3>
-                <iframe src="<%= page.liveUrl %>" title="Live URL"></iframe>
-              </div>
-            </div>
-
-            <% page.screenSizes.forEach((size, sizeIndex) => { %>
-              <div class="screen-feedback <%= sizeIndex === 0 ? 'active' : '' %>" data-feedback-size="<%= size %>">
-                <h3>Feedback for <%= size %></h3>
-                <%- include('partials/feedback-form', { packet, page, screenSize: size }) %>
-              </div>
-            <% }) %>
           </section>
         <% } %>
       <% }) %>
     </main>
 
-    <script src="/public/js/compare.js"></script>
-    <script src="/public/js/url-tabs.js"></script>
+    <script src="/public/js/review.js"></script>
   </body>
 </html>

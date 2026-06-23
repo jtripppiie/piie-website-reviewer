@@ -1,26 +1,38 @@
 <form class="feedback" method="post" action="/r/<%= packet.shareToken %>/feedback">
   <input type="hidden" name="pageId" value="<%= page.pageId %>">
   <input type="hidden" name="screenSize" value="<%= screenSize %>">
+  <input type="hidden" name="dotX" value="">
+  <input type="hidden" name="dotY" value="">
 
-  <label>
-    Initials
-    <input type="text" name="initials" maxlength="10" required>
-  </label>
+  <div class="feedback-grid">
+    <label>
+      Reviewer name or initials
+      <input type="text" name="reviewerName" maxlength="60" required>
+    </label>
 
-  <label>
-    Status
-    <select name="status">
-      <option value="approved">Approved</option>
-      <option value="approved-with-changes">Approved with changes</option>
-      <option value="needs-changes">Needs changes</option>
-      <option value="not-approved">Not approved</option>
-    </select>
-  </label>
+    <label>
+      Status
+      <select name="status">
+        <option value="approved">Approved</option>
+        <option value="approved-minor-changes">Approved with minor changes</option>
+        <option value="needs-design-changes">Needs design changes</option>
+        <option value="needs-content-changes">Needs content changes</option>
+        <option value="needs-mobile-review">Needs mobile review</option>
+        <option value="blocked-cannot-review">Blocked / cannot review</option>
+        <option value="not-approved">Not approved</option>
+      </select>
+    </label>
+  </div>
 
   <label>
     Comment
     <textarea name="comment" placeholder="Add feedback here"></textarea>
   </label>
 
-  <button type="submit">Save Feedback</button>
+  <div class="feedback-actions">
+    <button class="button secondary place-dot-button" type="button">Place comment dot</button>
+    <button type="submit">Save Feedback</button>
+  </div>
+
+  <p class="dot-location" hidden>No dot placed yet.</p>
 </form>

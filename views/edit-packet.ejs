@@ -18,6 +18,8 @@
 
         <% if (packet.published) { %>
           <p>Share link: <a href="/r/<%= packet.shareToken %>">/r/<%= packet.shareToken %></a></p>
+        <% } else { %>
+          <p class="muted">Publish the packet when it is ready for reviewers.</p>
         <% } %>
       </section>
 
@@ -39,22 +41,29 @@
 
           <label>Title <input type="text" name="title" required></label>
           <label>Instructions <textarea name="instructions"></textarea></label>
+          <label>Before label <input type="text" name="beforeLabel" value="Before"></label>
+          <label>After label <input type="text" name="afterLabel" value="After"></label>
           <label>Before image <input type="file" name="beforeImage" accept="image/*" required></label>
           <label>After image <input type="file" name="afterImage" accept="image/*" required></label>
 
           <button type="submit">Add Images</button>
         </form>
 
-        <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/url-compare">
+        <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/url-compare" enctype="multipart/form-data">
           <input type="hidden" name="key" value="<%= key %>">
-          <h2>Add Dev vs Live URL</h2>
+          <h2>Add Dev vs Live Review</h2>
 
           <label>Title <input type="text" name="title" required></label>
           <label>Instructions <textarea name="instructions"></textarea></label>
           <label>Dev URL <input type="url" name="devUrl" placeholder="https://dev-example.pantheonsite.io"></label>
           <label>Live URL <input type="url" name="liveUrl" placeholder="https://www.example.com"></label>
 
-          <button type="submit">Add URLs</button>
+          <p class="muted">Pantheon and many secure sites block iframe embedding. Use URLs as open-in-new-tab references, and upload screenshots for the actual side-by-side review.</p>
+
+          <label>Dev screenshot (optional) <input type="file" name="devScreenshot" accept="image/*"></label>
+          <label>Live screenshot (optional) <input type="file" name="liveScreenshot" accept="image/*"></label>
+
+          <button type="submit">Add Dev vs Live</button>
         </form>
       </section>
 
@@ -68,8 +77,18 @@
             <% if (page.instructions) { %>
               <p><%= page.instructions %></p>
             <% } %>
+
+            <% if (page.type === 'urlCompare') { %>
+              <p><strong>Dev:</strong> <%= page.devUrl || 'No URL' %></p>
+              <p><strong>Live:</strong> <%= page.liveUrl || 'No URL' %></p>
+              <p><strong>Screenshots:</strong> <%= page.devScreenshotPath && page.liveScreenshotPath ? 'Uploaded' : 'Not uploaded or partial' %></p>
+            <% } %>
           </article>
         <% }) %>
+
+        <% if (!packet.pages.length) { %>
+          <p>No pages yet. Add a cover page first, then add a comparison page.</p>
+        <% } %>
       </section>
     </main>
   </body>
