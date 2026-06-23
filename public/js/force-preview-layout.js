@@ -106,12 +106,15 @@
     if (state.scaleMode === '75') return 0.75;
     if (state.scaleMode === '50') return 0.5;
 
-    // Fit to screen: shrink only as much as needed to fit available width.
+    // Fit to screen: fill the available width.
+    // Single column presets (Desktop and laptop sizes) stretch to fill the row,
+    // scaling up or down as needed. Mobile shows side by side at natural size,
+    // so it only ever scales down.
     const stage = slide.querySelector('.webpage-preview-stage');
     const cardCount = state.size === 'mobile' ? 2 : 1;
     const available = stage.clientWidth - STAGE_GAP * (cardCount - 1);
-    const perCard = available / cardCount;
-    return Math.min(1, perCard / preset.w);
+    const raw = (available / cardCount) / preset.w;
+    return state.size === 'mobile' ? Math.min(1, raw) : raw;
   }
 
   function verifyIframe(scaler, preset) {
