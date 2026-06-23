@@ -18,8 +18,8 @@
       "type": "urlCompare",
       "title": "Real Website Load Test",
       "instructions": "Uses a stable public website that should load in a browser. If iframe behavior changes, the Open links still work.",
-      "devUrl": "https://example.com/",
-      "liveUrl": "https://example.com/",
+      "devUrl": "https://www.piie.com",
+      "liveUrl": "https://www.piie.com",
       "screenSizes": ["desktop", "laptop", "mobile"]
     },
     {
@@ -27,8 +27,8 @@
       "type": "urlCompare",
       "title": "Screenshot Fallback Review",
       "instructions": "Uses saved screenshots so reviewers can still compare work when Dev or Live blocks iframe embedding.",
-      "devUrl": "https://example.com/",
-      "liveUrl": "https://example.com/",
+      "devUrl": "https://www.piie.com",
+      "liveUrl": "https://www.piie.com",
       "devScreenshotPath": "demo-dev-screenshot.svg",
       "liveScreenshotPath": "demo-live-screenshot.svg",
       "screenSizes": ["desktop", "laptop", "mobile"]
