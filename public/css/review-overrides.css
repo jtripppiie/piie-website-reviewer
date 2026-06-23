@@ -62,3 +62,32 @@
   color: #475569;
   font-size: 13px;
 }
+
+/* Prevent laptop preset previews from collapsing to the right-column width. */
+.review-page[data-preview-size="laptop-15-6"] .webpage-preview-stage,
+.review-page[data-preview-size="laptop-14-5"] .webpage-preview-stage,
+.review-page[data-preview-size="laptop-13"] .webpage-preview-stage {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  width: 100% !important;
+  margin-inline: auto !important;
+}
+
+.review-page[data-preview-size="laptop-15-6"] .webpage-frame-card,
+.review-page[data-preview-size="laptop-15-6"] iframe {
+  width: 1366px !important;
+  max-width: 100% !important;
+}
+
+.review-page[data-preview-size="laptop-14-5"] .webpage-frame-card,
+.review-page[data-preview-size="laptop-14-5"] iframe {
+  width: 1280px !important;
+  max-width: 100% !important;
+}
+
+.review-page[data-preview-size="laptop-13"] .webpage-frame-card,
+.review-page[data-preview-size="laptop-13"] iframe {
+  width: 1180px !important;
+  max-width: 100% !important;
+}
