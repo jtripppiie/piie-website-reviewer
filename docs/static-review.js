@@ -1,6 +1,7 @@
 const NOTES_KEY = 'piieWebReviewerNotes';
+const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 
-const APP_VERSION = '0.2.5';
+const APP_VERSION = '0.2.6';
 
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
@@ -17,7 +18,8 @@ const state = {
   packet: null,
   activeSizes: {},
   scaleModes: {},
-  notes: JSON.parse(localStorage.getItem(NOTES_KEY) || '[]')
+  notes: JSON.parse(localStorage.getItem(NOTES_KEY) || '[]'),
+  cleared: JSON.parse(localStorage.getItem(CLEARED_KEY) || '[]')
 };
 
 const app = document.querySelector('#app');
@@ -35,6 +37,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function saveNotes() {
   localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes));
+}
+
+function saveCleared() {
+  localStorage.setItem(CLEARED_KEY, JSON.stringify(state.cleared));
 }
 
 function screenSizeLabel(size) {
@@ -68,7 +74,8 @@ function statusIcon(status) {
 
 function allNotes() {
   const demoNotes = Array.isArray(state.packet?.seedNotes) ? state.packet.seedNotes : [];
-  return [...demoNotes, ...state.notes];
+  const cleared = new Set(state.cleared);
+  return [...demoNotes, ...state.notes].filter(note => !cleared.has(note.noteId));
 }
 
 function pageNotes(pageId, screenSize) {
@@ -175,6 +182,8 @@ function renderPage(page, index) {
         <aside class="feedback-panel">
           <h3>Review Results</h3>
           <div data-notes-for="${escapeHtml(page.pageId)}">${renderNotes(page, activeSize)}</div>
+
+          <button type="button" class="demo-clear" data-clear-notes="${escapeHtml(page.pageId)}">Clear results for this screen size</button>
 
           <form class="feedback-form" data-note-form="${escapeHtml(page.pageId)}">
             <input type="hidden" name="screenSize" value="${escapeHtml(activeSize)}">
@@ -402,6 +411,29 @@ function render() {
 }
 
 app.addEventListener('click', event => {
+  const clearButton = event.target.closest('button[data-clear-notes]');
+  if (clearButton) {
+    const pageEl = clearButton.closest('.review-page');
+    const pageId = clearButton.dataset.clearNotes;
+    const size = state.activeSizes[pageId] || 'desktop';
+
+    if (!confirm('Clear review results for this page and screen size? This cannot be undone in the demo.')) return;
+
+    // Hide both seeded and local notes for this page and size, and remember it.
+    const toClear = pageNotes(pageId, size);
+    toClear.forEach(note => {
+      if (note.noteId && !state.cleared.includes(note.noteId)) {
+        state.cleared.push(note.noteId);
+      }
+    });
+    state.notes = state.notes.filter(note => !(note.pageId === pageId && note.screenSize === size));
+
+    saveCleared();
+    saveNotes();
+    render();
+    return;
+  }
+
   const scaleButton = event.target.closest('button[data-scale]');
   if (scaleButton) {
     const pageEl = scaleButton.closest('.review-page');

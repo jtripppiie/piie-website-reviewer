@@ -118,3 +118,15 @@
   opacity: .75;
   pointer-events: none;
 }
+
+.demo-clear {
+  border: 1px solid #b91c1c;
+  color: #b91c1c;
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  margin: 0 0 10px;
+}
