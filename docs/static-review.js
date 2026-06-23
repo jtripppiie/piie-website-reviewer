@@ -13,6 +13,16 @@ function saveNotes() {
   localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes));
 }
 
+function screenSizeLabel(size) {
+  return {
+    desktop: 'Desktop',
+    'laptop-15-6': '15.6 display',
+    'laptop-14-5': '14.5 display',
+    'laptop-13': '13 display',
+    mobile: 'Mobile'
+  }[size] || size;
+}
+
 function statusLabel(status) {
   return {
     approved: 'Approved',
@@ -69,7 +79,7 @@ function renderNotes(page, screenSize) {
     return '<p>No saved notes in this browser yet.</p>';
   }
 
-  return `<p class="note-summary">${notes.length} saved ${notes.length === 1 ? 'result' : 'results'} for ${escapeHtml(screenSize)}.</p>` + '<ol class="notes-list">' + notes.map(note => `
+  return `<p class="note-summary">${notes.length} saved ${notes.length === 1 ? 'result' : 'results'} for ${escapeHtml(screenSizeLabel(screenSize))}.</p>` + '<ol class="notes-list">' + notes.map(note => `
     <li class="note ${note.status}">
       <span class="note-icon" aria-hidden="true">${statusIcon(note.status)}</span>
       <div>
@@ -172,7 +182,7 @@ function renderPage(page, index) {
         </aside>
 
         <nav class="screen-tabs" aria-label="Screen size">
-          ${sizes.map(size => `<button type="button" data-size="${escapeHtml(size)}" ${size === activeSize ? 'class="active"' : ''}>${escapeHtml(size)}</button>`).join('')}
+          ${sizes.map(size => `<button type="button" data-size="${escapeHtml(size)}" ${size === activeSize ? 'class="active"' : ''}>${escapeHtml(screenSizeLabel(size))}</button>`).join('')}
         </nav>
 
         <div class="preview-stage">

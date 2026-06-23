@@ -1,10 +1,4 @@
-/* Static demo overrides. The review panel should not stay pinned while scrolling. */
-.app-header {
-  position: static !important;
-  top: auto !important;
-  z-index: auto !important;
-}
-
+/* Review panel should stay at the top of each review page, not pin while scrolling. */
 .feedback-panel {
   position: static !important;
   top: auto !important;
@@ -13,16 +7,7 @@
   overflow: visible !important;
 }
 
-.note-summary {
-  margin: 0 0 8px;
-  color: #667085;
-  font-size: 13px;
-}
-
-.frame-card--screenshot iframe {
-  display: none;
-}
-
+.webpage-frame-card img,
 .preview-screenshot {
   display: block;
   width: 100%;
@@ -32,27 +17,23 @@
   background: #fff;
 }
 
-.frame-empty {
-  padding: 24px;
-}
-
 /* Laptop viewport presets */
-.review-page[data-preview-size="laptop-15-6"] .preview-stage,
-.review-page[data-preview-size="laptop-14-5"] .preview-stage,
-.review-page[data-preview-size="laptop-13"] .preview-stage {
+.review-page[data-preview-size="laptop-15-6"] .webpage-preview-stage,
+.review-page[data-preview-size="laptop-14-5"] .webpage-preview-stage,
+.review-page[data-preview-size="laptop-13"] .webpage-preview-stage {
   grid-template-columns: 1fr !important;
   margin-inline: auto !important;
 }
 
-.review-page[data-preview-size="laptop-15-6"] .preview-stage {
+.review-page[data-preview-size="laptop-15-6"] .webpage-preview-stage {
   max-width: 1366px !important;
 }
 
-.review-page[data-preview-size="laptop-14-5"] .preview-stage {
+.review-page[data-preview-size="laptop-14-5"] .webpage-preview-stage {
   max-width: 1280px !important;
 }
 
-.review-page[data-preview-size="laptop-13"] .preview-stage {
+.review-page[data-preview-size="laptop-13"] .webpage-preview-stage {
   max-width: 1180px !important;
 }
 

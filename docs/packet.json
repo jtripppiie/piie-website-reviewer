@@ -11,7 +11,7 @@
       "instructions": "Same-origin demo pages. This is the most reliable layout test because GitHub Pages can iframe these files.",
       "devUrl": "demo-dev.html",
       "liveUrl": "demo-live.html",
-      "screenSizes": ["desktop", "laptop", "mobile"]
+      "screenSizes": ["desktop", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
     },
     {
       "pageId": "example_iframe_page",
@@ -20,7 +20,7 @@
       "instructions": "Uses a stable public website that should load in a browser. If iframe behavior changes, the Open links still work.",
       "devUrl": "https://www.piie.com",
       "liveUrl": "https://www.piie.com",
-      "screenSizes": ["desktop", "laptop", "mobile"]
+      "screenSizes": ["desktop", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
     },
     {
       "pageId": "screenshot_fallback_page",
@@ -31,7 +31,7 @@
       "liveUrl": "https://www.piie.com",
       "devScreenshotPath": "demo-dev-screenshot.svg",
       "liveScreenshotPath": "demo-live-screenshot.svg",
-      "screenSizes": ["desktop", "laptop", "mobile"]
+      "screenSizes": ["desktop", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
     }
   ],
   "seedNotes": [

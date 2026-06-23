@@ -3,6 +3,19 @@
   <%- include('partials/head', { title: packet.title }) %>
   <body class="review-body">
     <main class="review-deck">
+      <%
+        function screenSizeLabel(size) {
+          const labels = {
+            desktop: 'Desktop',
+            'laptop-15-6': '15.6 display',
+            'laptop-14-5': '14.5 display',
+            'laptop-13': '13 display',
+            mobile: 'Mobile'
+          };
+
+          return labels[size] || size;
+        }
+      %>
       <% packet.pages.forEach((page, index) => { %>
         <% const pageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
 
@@ -81,7 +94,7 @@
 
                 <div class="screen-tabs" data-url-tabs>
                   <% page.screenSizes.filter(size => size !== "tablet").forEach((size, sizeIndex) => { %>
-                    <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= size %></button>
+                    <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= screenSizeLabel(size) %></button>
                   <% }) %>
                 </div>
 
@@ -147,7 +160,7 @@
 
                 <% page.screenSizes.filter(size => size !== "tablet").forEach((size, sizeIndex) => { %>
                   <div class="screen-feedback <%= sizeIndex === 0 ? 'active' : '' %>" data-feedback-size="<%= size %>">
-                    <h4><%= size %></h4>
+                    <h4><%= screenSizeLabel(size) %></h4>
                     <%- include('partials/public-notes', { responses, page, screenSize: size }) %>
                     <%- include('partials/feedback-form', { packet, page, screenSize: size }) %>
                   </div>

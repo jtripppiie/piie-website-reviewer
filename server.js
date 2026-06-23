@@ -203,7 +203,7 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
   if (page.type === 'urlCompare') {
     page.devUrl = req.body.devUrl || '';
     page.liveUrl = req.body.liveUrl || '';
-    page.screenSizes = ['desktop', 'laptop', 'mobile'];
+    page.screenSizes = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
 
     const devScreenshot = req.files?.devScreenshot?.[0];
     const liveScreenshot = req.files?.liveScreenshot?.[0];
@@ -300,7 +300,7 @@ app.post('/admin/packets/:packetId/url-compare', upload.fields([
     liveUrl: req.body.liveUrl || '',
     devScreenshotPath: uploadPath(devScreenshot),
     liveScreenshotPath: uploadPath(liveScreenshot),
-    screenSizes: ['desktop', 'laptop', 'mobile'],
+    screenSizes: ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'],
     order: packet.pages.length
   });
 
