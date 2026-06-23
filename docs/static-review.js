@@ -1,6 +1,6 @@
 const NOTES_KEY = 'piieWebReviewerNotes';
 
-const APP_VERSION = '0.2.1';
+const APP_VERSION = '0.2.2';
 
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
@@ -272,8 +272,8 @@ function computeScale(pageEl, preset, scaleMode) {
   const cardCount = size === 'mobile' ? 2 : 1;
   const available = stage.clientWidth - STAGE_GAP * (cardCount - 1);
   const raw = (available / cardCount) / preset.w;
-  // Single column presets fill the available width. Mobile only scales down.
-  return size === 'mobile' ? Math.min(1, raw) : raw;
+  // Desktop fills the available width. Laptop presets and mobile only scale down.
+  return size === 'desktop' ? raw : Math.min(1, raw);
 }
 
 function applyLayout(pageEl) {
