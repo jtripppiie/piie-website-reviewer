@@ -1,6 +1,6 @@
-# Before After Design Review
+# PIIE Web Reviewer
 
-A small no-database design review prototype.
+A small no-database review tool for PIIE web design, content, and QA reviews.
 
 ## What it does now
 

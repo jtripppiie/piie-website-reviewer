@@ -14,6 +14,24 @@ const {
 } = require('./storage');
 
 const app = express();
+
+// PIIE_WEB_REVIEWER_REQUEST_LOGGER
+app.use((req, res, next) => {
+  const started = Date.now();
+  const requestId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+  req.requestId = requestId;
+
+  console.log(`[${requestId}] --> ${req.method} ${req.originalUrl}`);
+
+  res.on('finish', () => {
+    const duration = Date.now() - started;
+    console.log(`[${requestId}] <-- ${res.statusCode} ${req.method} ${req.originalUrl} ${duration}ms`);
+  });
+
+  next();
+});
+
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
 
@@ -116,6 +134,80 @@ app.get('/admin/packets/:packetId/edit', async (req, res) => {
   });
 });
 
+
+app.post('/admin/packets/:packetId/update', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const packet = packets.find(p => p.packetId === req.params.packetId);
+  if (!packet) return res.status(404).send('Packet not found');
+
+  packet.title = req.body.title || 'Untitled Review Packet';
+  packet.updatedAt = new Date().toISOString();
+
+  await savePackets(packets);
+
+  res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
+});
+
+app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
+  { name: 'beforeImage', maxCount: 1 },
+  { name: 'afterImage', maxCount: 1 },
+  { name: 'devScreenshot', maxCount: 1 },
+  { name: 'liveScreenshot', maxCount: 1 }
+]), async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const packet = packets.find(p => p.packetId === req.params.packetId);
+  if (!packet) return res.status(404).send('Packet not found');
+
+  const page = packet.pages.find(p => p.pageId === req.params.pageId);
+  if (!page) return res.status(404).send('Page not found');
+
+  page.title = req.body.title || page.title || 'Untitled Page';
+
+  if ('instructions' in req.body) {
+    page.instructions = req.body.instructions || '';
+  }
+
+  if (page.type === 'cover') {
+    page.subtitle = req.body.subtitle || '';
+    page.body = req.body.body || '';
+  }
+
+  if (page.type === 'imageCompare') {
+    page.beforeLabel = req.body.beforeLabel || 'Before';
+    page.afterLabel = req.body.afterLabel || 'After';
+
+    const before = req.files?.beforeImage?.[0];
+    const after = req.files?.afterImage?.[0];
+
+    if (before) page.beforeImagePath = uploadPath(before);
+    if (after) page.afterImagePath = uploadPath(after);
+  }
+
+  if (page.type === 'urlCompare') {
+    page.devUrl = req.body.devUrl || '';
+    page.liveUrl = req.body.liveUrl || '';
+    page.screenSizes = ['desktop', 'laptop', 'mobile'];
+
+    const devScreenshot = req.files?.devScreenshot?.[0];
+    const liveScreenshot = req.files?.liveScreenshot?.[0];
+
+    if (devScreenshot) page.devScreenshotPath = uploadPath(devScreenshot);
+    if (liveScreenshot) page.liveScreenshotPath = uploadPath(liveScreenshot);
+  }
+
+  page.updatedAt = new Date().toISOString();
+  packet.updatedAt = new Date().toISOString();
+
+  await savePackets(packets);
+
+  res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
+});
+
+
 app.post('/admin/packets/:packetId/cover', async (req, res) => {
   if (!isAdmin(req)) return res.status(403).send('Forbidden');
 
@@ -148,8 +240,8 @@ app.post('/admin/packets/:packetId/image-compare', upload.fields([
   const packet = packets.find(p => p.packetId === req.params.packetId);
   if (!packet) return res.status(404).send('Packet not found');
 
-  const before = req.files.beforeImage?.[0];
-  const after = req.files.afterImage?.[0];
+  const before = req.files?.beforeImage?.[0];
+  const after = req.files?.afterImage?.[0];
 
   if (!before || !after) {
     return res.status(400).send('Please upload both before and after images.');
@@ -183,8 +275,8 @@ app.post('/admin/packets/:packetId/url-compare', upload.fields([
   const packet = packets.find(p => p.packetId === req.params.packetId);
   if (!packet) return res.status(404).send('Packet not found');
 
-  const devScreenshot = req.files.devScreenshot?.[0];
-  const liveScreenshot = req.files.liveScreenshot?.[0];
+  const devScreenshot = req.files?.devScreenshot?.[0];
+  const liveScreenshot = req.files?.liveScreenshot?.[0];
 
   packet.pages.push({
     pageId: makeId('page'),
@@ -296,7 +388,85 @@ app.get('/admin/packets/:packetId/export.json', async (req, res) => {
 });
 
 ensureDataFiles().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Before After Design Review running at http://localhost:${PORT}`);
+  
+// PIIE_WEB_REVIEWER_DEBUG_ROUTES
+app.get('/healthz', async (req, res) => {
+  res.json({
+    ok: true,
+    app: 'PIIE Web Reviewer',
+    time: new Date().toISOString(),
+    cwd: process.cwd(),
+    node: process.version
+  });
+});
+
+app.get('/admin/debug', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+
+  const routeList = [];
+  app._router.stack.forEach(layer => {
+    if (layer.route && layer.route.path) {
+      const methods = Object.keys(layer.route.methods).join(', ').toUpperCase();
+      routeList.push(`${methods} ${layer.route.path}`);
+    }
+  });
+
+  res.type('html').send(`
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>PIIE Web Reviewer Debug</title>
+        <style>
+          body { font-family: system-ui, sans-serif; margin: 24px; line-height: 1.45; }
+          pre { background: #f6f7f9; padding: 12px; overflow: auto; border-radius: 8px; }
+          code { background: #eef1f4; padding: 2px 5px; border-radius: 4px; }
+          .ok { color: #15803d; font-weight: 700; }
+        </style>
+      </head>
+      <body>
+        <h1>PIIE Web Reviewer Debug</h1>
+        <p class="ok">App is running.</p>
+
+        <h2>Runtime</h2>
+        <pre>${JSON.stringify({
+          app: 'PIIE Web Reviewer',
+          time: new Date().toISOString(),
+          cwd: process.cwd(),
+          node: process.version,
+          env: process.env.NODE_ENV || 'not set',
+          port: process.env.PORT || '3000',
+          packetCount: packets.length
+        }, null, 2)}</pre>
+
+        <h2>Packets</h2>
+        <pre>${JSON.stringify(packets.map(packet => ({
+          packetId: packet.packetId,
+          title: packet.title,
+          published: packet.published,
+          shareToken: packet.shareToken,
+          pageCount: packet.pages?.length || 0,
+          editUrl: `/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`,
+          reviewUrl: packet.shareToken ? `/r/${packet.shareToken}` : null
+        })), null, 2)}</pre>
+
+        <h2>Routes</h2>
+        <pre>${routeList.join('\n')}</pre>
+
+        <h2>Useful Checks</h2>
+        <pre>GET  /healthz
+GET  /admin/debug?key=change-me
+GET  /admin?key=change-me
+POST /admin/packets/:packetId/pages/:pageId/update?key=change-me</pre>
+      </body>
+    </html>
+  `);
+});
+
+app.listen(PORT, () => {
+    console.log(`PIIE Web Reviewer running at http://localhost:${PORT}`);
   });
 });

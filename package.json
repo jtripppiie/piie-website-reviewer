@@ -1,7 +1,7 @@
 {
-  "name": "before-after-design-review",
+  "name": "piie-web-reviewer",
   "version": "0.1.0",
-  "description": "No-database before/after design review deck",
+  "description": "No-database web review tool for PIIE design and content QA",
   "main": "server.js",
   "scripts": {
     "dev": "node server.js",

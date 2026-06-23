@@ -5,22 +5,22 @@
     "title": "Publications Page Teaser Font Size Review",
     "published": true,
     "createdAt": "2026-06-23T19:16:05.150Z",
-    "updatedAt": "2026-06-23T19:28:00.016Z",
+    "updatedAt": "2026-06-23T20:24:18.477Z",
     "pages": [
       {
         "pageId": "page_1782242247352_obg5na",
         "type": "urlCompare",
         "title": "Title",
         "instructions": "instructions?",
-        "devUrl": "https://june-update-piie.pantheonsite.io/blogs/realtime-economics/2026/clone-does-eu-mercosur-deal-help-or-hurt-brazils-ai-ambitions",
+        "devUrl": "http://www.cnn.com",
         "liveUrl": "https://june-update-piie.pantheonsite.io/blogs/realtime-economics/2026/does-eu-mercosur-deal-help-or-hurt-brazils-ai-ambitions",
         "screenSizes": [
           "desktop",
           "laptop",
-          "tablet",
           "mobile"
         ],
-        "order": 0
+        "order": 0,
+        "updatedAt": "2026-06-23T20:24:18.477Z"
       }
     ]
   }

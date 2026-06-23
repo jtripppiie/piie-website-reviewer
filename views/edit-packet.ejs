@@ -5,7 +5,22 @@
     <main class="shell">
       <p><a href="/admin?key=<%= key %>">Back to admin</a></p>
 
-      <h1><%= packet.title %></h1>
+      <h1>Edit Packet</h1>
+
+      <section class="card">
+        <h2>Packet Details</h2>
+
+        <form method="post" action="/admin/packets/<%= packet.packetId %>/update">
+          <input type="hidden" name="key" value="<%= key %>">
+
+          <label>
+            Packet title
+            <input type="text" name="title" value="<%= packet.title %>" required>
+          </label>
+
+          <button type="submit">Save Packet Details</button>
+        </form>
+      </section>
 
       <section class="card">
         <p>Status: <strong><%= packet.published ? 'Published' : 'Draft' %></strong></p>
@@ -23,10 +38,12 @@
         <% } %>
       </section>
 
+      <h2>Add New Page</h2>
+
       <section class="grid">
         <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/cover">
           <input type="hidden" name="key" value="<%= key %>">
-          <h2>Add Cover Page</h2>
+          <h3>Add Cover Page</h3>
 
           <label>Title <input type="text" name="title" required></label>
           <label>Subtitle <input type="text" name="subtitle"></label>
@@ -37,7 +54,7 @@
 
         <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/image-compare" enctype="multipart/form-data">
           <input type="hidden" name="key" value="<%= key %>">
-          <h2>Add Before / After Screenshot Review</h2>
+          <h3>Add Screenshot Comparison</h3>
 
           <label>Title <input type="text" name="title" required></label>
           <label>Instructions <textarea name="instructions"></textarea></label>
@@ -51,14 +68,14 @@
 
         <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/url-compare" enctype="multipart/form-data">
           <input type="hidden" name="key" value="<%= key %>">
-          <h2>Add Dev / Live Reference Page</h2>
+          <h3>Add Dev vs Live Review</h3>
 
           <label>Title <input type="text" name="title" required></label>
           <label>Instructions <textarea name="instructions"></textarea></label>
           <label>Dev URL <input type="url" name="devUrl" placeholder="https://dev-example.pantheonsite.io"></label>
           <label>Live URL <input type="url" name="liveUrl" placeholder="https://www.example.com"></label>
 
-          <p class="muted">Pantheon and many secure sites block iframe embedding. Use URLs as open-in-new-tab references, and upload screenshots for the actual side-by-side review.</p>
+          <p class="muted">Upload screenshots if iframe previews are blocked.</p>
 
           <label>Dev screenshot (optional) <input type="file" name="devScreenshot" accept="image/*"></label>
           <label>Live screenshot (optional) <input type="file" name="liveScreenshot" accept="image/*"></label>
@@ -67,22 +84,93 @@
         </form>
       </section>
 
-      <h2>Pages</h2>
+      <h2>Edit Existing Pages</h2>
 
       <section class="stack">
         <% packet.pages.forEach((page, index) => { %>
           <article class="card">
             <p class="eyebrow">Page <%= index + 1 %>: <%= page.type %></p>
-            <h3><%= page.title %></h3>
-            <% if (page.instructions) { %>
-              <p><%= page.instructions %></p>
-            <% } %>
 
-            <% if (page.type === 'urlCompare') { %>
-              <p><strong>Dev:</strong> <%= page.devUrl || 'No URL' %></p>
-              <p><strong>Live:</strong> <%= page.liveUrl || 'No URL' %></p>
-              <p><strong>Screenshots:</strong> <%= page.devScreenshotPath && page.liveScreenshotPath ? 'Uploaded' : 'Not uploaded or partial' %></p>
-            <% } %>
+            <form method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/update" enctype="multipart/form-data">
+              <input type="hidden" name="key" value="<%= key %>">
+
+              <label>
+                Title
+                <input type="text" name="title" value="<%= page.title || '' %>" required>
+              </label>
+
+              <% if (page.type === 'cover') { %>
+                <label>
+                  Subtitle
+                  <input type="text" name="subtitle" value="<%= page.subtitle || '' %>">
+                </label>
+
+                <label>
+                  Body
+                  <textarea name="body"><%= page.body || '' %></textarea>
+                </label>
+              <% } %>
+
+              <% if (page.type === 'imageCompare') { %>
+                <label>
+                  Instructions
+                  <textarea name="instructions"><%= page.instructions || '' %></textarea>
+                </label>
+
+                <label>
+                  Before label
+                  <input type="text" name="beforeLabel" value="<%= page.beforeLabel || 'Before' %>">
+                </label>
+
+                <label>
+                  After label
+                  <input type="text" name="afterLabel" value="<%= page.afterLabel || 'After' %>">
+                </label>
+
+                <p class="muted">Current before image: <%= page.beforeImagePath || 'None' %></p>
+                <label>
+                  Replace before image
+                  <input type="file" name="beforeImage" accept="image/*">
+                </label>
+
+                <p class="muted">Current after image: <%= page.afterImagePath || 'None' %></p>
+                <label>
+                  Replace after image
+                  <input type="file" name="afterImage" accept="image/*">
+                </label>
+              <% } %>
+
+              <% if (page.type === 'urlCompare') { %>
+                <label>
+                  Instructions
+                  <textarea name="instructions"><%= page.instructions || '' %></textarea>
+                </label>
+
+                <label>
+                  Dev URL
+                  <input type="url" name="devUrl" value="<%= page.devUrl || '' %>">
+                </label>
+
+                <label>
+                  Live URL
+                  <input type="url" name="liveUrl" value="<%= page.liveUrl || '' %>">
+                </label>
+
+                <p class="muted">Current Dev screenshot: <%= page.devScreenshotPath || 'None' %></p>
+                <label>
+                  Replace Dev screenshot
+                  <input type="file" name="devScreenshot" accept="image/*">
+                </label>
+
+                <p class="muted">Current Live screenshot: <%= page.liveScreenshotPath || 'None' %></p>
+                <label>
+                  Replace Live screenshot
+                  <input type="file" name="liveScreenshot" accept="image/*">
+                </label>
+              <% } %>
+
+              <button type="submit">Save Page Changes</button>
+            </form>
           </article>
         <% }) %>
 
