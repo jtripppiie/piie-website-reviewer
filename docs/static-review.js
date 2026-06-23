@@ -185,6 +185,10 @@ function renderPage(page, index) {
           ${sizes.map(size => `<button type="button" data-size="${escapeHtml(size)}" ${size === activeSize ? 'class="active"' : ''}>${escapeHtml(screenSizeLabel(size))}</button>`).join('')}
         </nav>
 
+        <p class="viewport-note">
+          These previews are set to the selected target viewport size. Browser zoom, Windows display scaling, or monitor size may make the preview appear larger or smaller on your screen, but the review is still based on the selected viewport specification.
+        </p>
+
         <div class="preview-stage">
           <article class="frame-card">
             <div class="frame-card__header">

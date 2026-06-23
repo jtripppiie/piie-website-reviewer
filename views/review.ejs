@@ -98,6 +98,10 @@
                   <% }) %>
                 </div>
 
+                <p class="viewport-note">
+                  These previews are set to the selected target viewport size. Browser zoom, Windows display scaling, or monitor size may make the preview appear larger or smaller on your screen, but the review is still based on the selected viewport specification.
+                </p>
+
                 <% if (page.devScreenshotPath && page.liveScreenshotPath) { %>
                   <div class="compare wide-compare" data-compare data-annotatable>
                     <img class="before" src="<%= page.liveScreenshotPath %>" alt="Live screenshot">
