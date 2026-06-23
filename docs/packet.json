@@ -1,0 +1,17 @@
+{
+  "packetId": "public_demo_packet",
+  "title": "PIIE Website Reviewer Public Demo",
+  "published": true,
+  "shareToken": "public_demo",
+  "pages": [
+    {
+      "pageId": "public_demo_page",
+      "type": "urlCompare",
+      "title": "Safe Dev vs Live Layout Demo",
+      "instructions": "Use this public demo to test desktop, laptop, and mobile review layouts without exposing real packet data.",
+      "devUrl": "demo-dev.html",
+      "liveUrl": "demo-live.html",
+      "screenSizes": ["desktop", "laptop", "mobile"]
+    }
+  ]
+}

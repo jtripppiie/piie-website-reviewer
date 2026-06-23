@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const crypto = require('crypto');
 
 const {
   ensureDataFiles,
@@ -33,7 +34,19 @@ app.use((req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === 'production' ? '' : 'change-me');
+
+if (!ADMIN_PASSWORD) {
+  throw new Error('ADMIN_PASSWORD is required when NODE_ENV=production.');
+}
+
+
+const REVIEW_USERNAME = process.env.REVIEW_USERNAME || (process.env.NODE_ENV === 'production' ? '' : 'PIIE');
+const REVIEW_PASSWORD = process.env.REVIEW_PASSWORD || (process.env.NODE_ENV === 'production' ? '' : 'review-local-only');
+
+if (process.env.NODE_ENV === 'production' && (!REVIEW_USERNAME || !REVIEW_PASSWORD)) {
+  throw new Error('REVIEW_USERNAME and REVIEW_PASSWORD are required when NODE_ENV=production.');
+}
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -311,7 +324,118 @@ app.post('/admin/packets/:packetId/publish', async (req, res) => {
   res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
 });
 
-app.get('/r/:shareToken', async (req, res) => {
+
+function parseCookies(req) {
+  const header = req.headers.cookie || '';
+
+  return header.split(';').reduce((cookies, part) => {
+    const [rawName, ...rawValue] = part.trim().split('=');
+    if (!rawName) return cookies;
+
+    cookies[rawName] = decodeURIComponent(rawValue.join('=') || '');
+    return cookies;
+  }, {});
+}
+
+function reviewerCookieValue() {
+  return crypto
+    .createHash('sha256')
+    .update(`${REVIEW_USERNAME}:${REVIEW_PASSWORD}:${ADMIN_PASSWORD}`)
+    .digest('hex');
+}
+
+function isReviewer(req) {
+  const cookies = parseCookies(req);
+  return cookies.piie_reviewer === reviewerCookieValue();
+}
+
+function reviewerCookieHeader() {
+  const parts = [
+    `piie_reviewer=${encodeURIComponent(reviewerCookieValue())}`,
+    'HttpOnly',
+    'SameSite=Lax',
+    'Path=/',
+    'Max-Age=604800'
+  ];
+
+  if (process.env.NODE_ENV === 'production') {
+    parts.push('Secure');
+  }
+
+  return parts.join('; ');
+}
+
+function requireReviewer(req, res, next) {
+  if (isAdmin(req) || isReviewer(req)) {
+    return next();
+  }
+
+  const nextUrl = encodeURIComponent(req.originalUrl || '/');
+  return res.redirect(`/review-login?next=${nextUrl}`);
+}
+
+app.get('/review-login', (req, res) => {
+  const nextUrl = req.query.next || '/';
+  const safeNext = String(nextUrl).replaceAll('"', '&quot;');
+  const error = req.query.error ? '<p class="error">Wrong reviewer username or password.</p>' : '';
+
+  res.type('html').send(`
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Reviewer Login</title>
+        <style>
+          body { font-family: system-ui, sans-serif; background: #f5f7fa; margin: 0; padding: 32px; }
+          main { max-width: 420px; margin: 10vh auto; background: #fff; border: 1px solid #d8dee6; border-radius: 12px; padding: 24px; }
+          label { display: grid; gap: 6px; margin-bottom: 14px; font-weight: 700; }
+          input { padding: 10px; border: 1px solid #d8dee6; border-radius: 8px; font: inherit; }
+          button { padding: 10px 14px; border: 0; border-radius: 8px; background: #407ca7; color: #fff; font-weight: 800; cursor: pointer; }
+          .error { color: #b91c1c; font-weight: 700; }
+          .muted { color: #667085; }
+        </style>
+      </head>
+      <body>
+        <main>
+          <h1>Reviewer Access</h1>
+          <p class="muted">Enter the reviewer credentials to view this review packet.</p>
+          ${error}
+
+          <form method="post" action="/review-login">
+            <input type="hidden" name="next" value="${safeNext}">
+
+            <label>
+              Username
+              <input type="text" name="username" autocomplete="username" required>
+            </label>
+
+            <label>
+              Password
+              <input type="password" name="password" autocomplete="current-password" required>
+            </label>
+
+            <button type="submit">View Review</button>
+          </form>
+        </main>
+      </body>
+    </html>
+  `);
+});
+
+app.post('/review-login', (req, res) => {
+  const nextUrl = req.body.next || '/';
+
+  if (req.body.username !== REVIEW_USERNAME || req.body.password !== REVIEW_PASSWORD) {
+    return res.redirect(`/review-login?error=1&next=${encodeURIComponent(nextUrl)}`);
+  }
+
+  res.setHeader('Set-Cookie', reviewerCookieHeader());
+  res.redirect(nextUrl);
+});
+
+
+app.get('/r/:shareToken', requireReviewer, async (req, res) => {
   const packets = await getPackets();
   const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
 
@@ -326,7 +450,7 @@ app.get('/r/:shareToken', async (req, res) => {
   });
 });
 
-app.post('/r/:shareToken/feedback', async (req, res) => {
+app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
   const packets = await getPackets();
   const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
 

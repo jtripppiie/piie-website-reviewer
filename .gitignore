@@ -3,3 +3,53 @@ dist/
 build/
 .env
 .DS_Store
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Local runtime data
+data/packets.json
+data/responses.json
+data/uploads/*
+!data/uploads/.gitkeep
+!data/.gitkeep
+
+# Archives and Windows metadata
+*.zip
+*:Zone.Identifier
+
+# Local backup files
+_backup-old-static/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Local runtime data
+data/packets.json
+data/responses.json
+data/uploads/*
+!data/uploads/.gitkeep
+!data/.gitkeep
+
+# Archives and Windows metadata
+*.zip
+*:Zone.Identifier
+
+# Local backup files
+_backup-old-static/
+
+# Old local prototypes
+before-after.html
+before-after-url.html
+before-teaser-font-size.jpg
+after-teaser-font-size.jpg

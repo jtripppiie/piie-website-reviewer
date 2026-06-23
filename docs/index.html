@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PIIE Web Reviewer Static Demo</title>
+  <link rel="stylesheet" href="static-review.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Static GitHub Pages Demo</p>
+      <h1>PIIE Web Reviewer</h1>
+    </div>
+    <div class="header-actions">
+      <button type="button" id="exportNotes">Export Notes JSON</button>
+      <button type="button" id="clearNotes">Clear Local Notes</button>
+    </div>
+  </header>
+
+  <main id="app" class="review-app">
+    <p>Loading packet...</p>
+  </main>
+
+  <aside class="debug-panel">
+    <h2>Debug</h2>
+    <pre id="debugOutput">Loading...</pre>
+  </aside>
+
+  <script src="static-review.js"></script>
+</body>
+</html>
