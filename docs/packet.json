@@ -14,15 +14,6 @@
       "screenSizes": ["desktop", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
     },
     {
-      "pageId": "example_iframe_page",
-      "type": "urlCompare",
-      "title": "Real Website Load Test",
-      "instructions": "Uses a stable public website that should load in a browser. If iframe behavior changes, the Open links still work.",
-      "devUrl": "https://www.piie.com",
-      "liveUrl": "https://www.piie.com",
-      "screenSizes": ["desktop", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
-    },
-    {
       "pageId": "screenshot_fallback_page",
       "type": "urlCompare",
       "title": "Screenshot Fallback Review",

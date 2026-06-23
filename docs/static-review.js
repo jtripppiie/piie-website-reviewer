@@ -1,6 +1,6 @@
 const NOTES_KEY = 'piieWebReviewerNotes';
 
-const APP_VERSION = '0.2.3';
+const APP_VERSION = '0.2.5';
 
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
@@ -310,6 +310,14 @@ function applyLayout(pageEl) {
 
     const img = card.querySelector('img.preview-screenshot');
     if (img) {
+      const targetW = Math.round(preset.w * scale);
+      card.style.setProperty('width', `${targetW}px`, 'important');
+      card.style.setProperty('max-width', '100%', 'important');
+      img.style.setProperty('width', '100%', 'important');
+      img.style.setProperty('height', 'auto', 'important');
+      img.style.setProperty('min-height', '0', 'important');
+      img.style.setProperty('object-fit', 'unset', 'important');
+
       const w = img.naturalWidth;
       const h = img.naturalHeight;
       if (w && !screenshotLine) {
