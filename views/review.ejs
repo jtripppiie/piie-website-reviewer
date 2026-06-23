@@ -2,19 +2,6 @@
 <html lang="en">
   <%- include('partials/head', { title: packet.title }) %>
   <body class="review-body">
-    <header class="review-topbar">
-      <div>
-        <p class="eyebrow">Design Review Deck</p>
-        <h1><%= packet.title %></h1>
-      </div>
-
-      <div class="review-nav">
-        <span id="pageCounter">Page 1 of <%= packet.pages.length %></span>
-        <button class="button secondary" type="button" id="prevPage">Previous</button>
-        <button class="button secondary" type="button" id="nextPage">Next</button>
-      </div>
-    </header>
-
     <main class="review-deck">
       <% packet.pages.forEach((page, index) => { %>
         <% const pageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
@@ -61,8 +48,9 @@
               </div>
 
               <aside class="feedback-panel">
-                <h3>Feedback</h3>
+                <h3>Review Notes</h3>
                 <p class="muted">Use the dot button if your comment refers to a specific part of the design.</p>
+                <%- include('partials/public-notes', { responses, page, screenSize: '' }) %>
                 <%- include('partials/feedback-form', { packet, page, screenSize: '' }) %>
               </aside>
             </div>
@@ -92,7 +80,7 @@
                 </div>
 
                 <div class="screen-tabs" data-url-tabs>
-                  <% page.screenSizes.forEach((size, sizeIndex) => { %>
+                  <% page.screenSizes.filter(size => size !== "tablet").forEach((size, sizeIndex) => { %>
                     <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= size %></button>
                   <% }) %>
                 </div>
@@ -117,20 +105,50 @@
                     <% }) %>
                   </div>
                 <% } else { %>
-                  <div class="empty-preview">
-                    <h3>No screenshots uploaded for this URL comparison</h3>
-                    <p>Use the Dev and Live buttons above to open the pages directly. For side-by-side review, add screenshots from the admin screen.</p>
+                  <div class="webpage-preview-stage" data-webpage-preview>
+                    <div class="webpage-frame-card">
+                      <div class="webpage-frame-card__header">
+                        <strong>Dev preview</strong>
+                        <% if (page.devUrl) { %>
+                          <a href="<%= page.devUrl %>" target="_blank" rel="noopener">Open Dev</a>
+                        <% } %>
+                      </div>
+
+                      <% if (page.devUrl) { %>
+                        <iframe src="<%= page.devUrl %>" title="Dev webpage preview"></iframe>
+                      <% } else { %>
+                        <div class="webpage-frame-empty">No Dev URL entered.</div>
+                      <% } %>
+                    </div>
+
+                    <div class="webpage-frame-card">
+                      <div class="webpage-frame-card__header">
+                        <strong>Live preview</strong>
+                        <% if (page.liveUrl) { %>
+                          <a href="<%= page.liveUrl %>" target="_blank" rel="noopener">Open Live</a>
+                        <% } %>
+                      </div>
+
+                      <% if (page.liveUrl) { %>
+                        <iframe src="<%= page.liveUrl %>" title="Live webpage preview"></iframe>
+                      <% } else { %>
+                        <div class="webpage-frame-empty">No Live URL entered.</div>
+                      <% } %>
+                    </div>
                   </div>
+
+                  <p class="muted">If a preview does not load, the site is blocking iframe embedding. Use the Open Dev / Open Live links instead, or upload screenshots from the admin page.</p>
                 <% } %>
               </div>
 
               <aside class="feedback-panel">
-                <h3>Feedback by screen size</h3>
+                <h3>Screen-size Review Notes</h3>
                 <p class="muted">Select a screen size, then save feedback for that specific size.</p>
 
-                <% page.screenSizes.forEach((size, sizeIndex) => { %>
+                <% page.screenSizes.filter(size => size !== "tablet").forEach((size, sizeIndex) => { %>
                   <div class="screen-feedback <%= sizeIndex === 0 ? 'active' : '' %>" data-feedback-size="<%= size %>">
                     <h4><%= size %></h4>
+                    <%- include('partials/public-notes', { responses, page, screenSize: size }) %>
                     <%- include('partials/feedback-form', { packet, page, screenSize: size }) %>
                   </div>
                 <% }) %>
@@ -142,5 +160,7 @@
     </main>
 
     <script src="/public/js/review.js"></script>
+    <script src="/public/js/debug-layout.js"></script>
+      <script src="/public/js/force-preview-layout.js"></script>
   </body>
 </html>

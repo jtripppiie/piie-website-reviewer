@@ -195,7 +195,7 @@ app.post('/admin/packets/:packetId/url-compare', upload.fields([
     liveUrl: req.body.liveUrl || '',
     devScreenshotPath: uploadPath(devScreenshot),
     liveScreenshotPath: uploadPath(liveScreenshot),
-    screenSizes: ['desktop', 'laptop', 'tablet', 'mobile'],
+    screenSizes: ['desktop', 'laptop', 'mobile'],
     order: packet.pages.length
   });
 

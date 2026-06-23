@@ -37,7 +37,7 @@
 
         <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/image-compare" enctype="multipart/form-data">
           <input type="hidden" name="key" value="<%= key %>">
-          <h2>Add Screenshot Comparison</h2>
+          <h2>Add Before / After Screenshot Review</h2>
 
           <label>Title <input type="text" name="title" required></label>
           <label>Instructions <textarea name="instructions"></textarea></label>
@@ -51,7 +51,7 @@
 
         <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/url-compare" enctype="multipart/form-data">
           <input type="hidden" name="key" value="<%= key %>">
-          <h2>Add Dev vs Live Review</h2>
+          <h2>Add Dev / Live Reference Page</h2>
 
           <label>Title <input type="text" name="title" required></label>
           <label>Instructions <textarea name="instructions"></textarea></label>

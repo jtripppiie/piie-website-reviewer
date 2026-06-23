@@ -1,0 +1,129 @@
+/* Visual layout debug mode
+   Use: ?debug=layout
+*/
+
+body.debug-layout-on [data-debug-label] {
+  --debug-color: #6b7280;
+  position: relative;
+  outline: 3px dashed var(--debug-color) !important;
+  outline-offset: -3px;
+}
+
+body.debug-layout-on [data-debug-label]::before {
+  content: attr(data-debug-label);
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 9998;
+  display: inline-block;
+  max-width: calc(100% - 12px);
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--debug-color);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+}
+
+body.debug-layout-on .review-topbar {
+  --debug-color: #111827;
+}
+
+body.debug-layout-on .review-page {
+  --debug-color: #6b7280;
+}
+
+body.debug-layout-on .page-heading {
+  --debug-color: #f97316;
+}
+
+body.debug-layout-on .review-canvas {
+  --debug-color: #2563eb;
+}
+
+body.debug-layout-on [data-compare] {
+  --debug-color: #16a34a;
+}
+
+body.debug-layout-on .feedback-panel {
+  --debug-color: #7c3aed;
+}
+
+body.debug-layout-on .feedback {
+  --debug-color: #db2777;
+}
+
+body.debug-layout-on .screen-tabs {
+  --debug-color: #0f766e;
+}
+
+body.debug-layout-on .url-note,
+body.debug-layout-on .empty-preview {
+  --debug-color: #ca8a04;
+}
+
+.layout-debug-panel {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 10000;
+  width: min(460px, calc(100vw - 24px));
+  max-height: 72vh;
+  overflow: auto;
+  background: #111827;
+  color: #f9fafb;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
+  padding: 12px;
+  font-size: 12px;
+}
+
+.layout-debug-panel__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.layout-debug-panel__header strong {
+  font-size: 14px;
+}
+
+.layout-debug-panel__header button {
+  background: transparent;
+  color: #f9fafb;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 8px;
+  padding: 2px 8px;
+}
+
+.layout-debug-panel dl {
+  display: grid;
+  grid-template-columns: 145px 1fr;
+  gap: 6px 10px;
+  margin: 0;
+}
+
+.layout-debug-panel dt {
+  color: #93c5fd;
+  font-weight: 800;
+}
+
+.layout-debug-panel dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.layout-debug-panel .debug-warning {
+  color: #fde68a;
+  font-weight: 700;
+}
+
+.layout-debug-panel .debug-ok {
+  color: #bbf7d0;
+}

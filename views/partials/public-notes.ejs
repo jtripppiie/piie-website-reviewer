@@ -1,0 +1,65 @@
+<%
+  const visibleNotes = responses.filter(response => {
+    const samePage = response.pageId === page.pageId;
+    const sameScreen = (screenSize || '') === (response.screenSize || '');
+    return samePage && sameScreen;
+  });
+
+  function statusLabel(status) {
+    const labels = {
+      'approved': 'Approved',
+      'approved-minor-changes': 'Approved after these changes',
+      'approved-after-these-changes': 'Approved after these changes',
+      'needs-design-changes': 'Needs design changes',
+      'needs-content-changes': 'Needs content changes',
+      'needs-mobile-review': 'Needs mobile review',
+      'blocked-cannot-review': 'Blocked / cannot review',
+      'not-approved': 'Not approved'
+    };
+
+    return labels[status] || status || 'Review note';
+  }
+
+  function statusIcon(status) {
+    if (status === 'approved') return '✓';
+    if (status === 'not-approved' || status === 'blocked-cannot-review') return '×';
+    if (status === 'approved-minor-changes' || status === 'approved-after-these-changes') return '↻';
+    return '!';
+  }
+
+  function statusClass(status) {
+    if (status === 'approved') return 'is-approved';
+    if (status === 'not-approved' || status === 'blocked-cannot-review') return 'is-not-approved';
+    if (status === 'approved-minor-changes' || status === 'approved-after-these-changes') return 'is-approved-after-changes';
+    return 'is-needs-review';
+  }
+%>
+
+<section class="public-notes" aria-label="Visible review notes">
+  <h4>Saved review notes</h4>
+
+  <% if (visibleNotes.length) { %>
+    <ol class="public-notes__list">
+      <% visibleNotes.forEach(note => { %>
+        <li class="public-note <%= statusClass(note.status) %>">
+          <span class="public-note__icon" aria-hidden="true"><%= statusIcon(note.status) %></span>
+
+          <div class="public-note__body">
+            <div class="public-note__meta">
+              <strong><%= note.reviewerName || note.initials || 'Reviewer' %></strong>
+              <span><%= statusLabel(note.status) %></span>
+            </div>
+
+            <% if (note.comment) { %>
+              <p><%= note.comment %></p>
+            <% } else { %>
+              <p class="muted">No written comment.</p>
+            <% } %>
+          </div>
+        </li>
+      <% }) %>
+    </ol>
+  <% } else { %>
+    <p class="muted public-notes__empty">No saved notes yet.</p>
+  <% } %>
+</section>

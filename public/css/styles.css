@@ -452,3 +452,173 @@ button.secondary {
     padding: 28px;
   }
 }
+
+/* Debug panel, only appears when review URL has ?debug=1 */
+.debug-panel {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 9999;
+  width: min(420px, calc(100vw - 24px));
+  max-height: 70vh;
+  overflow: auto;
+  background: #111827;
+  color: #f9fafb;
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
+  padding: 12px;
+  font-size: 12px;
+}
+
+.debug-panel__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.debug-panel__header button {
+  background: transparent;
+  color: #f9fafb;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 8px;
+  padding: 2px 8px;
+}
+
+.debug-panel dl {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px 10px;
+  margin: 0;
+}
+
+.debug-panel dt {
+  color: #93c5fd;
+  font-weight: 700;
+}
+
+.debug-panel dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Screen-size preview widths for Dev / Live reference pages */
+.review-page[data-preview-size] .review-canvas {
+  justify-items: center;
+}
+
+.review-page[data-preview-size] .page-heading,
+.review-page[data-preview-size] .url-note,
+.review-page[data-preview-size] .screen-tabs,
+.review-page[data-preview-size] .empty-preview,
+.review-page[data-preview-size] .compare {
+  width: 100%;
+}
+
+.review-page[data-preview-size="desktop"] .review-canvas {
+  --preview-width: 1440px;
+}
+
+.review-page[data-preview-size="laptop"] .review-canvas {
+  --preview-width: 1280px;
+}
+
+.review-page[data-preview-size="tablet"] .review-canvas {
+  --preview-width: 768px;
+}
+
+.review-page[data-preview-size="mobile"] .review-canvas {
+  --preview-width: 390px;
+}
+
+.review-page[data-preview-size] .compare,
+.review-page[data-preview-size] .empty-preview {
+  max-width: min(100%, var(--preview-width));
+}
+
+.review-page[data-preview-size="tablet"] .wide-compare,
+.review-page[data-preview-size="mobile"] .wide-compare {
+  height: min(76vh, 900px);
+}
+
+.review-page[data-preview-size="mobile"] .compare,
+.review-page[data-preview-size="mobile"] .empty-preview {
+  border-radius: 22px;
+}
+
+/* Dev / Live embedded webpage preview */
+.webpage-preview-stage {
+  width: 100%;
+  min-height: 640px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.webpage-frame-card {
+  min-width: 0;
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.webpage-frame-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+}
+
+.webpage-frame-card iframe {
+  display: block;
+  width: 100%;
+  height: 720px;
+  border: 0;
+  background: #fff;
+}
+
+.webpage-frame-empty {
+  display: grid;
+  place-items: center;
+  min-height: 420px;
+  color: var(--muted);
+}
+
+/* Let screen-size tabs resize the embedded preview area */
+.review-page[data-preview-size="desktop"] .webpage-preview-stage {
+  max-width: min(100%, 1440px);
+}
+
+.review-page[data-preview-size="laptop"] .webpage-preview-stage {
+  max-width: min(100%, 1280px);
+}
+
+.review-page[data-preview-size="tablet"] .webpage-preview-stage {
+  max-width: min(100%, 768px);
+  grid-template-columns: 1fr;
+}
+
+.review-page[data-preview-size="mobile"] .webpage-preview-stage {
+  max-width: min(100%, 390px);
+  grid-template-columns: 1fr;
+}
+
+.review-page[data-preview-size="tablet"] .webpage-frame-card iframe {
+  height: 900px;
+}
+
+.review-page[data-preview-size="mobile"] .webpage-frame-card iframe {
+  height: 844px;
+}
+
+@media (max-width: 900px) {
+  .webpage-preview-stage {
+    grid-template-columns: 1fr;
+  }
+}
