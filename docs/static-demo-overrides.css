@@ -36,41 +36,6 @@
   padding: 24px;
 }
 
-/* Laptop viewport presets */
-.review-page[data-preview-size="laptop-15-6"] .preview-stage,
-.review-page[data-preview-size="laptop-14-5"] .preview-stage,
-.review-page[data-preview-size="laptop-13"] .preview-stage {
-  grid-template-columns: 1fr !important;
-  margin-inline: auto !important;
-}
-
-.review-page[data-preview-size="laptop-15-6"] .preview-stage {
-  max-width: 1366px !important;
-}
-
-.review-page[data-preview-size="laptop-14-5"] .preview-stage {
-  max-width: 1280px !important;
-}
-
-.review-page[data-preview-size="laptop-13"] .preview-stage {
-  max-width: 1180px !important;
-}
-
-.review-page[data-preview-size="laptop-15-6"] iframe {
-  height: 768px !important;
-  min-height: 768px !important;
-}
-
-.review-page[data-preview-size="laptop-14-5"] iframe {
-  height: 760px !important;
-  min-height: 760px !important;
-}
-
-.review-page[data-preview-size="laptop-13"] iframe {
-  height: 720px !important;
-  min-height: 720px !important;
-}
-
 .viewport-note {
   margin: 4px 0 10px;
   padding: 8px 10px;
@@ -81,27 +46,62 @@
   font-size: 13px;
 }
 
-/* Force static demo laptop preview widths.
-   Without explicit width rules, iframe previews can collapse to the browser default width. */
-.review-page[data-preview-size="laptop-15-6"] .preview-stage,
-.review-page[data-preview-size="laptop-14-5"] .preview-stage,
-.review-page[data-preview-size="laptop-13"] .preview-stage {
-  width: 100% !important;
-  justify-self: stretch !important;
-  grid-template-columns: minmax(0, 1fr) !important;
+/* Preview scale controls and viewport status for the static demo.
+   The JavaScript sets the real test viewport size on each frame and scales the
+   preview visually, so these rules only style the control row and status. */
+.preview-scale-controls {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 8px;
 }
 
-.review-page[data-preview-size="laptop-15-6"] .frame-card,
-.review-page[data-preview-size="laptop-14-5"] .frame-card,
-.review-page[data-preview-size="laptop-13"] .frame-card {
-  width: 100% !important;
-  min-width: 0 !important;
+.preview-scale-controls__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
 }
 
-.review-page[data-preview-size="laptop-15-6"] iframe,
-.review-page[data-preview-size="laptop-14-5"] iframe,
-.review-page[data-preview-size="laptop-13"] iframe {
-  display: block !important;
-  width: 100% !important;
-  max-width: none !important;
+.preview-scale-controls button {
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.preview-scale-controls button.active {
+  background: #407ca7;
+  border-color: #407ca7;
+  color: #fff;
+}
+
+.preview-status {
+  grid-column: 1 / -1;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 12px;
+  color: #334155;
+}
+
+.preview-status p {
+  margin: 0 0 2px;
+}
+
+.preview-status p:last-child {
+  margin-bottom: 0;
+}
+
+.viewport-scaler {
+  position: relative;
+  display: block;
+  background: #fff;
 }

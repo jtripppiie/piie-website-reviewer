@@ -1,8 +1,20 @@
 const NOTES_KEY = 'piieWebReviewerNotes';
 
+const PRESETS = {
+  desktop: { label: 'Desktop', w: 1440, h: 900 },
+  'laptop-15-6': { label: '15.6 display', w: 1366, h: 768 },
+  'laptop-14-5': { label: '14.5 display', w: 1280, h: 760 },
+  'laptop-13': { label: '13 display', w: 1180, h: 720 },
+  mobile: { label: 'Mobile', w: 390, h: 844 }
+};
+
+const SCALE_LABELS = { fit: 'Fit to screen', '100': '100%', '75': '75%', '50': '50%' };
+const STAGE_GAP = 16;
+
 const state = {
   packet: null,
   activeSizes: {},
+  scaleModes: {},
   notes: JSON.parse(localStorage.getItem(NOTES_KEY) || '[]')
 };
 
@@ -186,8 +198,15 @@ function renderPage(page, index) {
         </nav>
 
         <p class="viewport-note">
-          These previews are set to the selected target viewport size. Browser zoom, Windows display scaling, or monitor size may make the preview appear larger or smaller on your screen, but the review is still based on the selected viewport specification.
+          These labels represent common laptop-class viewport presets, not guaranteed physical screen-inch measurements. Browser zoom, Windows display scaling, browser chrome, and monitor resolution can change what fits on a real device. The review is based on the CSS viewport size shown for each preset.
         </p>
+
+        <div class="preview-scale-controls" role="group" aria-label="Preview scale" data-scale-controls="${escapeHtml(page.pageId)}">
+          <span class="preview-scale-controls__label">Preview scale:</span>
+          ${Object.keys(SCALE_LABELS).map(mode => `<button type="button" data-scale="${mode}">${SCALE_LABELS[mode]}</button>`).join('')}
+        </div>
+
+        <div class="preview-status" data-status-for="${escapeHtml(page.pageId)}" aria-live="polite"></div>
 
         <div class="preview-stage">
           <article class="frame-card">
@@ -211,14 +230,155 @@ function renderPage(page, index) {
   `;
 }
 
+function presetFor(size) {
+  return PRESETS[size] || PRESETS.desktop;
+}
+
+function ensureScaler(card) {
+  const iframe = card.querySelector('iframe');
+  if (!iframe) return null;
+
+  let scaler = iframe.closest('.viewport-scaler');
+  if (!scaler) {
+    scaler = document.createElement('div');
+    scaler.className = 'viewport-scaler';
+    iframe.parentNode.insertBefore(scaler, iframe);
+    scaler.appendChild(iframe);
+  }
+  return scaler;
+}
+
+function computeScale(pageEl, preset, scaleMode) {
+  if (scaleMode === '100') return 1;
+  if (scaleMode === '75') return 0.75;
+  if (scaleMode === '50') return 0.5;
+
+  const stage = pageEl.querySelector('.preview-stage');
+  if (!stage) return 1;
+  const size = pageEl.dataset.previewSize;
+  const cardCount = size === 'mobile' ? 2 : 1;
+  const available = stage.clientWidth - STAGE_GAP * (cardCount - 1);
+  return Math.min(1, (available / cardCount) / preset.w);
+}
+
+function applyLayout(pageEl) {
+  const pageId = pageEl.dataset.pageId;
+  if (!pageId) return;
+
+  const size = state.activeSizes[pageId] || 'desktop';
+  const scaleMode = state.scaleModes[pageId] || 'fit';
+  const preset = presetFor(size);
+  const stage = pageEl.querySelector('.preview-stage');
+  if (!stage) return;
+
+  pageEl.dataset.previewSize = size;
+
+  const cardCount = size === 'mobile' ? 2 : 1;
+  const scale = computeScale(pageEl, preset, scaleMode);
+
+  stage.style.setProperty('display', 'flex', 'important');
+  stage.style.setProperty('flex-wrap', 'wrap', 'important');
+  stage.style.setProperty('gap', `${STAGE_GAP}px`, 'important');
+  stage.style.setProperty('align-items', 'flex-start', 'important');
+  stage.style.setProperty('justify-content', cardCount === 2 ? 'center' : 'flex-start', 'important');
+  stage.style.setProperty('width', '100%', 'important');
+  stage.style.setProperty('max-width', 'none', 'important');
+  stage.style.setProperty('overflow-x', 'auto', 'important');
+
+  let screenshotLine = '';
+
+  stage.querySelectorAll('.frame-card').forEach(card => {
+    card.style.setProperty('min-width', '0', 'important');
+    card.style.setProperty('width', 'auto', 'important');
+    card.style.setProperty('max-width', 'none', 'important');
+    card.style.setProperty('flex', '0 0 auto', 'important');
+
+    const img = card.querySelector('img.preview-screenshot');
+    if (img) {
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      if (w && !screenshotLine) {
+        const match = w === preset.w && h === preset.h;
+        screenshotLine = `Uploaded screenshot: ${w} x ${h} px. Selected preset: ${preset.w} x ${preset.h} CSS px. Match: ${match ? 'yes' : 'no'}`;
+      }
+      return;
+    }
+
+    const scaler = ensureScaler(card);
+    if (!scaler) return;
+    const iframe = scaler.querySelector('iframe');
+    if (iframe) {
+      iframe.style.setProperty('width', `${preset.w}px`, 'important');
+      iframe.style.setProperty('height', `${preset.h}px`, 'important');
+      iframe.style.setProperty('max-width', 'none', 'important');
+      iframe.style.setProperty('border', '0', 'important');
+      iframe.style.setProperty('transform', `scale(${scale})`, 'important');
+      iframe.style.setProperty('transform-origin', 'top left', 'important');
+      iframe.style.setProperty('display', 'block', 'important');
+    }
+    scaler.style.setProperty('width', `${Math.round(preset.w * scale)}px`, 'important');
+    scaler.style.setProperty('height', `${Math.round(preset.h * scale)}px`, 'important');
+    scaler.style.setProperty('overflow', 'hidden', 'important');
+    scaler.style.setProperty('max-width', '100%', 'important');
+  });
+
+  const status = pageEl.querySelector(`[data-status-for="${pageId}"]`);
+  if (status) {
+    const percent = Math.round(scale * 100);
+    const scaleText = scaleMode === 'fit' ? `Fit to screen (${percent}%)` : `${SCALE_LABELS[scaleMode]} (${percent}%)`;
+    const rows = [
+      `<p><strong>Selected review size:</strong> ${escapeHtml(preset.label)}</p>`,
+      `<p><strong>Test viewport:</strong> ${preset.w} x ${preset.h} CSS px</p>`,
+      `<p><strong>Preview scale:</strong> ${escapeHtml(scaleText)}</p>`
+    ];
+    if (screenshotLine) {
+      const isMismatch = /Match: no/.test(screenshotLine);
+      rows.push(`<p><strong>Screenshot check:</strong> ${escapeHtml(screenshotLine)}</p>`);
+      if (isMismatch) {
+        rows.push('<p>This screenshot does not match the selected viewport preset. It may still be useful for review, but it is not a strict viewport match.</p>');
+      }
+    }
+    status.innerHTML = rows.join('');
+  }
+
+  const controls = pageEl.querySelector(`[data-scale-controls="${pageId}"]`);
+  if (controls) {
+    controls.querySelectorAll('button[data-scale]').forEach(button => {
+      button.classList.toggle('active', button.dataset.scale === scaleMode);
+    });
+  }
+}
+
+function applyAllLayouts() {
+  document.querySelectorAll('.review-page[data-page-id]').forEach(pageEl => {
+    applyLayout(pageEl);
+    pageEl.querySelectorAll('.frame-card iframe').forEach(iframe => {
+      iframe.addEventListener('load', () => applyLayout(pageEl), { once: true });
+    });
+    pageEl.querySelectorAll('img.preview-screenshot').forEach(img => {
+      if (!img.complete) img.addEventListener('load', () => applyLayout(pageEl), { once: true });
+    });
+  });
+}
+
 function render() {
   app.innerHTML = `
     ${(state.packet.pages || []).map(renderPage).join('')}
   `;
+  requestAnimationFrame(applyAllLayouts);
   updateDebug();
 }
 
 app.addEventListener('click', event => {
+  const scaleButton = event.target.closest('button[data-scale]');
+  if (scaleButton) {
+    const pageEl = scaleButton.closest('.review-page');
+    if (!pageEl || !pageEl.dataset.pageId) return;
+    state.scaleModes[pageEl.dataset.pageId] = scaleButton.dataset.scale;
+    applyLayout(pageEl);
+    return;
+  }
+
   const button = event.target.closest('button[data-size]');
   if (!button) return;
 
@@ -240,7 +400,12 @@ app.addEventListener('click', event => {
   const notesTarget = pageEl.querySelector(`[data-notes-for="${pageId}"]`);
   if (page && notesTarget) notesTarget.innerHTML = renderNotes(page, size);
 
+  applyLayout(pageEl);
   updateDebug();
+});
+
+window.addEventListener('resize', () => {
+  document.querySelectorAll('.review-page[data-page-id]').forEach(applyLayout);
 });
 
 app.addEventListener('submit', event => {

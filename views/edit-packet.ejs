@@ -88,7 +88,7 @@
 
       <section class="stack">
         <% packet.pages.forEach((page, index) => { %>
-          <article class="card">
+          <article class="card" id="page-<%= page.pageId %>">
             <p class="eyebrow">Page <%= index + 1 %>: <%= page.type %></p>
 
             <form method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/update" enctype="multipart/form-data">
@@ -132,12 +132,22 @@
                   Replace before image
                   <input type="file" name="beforeImage" accept="image/*">
                 </label>
+                <% if (page.beforeImagePath) { %>
+                  <label class="remove-toggle">
+                    <input type="checkbox" name="removeBeforeImage" value="true"> Remove before image
+                  </label>
+                <% } %>
 
                 <p class="muted">Current after image: <%= page.afterImagePath || 'None' %></p>
                 <label>
                   Replace after image
                   <input type="file" name="afterImage" accept="image/*">
                 </label>
+                <% if (page.afterImagePath) { %>
+                  <label class="remove-toggle">
+                    <input type="checkbox" name="removeAfterImage" value="true"> Remove after image
+                  </label>
+                <% } %>
               <% } %>
 
               <% if (page.type === 'urlCompare') { %>
@@ -161,12 +171,22 @@
                   Replace Dev screenshot
                   <input type="file" name="devScreenshot" accept="image/*">
                 </label>
+                <% if (page.devScreenshotPath) { %>
+                  <label class="remove-toggle">
+                    <input type="checkbox" name="removeDevScreenshot" value="true"> Remove Dev screenshot
+                  </label>
+                <% } %>
 
                 <p class="muted">Current Live screenshot: <%= page.liveScreenshotPath || 'None' %></p>
                 <label>
                   Replace Live screenshot
                   <input type="file" name="liveScreenshot" accept="image/*">
                 </label>
+                <% if (page.liveScreenshotPath) { %>
+                  <label class="remove-toggle">
+                    <input type="checkbox" name="removeLiveScreenshot" value="true"> Remove Live screenshot
+                  </label>
+                <% } %>
               <% } %>
 
               <button type="submit">Save Page Changes</button>

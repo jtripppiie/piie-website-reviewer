@@ -9,6 +9,7 @@
 
       <p>
         <a class="button" href="/admin/packets/<%= packet.packetId %>/export.json?key=<%= key %>">Export JSON</a>
+        <a class="button" href="/admin/packets/<%= packet.packetId %>/export.md?key=<%= key %>">Export Markdown</a>
       </p>
 
       <% packet.pages.forEach(page => { %>

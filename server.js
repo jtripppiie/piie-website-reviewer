@@ -198,6 +198,9 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
 
     if (before) page.beforeImagePath = uploadPath(before);
     if (after) page.afterImagePath = uploadPath(after);
+
+    if (req.body.removeBeforeImage === 'true') page.beforeImagePath = '';
+    if (req.body.removeAfterImage === 'true') page.afterImagePath = '';
   }
 
   if (page.type === 'urlCompare') {
@@ -210,6 +213,9 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
 
     if (devScreenshot) page.devScreenshotPath = uploadPath(devScreenshot);
     if (liveScreenshot) page.liveScreenshotPath = uploadPath(liveScreenshot);
+
+    if (req.body.removeDevScreenshot === 'true') page.devScreenshotPath = '';
+    if (req.body.removeLiveScreenshot === 'true') page.liveScreenshotPath = '';
   }
 
   page.updatedAt = new Date().toISOString();
@@ -446,7 +452,9 @@ app.get('/r/:shareToken', requireReviewer, async (req, res) => {
 
   res.render('review', {
     packet,
-    responses: packetResponses
+    responses: packetResponses,
+    isAdminView: isAdmin(req),
+    adminKeyValue: isAdmin(req) ? adminKey(req) : ''
   });
 });
 
@@ -476,6 +484,36 @@ app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
 
   const hash = req.body.pageId ? `#${req.body.pageId}` : '';
   res.redirect(`/r/${packet.shareToken}${hash}`);
+});
+
+app.post('/r/:shareToken/clear-notes', async (req, res) => {
+  // Admin only. Normal reviewers cannot clear notes.
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const packet = packets.find(p => p.shareToken === req.params.shareToken);
+  if (!packet) return res.status(404).send('Review packet not found.');
+
+  const pageId = req.body.pageId || '';
+  if (!pageId) return res.status(400).send('A page is required to clear notes.');
+
+  const screenSize = req.body.screenSize || '';
+  const hasScreenFilter = 'screenSize' in req.body;
+
+  const responses = await getResponses();
+
+  const kept = responses.filter(response => {
+    if (response.packetId !== packet.packetId) return true;
+    if (response.pageId !== pageId) return true;
+    if (hasScreenFilter && (response.screenSize || '') !== screenSize) return true;
+    return false;
+  });
+
+  await saveResponses(kept);
+
+  const hash = pageId ? `#${pageId}` : '';
+  const keyPart = `?key=${encodeURIComponent(adminKey(req))}`;
+  res.redirect(`/r/${packet.shareToken}${keyPart}${hash}`);
 });
 
 app.get('/admin/packets/:packetId/results', async (req, res) => {
@@ -509,6 +547,71 @@ app.get('/admin/packets/:packetId/export.json', async (req, res) => {
     packet,
     responses: packetResponses
   });
+});
+
+app.get('/admin/packets/:packetId/export.md', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const packet = packets.find(p => p.packetId === req.params.packetId);
+  if (!packet) return res.status(404).send('Packet not found');
+
+  const responses = await getResponses();
+  const packetResponses = responses.filter(r => r.packetId === packet.packetId);
+
+  const statusLabels = {
+    'approved': 'Approved',
+    'approved-minor-changes': 'Approved after these changes',
+    'approved-after-these-changes': 'Approved after these changes',
+    'needs-design-changes': 'Needs design changes',
+    'needs-content-changes': 'Needs content changes',
+    'needs-mobile-review': 'Needs mobile review',
+    'blocked-cannot-review': 'Blocked / cannot review',
+    'not-approved': 'Not approved',
+    'needs-review': 'Needs review'
+  };
+
+  const screenLabels = {
+    desktop: 'Desktop',
+    'laptop-15-6': '15.6 display',
+    'laptop-14-5': '14.5 display',
+    'laptop-13': '13 display',
+    mobile: 'Mobile'
+  };
+
+  const lines = [];
+  lines.push(`# Review feedback: ${packet.title}`);
+  lines.push('');
+  lines.push(`Exported: ${new Date().toISOString()}`);
+  lines.push('');
+
+  packet.pages.forEach(page => {
+    lines.push(`## ${page.title || 'Untitled page'}`);
+    lines.push(`Page ID: ${page.pageId}`);
+    lines.push('');
+
+    const pageResponses = packetResponses.filter(r => r.pageId === page.pageId);
+
+    if (!pageResponses.length) {
+      lines.push('There are no notes for this page.');
+      lines.push('');
+      return;
+    }
+
+    pageResponses.forEach(response => {
+      const reviewer = response.reviewerName || response.initials || 'Unknown';
+      const status = statusLabels[response.status] || response.status || 'Needs review';
+      const screen = response.screenSize ? (screenLabels[response.screenSize] || response.screenSize) : 'Not specified';
+      lines.push(`- Screen size: ${screen}`);
+      lines.push(`  - Status: ${status}`);
+      lines.push(`  - Reviewer: ${reviewer}`);
+      lines.push(`  - Comment: ${response.comment ? response.comment : 'No comment'}`);
+      lines.push(`  - Created: ${response.createdAt || 'Unknown'}`);
+      lines.push('');
+    });
+  });
+
+  res.type('text/markdown').send(lines.join('\n'));
 });
 
 ensureDataFiles().then(() => {

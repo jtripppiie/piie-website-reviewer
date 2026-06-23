@@ -1,93 +1,233 @@
 /**
- * Force Dev / Live preview layout.
+ * Honest viewport presets for the Dev / Live preview.
  *
- * Desktop: Dev top, Live bottom, full width
- * Laptop presets: Dev top, Live bottom, fixed target width
- * Mobile: Dev left, Live right
- * Tablet: hidden
+ * Important concept:
+ * - Test viewport is the real CSS pixel size being reviewed. It never changes
+ *   when you change preview scale.
+ * - Preview scale only shrinks the preview visually so it fits the reviewer
+ *   screen. Fit to screen, 100%, 75%, and 50% only change how big the preview
+ *   looks, not what size is being tested.
+ *
+ * The friendly labels (15.6 display, 14.5 display, 13 display, Mobile) are
+ * laptop-class viewport presets, not guaranteed physical screen inches.
  */
 
 (function () {
-  const viewportPresets = {
-    desktop: {
-      label: 'Desktop',
-      width: '100%',
-      height: '78vh',
-      minHeight: '700px',
-      columns: '1fr',
-      maxWidth: '100%'
-    },
-    'laptop-15-6': {
-      label: '15.6 display',
-      width: '1366px',
-      height: '768px',
-      minHeight: '768px',
-      columns: '1fr',
-      maxWidth: '1366px'
-    },
-    'laptop-14-5': {
-      label: '14.5 display',
-      width: '1280px',
-      height: '760px',
-      minHeight: '760px',
-      columns: '1fr',
-      maxWidth: '1280px'
-    },
-    'laptop-13': {
-      label: '13 display',
-      width: '1180px',
-      height: '720px',
-      minHeight: '720px',
-      columns: '1fr',
-      maxWidth: '1180px'
-    },
-    mobile: {
-      label: 'Mobile',
-      width: '390px',
-      height: '844px',
-      minHeight: '844px',
-      columns: '1fr 1fr',
-      maxWidth: '900px'
-    }
+  const PRESETS = {
+    desktop: { label: 'Desktop', w: 1440, h: 900 },
+    'laptop-15-6': { label: '15.6 display', w: 1366, h: 768 },
+    'laptop-14-5': { label: '14.5 display', w: 1280, h: 760 },
+    'laptop-13': { label: '13 display', w: 1180, h: 720 },
+    mobile: { label: 'Mobile', w: 390, h: 844 }
   };
 
-  function applyPreviewLayout(slide, size) {
-    if (!slide) return;
+  const SCALE_MODES = ['fit', '100', '75', '50'];
+  const STAGE_GAP = 16;
 
+  function presetFor(size) {
+    return PRESETS[size] || PRESETS.desktop;
+  }
+
+  function slideState(slide) {
+    if (!slide._previewState) {
+      slide._previewState = { size: 'desktop', scaleMode: 'fit' };
+    }
+    return slide._previewState;
+  }
+
+  function ensureScaler(card) {
+    const iframe = card.querySelector('iframe');
+    if (!iframe) return null;
+
+    let scaler = iframe.closest('.viewport-scaler');
+    if (!scaler) {
+      scaler = document.createElement('div');
+      scaler.className = 'viewport-scaler';
+      iframe.parentNode.insertBefore(scaler, iframe);
+      scaler.appendChild(iframe);
+    }
+    return scaler;
+  }
+
+  function ensureControls(slide) {
+    const tabs = slide.querySelector('[data-url-tabs]');
+    const stage = slide.querySelector('.webpage-preview-stage');
+    if (!tabs || !stage) return null;
+
+    let controls = slide.querySelector('.preview-scale-controls');
+    if (!controls) {
+      controls = document.createElement('div');
+      controls.className = 'preview-scale-controls';
+      controls.setAttribute('role', 'group');
+      controls.setAttribute('aria-label', 'Preview scale');
+
+      const labelText = document.createElement('span');
+      labelText.className = 'preview-scale-controls__label';
+      labelText.textContent = 'Preview scale:';
+      controls.appendChild(labelText);
+
+      const buttonLabels = {
+        fit: 'Fit to screen',
+        '100': '100%',
+        '75': '75%',
+        '50': '50%'
+      };
+
+      SCALE_MODES.forEach(mode => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.scale = mode;
+        button.textContent = buttonLabels[mode];
+        button.addEventListener('click', () => {
+          slideState(slide).scaleMode = mode;
+          setActiveScaleButton(slide);
+          applyLayout(slide);
+        });
+        controls.appendChild(button);
+      });
+
+      stage.parentNode.insertBefore(controls, stage);
+    }
+
+    let status = slide.querySelector('.preview-status');
+    if (!status) {
+      status = document.createElement('div');
+      status.className = 'preview-status';
+      status.setAttribute('aria-live', 'polite');
+      stage.parentNode.insertBefore(status, stage);
+    }
+
+    return { controls, status };
+  }
+
+  function computeScale(slide, preset) {
+    const state = slideState(slide);
+    if (state.scaleMode === '100') return 1;
+    if (state.scaleMode === '75') return 0.75;
+    if (state.scaleMode === '50') return 0.5;
+
+    // Fit to screen: shrink only as much as needed to fit available width.
+    const stage = slide.querySelector('.webpage-preview-stage');
+    const cardCount = state.size === 'mobile' ? 2 : 1;
+    const available = stage.clientWidth - STAGE_GAP * (cardCount - 1);
+    const perCard = available / cardCount;
+    return Math.min(1, perCard / preset.w);
+  }
+
+  function verifyIframe(scaler, preset) {
+    const iframe = scaler.querySelector('iframe');
+    if (!iframe) return 'No preview frame.';
+
+    try {
+      const innerWidth = iframe.contentWindow && iframe.contentWindow.innerWidth;
+      const innerHeight = iframe.contentWindow && iframe.contentWindow.innerHeight;
+      if (innerWidth) {
+        const match = Math.abs(innerWidth - preset.w) <= 2;
+        return `Verified inside frame: ${innerWidth} x ${innerHeight} CSS px${match ? '' : ' (does not match preset)'}`;
+      }
+    } catch (error) {
+      // Cross-origin frames block reading inside. Fall back to element size.
+    }
+
+    return `Set frame element size: ${preset.w} x ${preset.h} CSS px (cross-origin, cannot read inside)`;
+  }
+
+  function applyLayout(slide) {
+    const state = slideState(slide);
+    const preset = presetFor(state.size);
     const stage = slide.querySelector('.webpage-preview-stage');
     if (!stage) return;
 
-    const preset = viewportPresets[size] || viewportPresets.desktop;
+    slide.dataset.previewSize = state.size;
+
+    const cardCount = state.size === 'mobile' ? 2 : 1;
+    const scale = computeScale(slide, preset);
+
+    stage.style.setProperty('display', 'flex', 'important');
+    stage.style.setProperty('flex-wrap', 'wrap', 'important');
+    stage.style.setProperty('gap', `${STAGE_GAP}px`, 'important');
+    stage.style.setProperty('align-items', 'flex-start', 'important');
+    stage.style.setProperty('justify-content', cardCount === 2 ? 'center' : 'flex-start', 'important');
+    stage.style.setProperty('width', '100%', 'important');
+    stage.style.setProperty('max-width', 'none', 'important');
+    stage.style.setProperty('overflow-x', 'auto', 'important');
+
     const cards = stage.querySelectorAll('.webpage-frame-card');
-    const frames = stage.querySelectorAll('.webpage-frame-card iframe');
-
-    slide.dataset.previewSize = size;
-
-    stage.style.display = 'grid';
-    stage.style.gridTemplateColumns = preset.columns;
-    stage.style.width = '100%';
-    stage.style.maxWidth = preset.maxWidth;
-    stage.style.height = 'auto';
-    stage.style.gap = '16px';
-    stage.style.marginLeft = size === 'desktop' ? '0' : 'auto';
-    stage.style.marginRight = size === 'desktop' ? '0' : 'auto';
-
     cards.forEach(card => {
-      card.style.width = '100%';
-      card.style.maxWidth = preset.width === '100%' ? '100%' : preset.width;
-      card.style.minWidth = '0';
-      card.style.marginLeft = 'auto';
-      card.style.marginRight = 'auto';
+      const scaler = ensureScaler(card);
+      card.style.setProperty('min-width', '0', 'important');
+      card.style.setProperty('width', 'auto', 'important');
+      card.style.setProperty('max-width', 'none', 'important');
+      card.style.setProperty('flex', '0 0 auto', 'important');
+
+      if (!scaler) return;
+
+      const iframe = scaler.querySelector('iframe');
+      if (iframe) {
+        iframe.style.setProperty('width', `${preset.w}px`, 'important');
+        iframe.style.setProperty('height', `${preset.h}px`, 'important');
+        iframe.style.setProperty('max-width', 'none', 'important');
+        iframe.style.setProperty('border', '0', 'important');
+        iframe.style.setProperty('transform', `scale(${scale})`, 'important');
+        iframe.style.setProperty('transform-origin', 'top left', 'important');
+        iframe.style.setProperty('display', 'block', 'important');
+      }
+
+      scaler.style.setProperty('width', `${Math.round(preset.w * scale)}px`, 'important');
+      scaler.style.setProperty('height', `${Math.round(preset.h * scale)}px`, 'important');
+      scaler.style.setProperty('overflow', 'hidden', 'important');
+      scaler.style.setProperty('max-width', '100%', 'important');
     });
 
-    frames.forEach(frame => {
-      frame.style.width = preset.width;
-      frame.style.maxWidth = '100%';
-      frame.style.height = preset.height;
-      frame.style.minHeight = preset.minHeight;
-      frame.style.marginLeft = 'auto';
-      frame.style.marginRight = 'auto';
-      frame.style.display = 'block';
+    updateStatus(slide, preset, scale);
+  }
+
+  function updateStatus(slide, preset, scale) {
+    const status = slide.querySelector('.preview-status');
+    if (!status) return;
+
+    const state = slideState(slide);
+    const scaleLabel = {
+      fit: 'Fit to screen',
+      '100': '100%',
+      '75': '75%',
+      '50': '50%'
+    }[state.scaleMode];
+
+    const percent = Math.round(scale * 100);
+    const scaleText = state.scaleMode === 'fit'
+      ? `Fit to screen (${percent}%)`
+      : `${scaleLabel} (${percent}%)`;
+
+    const scalers = slide.querySelectorAll('.viewport-scaler');
+    const verifyText = scalers.length ? verifyIframe(scalers[0], preset) : '';
+
+    status.innerHTML = '';
+
+    const lines = [
+      ['Selected review size', preset.label],
+      ['Test viewport', `${preset.w} x ${preset.h} CSS px`],
+      ['Preview scale', scaleText]
+    ];
+
+    if (verifyText) {
+      lines.push(['Frame check', verifyText]);
+    }
+
+    lines.forEach(([key, value]) => {
+      const row = document.createElement('p');
+      const strong = document.createElement('strong');
+      strong.textContent = `${key}: `;
+      row.appendChild(strong);
+      row.appendChild(document.createTextNode(value));
+      status.appendChild(row);
+    });
+  }
+
+  function setActiveScaleButton(slide) {
+    const state = slideState(slide);
+    slide.querySelectorAll('.preview-scale-controls button').forEach(button => {
+      button.classList.toggle('active', button.dataset.scale === state.scaleMode);
     });
   }
 
@@ -95,6 +235,9 @@
     document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {
       const slide = tabGroup.closest('.review-page');
       if (!slide) return;
+      if (!slide.querySelector('.webpage-preview-stage')) return;
+
+      ensureControls(slide);
 
       tabGroup.querySelectorAll('button[data-size="tablet"]').forEach(button => {
         button.hidden = true;
@@ -104,18 +247,17 @@
       const activeButton =
         tabGroup.querySelector('button.active:not([data-size="tablet"])') ||
         tabGroup.querySelector('button[data-size="desktop"]') ||
-        tabGroup.querySelector('button[data-size="laptop-15-6"]') ||
-        tabGroup.querySelector('button[data-size="laptop-14-5"]') ||
-        tabGroup.querySelector('button[data-size="laptop-13"]') ||
-        tabGroup.querySelector('button[data-size="mobile"]');
+        tabGroup.querySelector('button[data-size]:not([data-size="tablet"])');
 
       if (activeButton) {
         tabGroup.querySelectorAll('button').forEach(button => {
           button.classList.toggle('active', button === activeButton);
         });
-
-        applyPreviewLayout(slide, activeButton.dataset.size);
+        slideState(slide).size = activeButton.dataset.size;
       }
+
+      setActiveScaleButton(slide);
+      requestAnimationFrame(() => applyLayout(slide));
 
       tabGroup.addEventListener('click', event => {
         const button = event.target.closest('button[data-size]');
@@ -125,11 +267,32 @@
           tab.classList.toggle('active', tab === button);
         });
 
-        applyPreviewLayout(slide, button.dataset.size);
+        slideState(slide).size = button.dataset.size;
+        applyLayout(slide);
       });
+
+      // Verify same-origin frames once they load.
+      slide.querySelectorAll('.webpage-frame-card iframe').forEach(iframe => {
+        iframe.addEventListener('load', () => applyLayout(slide));
+      });
+    });
+  }
+
+  function reflowAll() {
+    document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {
+      const slide = tabGroup.closest('.review-page');
+      if (slide && slide.querySelector('.webpage-preview-stage')) {
+        applyLayout(slide);
+      }
     });
   }
 
   window.addEventListener('load', wireTabs);
   document.addEventListener('DOMContentLoaded', wireTabs);
+
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(reflowAll, 150);
+  });
 })();
