@@ -1003,13 +1003,27 @@ app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
 
   if (!packet) return res.status(404).send('Review packet not found or not published.');
 
+  const page = packet.pages.find(p => p.pageId === req.body.pageId);
+  if (!page || page.type === 'cover') {
+    return res.status(400).send('Review page not found.');
+  }
+
+  const allowedSizes = Array.isArray(page.screenSizes) && page.screenSizes.length
+    ? page.screenSizes.filter(size => size !== 'tablet')
+    : DEFAULT_SCREEN_SIZES;
+  const screenSize = req.body.screenSize || '';
+
+  if (!allowedSizes.includes(screenSize)) {
+    return res.status(400).send('Screen size not valid for this page.');
+  }
+
   const responses = await getResponses();
 
   responses.push({
     responseId: makeId('response'),
     packetId: packet.packetId,
-    pageId: req.body.pageId,
-    screenSize: req.body.screenSize || '',
+    pageId: page.pageId,
+    screenSize,
     reviewerName: req.body.reviewerName || req.body.initials || '',
     initials: req.body.initials || req.body.reviewerName || '',
     status: req.body.status || 'needs-review',
@@ -1021,7 +1035,7 @@ app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
 
   await saveResponses(responses);
 
-  const hash = req.body.pageId ? `#${req.body.pageId}` : '';
+  const hash = page.pageId ? `#${page.pageId}` : '';
   const keyPart = adminKey(req) ? `?key=${encodeURIComponent(adminKey(req))}` : '';
   res.redirect(`/r/${packet.shareToken}${keyPart}${hash}`);
 });

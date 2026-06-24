@@ -144,8 +144,9 @@
     stage.style.setProperty('align-items', 'flex-start', 'important');
     stage.style.setProperty('justify-content', canFitTwoCards ? 'center' : 'stretch', 'important');
     stage.style.setProperty('width', '100%', 'important');
+    stage.style.setProperty('min-width', '0', 'important');
     stage.style.setProperty('max-width', 'none', 'important');
-    stage.style.setProperty('overflow-x', canFitTwoCards ? 'auto' : 'visible', 'important');
+    stage.style.setProperty('overflow-x', canFitTwoCards ? 'auto' : 'hidden', 'important');
 
     const cards = stage.querySelectorAll('.webpage-frame-card');
     cards.forEach(card => {

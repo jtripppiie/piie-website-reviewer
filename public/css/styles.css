@@ -817,8 +817,8 @@ body.debug-layout-on .empty-preview {
 
 /* Overall review page */
 .review-deck {
-  width: calc(100vw - 12px);
-  max-width: none;
+  width: min(1800px, calc(100% - 12px));
+  max-width: 100%;
   margin: 0 auto;
   padding: 6px 0 18px;
 }
