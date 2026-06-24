@@ -69,12 +69,12 @@
                   <% }) %>
                 </div>
 
-                <p class="muted">For best results, upload before and after screenshots with the same dimensions.</p>
+                <p class="muted">Tip: matching image sizes make the before/after slider line up better.</p>
               </div>
 
               <aside class="feedback-panel">
                 <h3>Review Notes</h3>
-                <p class="muted">Use the dot button if your comment refers to a specific part of the design.</p>
+                <p class="muted">Want to point at something specific? Use the dot button.</p>
                 <%- include('partials/public-notes', { responses, page, screenSize: '' }) %>
                 <%- include('partials/feedback-form', { packet, page, screenSize: '' }) %>
                 <% if (isAdminView) { %>
@@ -107,7 +107,7 @@
                 </div>
 
                 <div class="url-note">
-                  <p>Some Dev/Test/Live sites block embedded previews for security reasons. Open each URL in a new tab, then review the uploaded screenshots below.</p>
+                  <p>Some sites won't load inside a preview. Open them in a new tab and use the screenshots below.</p>
                   <div class="actions">
                     <% if (page.devUrl) { %>
                       <a class="button" href="<%= page.devUrl %>" target="_blank" rel="noopener">Open Dev in new tab</a>
@@ -125,7 +125,7 @@
                 </div>
 
                 <p class="viewport-note">
-                  These labels represent common laptop-class viewport presets, not guaranteed physical screen-inch measurements. Browser zoom, Windows display scaling, browser chrome, and monitor resolution can change what fits on a real device. The review is based on the CSS viewport size shown for each preset.
+                  Heads up: these are common screen widths, not exact inch sizes. Zoom, display scaling, and your monitor can all change what actually fits. We go by the browser width listed for each one.
                 </p>
 
                 <% if (page.devShots || page.liveShots) { %>
@@ -142,14 +142,14 @@
                   <div class="shots-stage" data-shots-stage>
                     <% shotSizes.forEach((size, shotIndex) => { %>
                       <div class="shots-size <%= shotIndex === 0 ? 'active' : '' %>" data-shots-size="<%= size %>">
-                        <p class="shots-size__caption">Captured at <%= screenSizeLabel(size) %> (<%= cssDims[size] || '' %> CSS px), full page</p>
+                        <p class="shots-size__caption"><%= screenSizeLabel(size) %> (<%= cssDims[size] || '' %>), full page</p>
                         <div class="shots-pair shots-pair--<%= size === 'mobile' ? 'row' : 'col' %>">
                           <figure class="shot-card">
                             <figcaption>Dev: <%= screenSizeLabel(size) %></figcaption>
                             <% if (page.devShots && page.devShots[size]) { %>
                               <img src="<%= page.devShots[size] %>" alt="Dev screenshot at <%= screenSizeLabel(size) %>">
                             <% } else { %>
-                              <div class="shot-empty">No Dev screenshot for this size.</div>
+                              <div class="shot-empty">No Dev shot for this size yet.</div>
                             <% } %>
                           </figure>
                           <figure class="shot-card">
@@ -157,7 +157,7 @@
                             <% if (page.liveShots && page.liveShots[size]) { %>
                               <img src="<%= page.liveShots[size] %>" alt="Live screenshot at <%= screenSizeLabel(size) %>">
                             <% } else { %>
-                              <div class="shot-empty">No Live screenshot for this size.</div>
+                              <div class="shot-empty">No Live shot for this size yet.</div>
                             <% } %>
                           </figure>
                         </div>
@@ -216,13 +216,13 @@
                     </div>
                   </div>
 
-                  <p class="muted">If a preview does not load, the site is blocking iframe embedding. Use the Open Dev / Open Live links instead, or upload screenshots from the admin page.</p>
+                  <p class="muted">If a preview is blank, the site won't load in a frame. Use the Open Dev / Open Live links, or add screenshots from the admin page.</p>
                 <% } %>
               </div>
 
               <aside class="feedback-panel">
-                <h3>Screen-size Review Notes</h3>
-                <p class="muted">Select a screen size, then save feedback for that specific size.</p>
+                <h3>Notes by screen size</h3>
+                <p class="muted">Pick a screen size, then leave your notes for it.</p>
 
                 <% page.screenSizes.filter(size => size !== "tablet").forEach((size, sizeIndex) => { %>
                   <div class="screen-feedback <%= sizeIndex === 0 ? 'active' : '' %>" data-feedback-size="<%= size %>">

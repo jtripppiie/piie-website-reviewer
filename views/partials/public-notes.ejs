@@ -36,7 +36,7 @@
 %>
 
 <section class="public-notes" aria-label="Visible review notes">
-  <h4>Saved review notes</h4>
+  <h4>Notes so far</h4>
 
   <% if (visibleNotes.length) { %>
     <ol class="public-notes__list">
@@ -53,13 +53,13 @@
             <% if (note.comment) { %>
               <p><%= note.comment %></p>
             <% } else { %>
-              <p class="muted">No written comment.</p>
+              <p class="muted">No comment added.</p>
             <% } %>
           </div>
         </li>
       <% }) %>
     </ol>
   <% } else { %>
-    <p class="muted public-notes__empty">No saved notes yet.</p>
+    <p class="muted public-notes__empty">Nothing here yet.</p>
   <% } %>
 </section>

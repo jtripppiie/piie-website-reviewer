@@ -1,7 +1,7 @@
 const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 
-const APP_VERSION = '0.2.7';
+const APP_VERSION = '0.2.8';
 
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
@@ -108,10 +108,10 @@ function renderNotes(page, screenSize) {
   const notes = pageNotes(page.pageId, screenSize);
 
   if (!notes.length) {
-    return '<p>No saved notes in this browser yet.</p>';
+    return '<p>Nothing here yet.</p>';
   }
 
-  return `<p class="note-summary">${notes.length} saved ${notes.length === 1 ? 'result' : 'results'} for ${escapeHtml(screenSizeLabel(screenSize))}.</p>` + '<ol class="notes-list">' + notes.map(note => `
+  return `<p class="note-summary">${notes.length} ${notes.length === 1 ? 'note' : 'notes'} for ${escapeHtml(screenSizeLabel(screenSize))}.</p>` + '<ol class="notes-list">' + notes.map(note => `
     <li class="note ${note.status}">
       <span class="note-icon" aria-hidden="true">${statusIcon(note.status)}</span>
       <div>
@@ -172,7 +172,7 @@ function renderPage(page, index) {
         </div>
 
         <div class="url-note">
-          <p>GitHub Pages demo mode. Seeded notes show multiple reviewers. New notes save only in this browser.</p>
+          <p>This is the demo. The sample notes are made up, and anything you add only saves in this browser.</p>
           <div class="actions">
             ${page.devUrl ? `<a class="button" href="${escapeHtml(page.devUrl)}" target="_blank" rel="noopener">Open Dev</a>` : ''}
             ${page.liveUrl ? `<a class="button" href="${escapeHtml(page.liveUrl)}" target="_blank" rel="noopener">Open Live</a>` : ''}
@@ -208,10 +208,10 @@ function renderPage(page, index) {
 
             <label>
               Comment
-              <textarea name="comment" placeholder="Add feedback here"></textarea>
+              <textarea name="comment" placeholder="What did you notice?"></textarea>
             </label>
 
-            <button type="submit">Save Local Note</button>
+            <button type="submit">Save note</button>
           </form>
         </aside>
 
@@ -220,7 +220,7 @@ function renderPage(page, index) {
         </nav>
 
         <p class="viewport-note">
-          These labels represent common laptop-class viewport presets, not guaranteed physical screen-inch measurements. Browser zoom, Windows display scaling, browser chrome, and monitor resolution can change what fits on a real device. The review is based on the CSS viewport size shown for each preset.
+          Heads up: these are common screen widths, not exact inch sizes. Zoom, display scaling, and your monitor can all change what actually fits. We go by the browser width listed for each one.
         </p>
 
         <div class="preview-scale-controls" role="group" aria-label="Preview scale" data-scale-controls="${escapeHtml(page.pageId)}">
