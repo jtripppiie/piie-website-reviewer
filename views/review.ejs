@@ -98,6 +98,10 @@
                 </div>
 
                 <p class="muted">Tip: matching image sizes make the before/after slider line up better.</p>
+                <p class="muted">View at 100%:
+                  <% if (page.beforeImagePath) { %><a href="<%= page.beforeImagePath %>" target="_blank" rel="noopener"><%= page.beforeLabel || 'Before' %></a><% } %>
+                  <% if (page.afterImagePath) { %><a href="<%= page.afterImagePath %>" target="_blank" rel="noopener"><%= page.afterLabel || 'After' %></a><% } %>
+                </p>
               </div>
 
               <aside class="feedback-panel">
@@ -212,6 +216,7 @@
                             <figcaption>Dev: <%= screenSizeLabel(size) %></figcaption>
                             <% if (page.devShots && page.devShots[size]) { %>
                               <img src="<%= page.devShots[size] %>" alt="Dev screenshot at <%= screenSizeLabel(size) %>">
+                              <a class="shot-fullsize" href="<%= page.devShots[size] %>" target="_blank" rel="noopener">View at 100%</a>
                             <% } else { %>
                               <div class="shot-empty">No Dev shot for this size yet.</div>
                             <% } %>
@@ -220,6 +225,7 @@
                             <figcaption>Live: <%= screenSizeLabel(size) %></figcaption>
                             <% if (page.liveShots && page.liveShots[size]) { %>
                               <img src="<%= page.liveShots[size] %>" alt="Live screenshot at <%= screenSizeLabel(size) %>">
+                              <a class="shot-fullsize" href="<%= page.liveShots[size] %>" target="_blank" rel="noopener">View at 100%</a>
                             <% } else { %>
                               <div class="shot-empty">No Live shot for this size yet.</div>
                             <% } %>
@@ -247,6 +253,10 @@
                       </button>
                     <% }) %>
                   </div>
+                  <p class="muted">View at 100%:
+                    <a href="<%= page.liveScreenshotPath %>" target="_blank" rel="noopener">Live</a>
+                    <a href="<%= page.devScreenshotPath %>" target="_blank" rel="noopener">Dev</a>
+                  </p>
                 <% } else { %>
                   <div class="webpage-preview-stage" data-webpage-preview>
                     <div class="webpage-frame-card">
