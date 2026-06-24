@@ -539,9 +539,23 @@ button.secondary {
 .review-page[data-preview-size] .page-heading,
 .review-page[data-preview-size] .url-note,
 .review-page[data-preview-size] .screen-tabs,
+.review-page[data-preview-size] .viewport-note,
+.review-page[data-preview-size] .preview-scale-controls,
+.review-page[data-preview-size] .preview-status,
 .review-page[data-preview-size] .empty-preview,
 .review-page[data-preview-size] .compare {
   width: 100%;
+}
+
+.review-page[data-preview-size] .page-heading,
+.review-page[data-preview-size] .url-note,
+.review-page[data-preview-size] .screen-tabs,
+.review-page[data-preview-size] .viewport-note,
+.review-page[data-preview-size] .preview-scale-controls,
+.review-page[data-preview-size] .preview-status,
+.review-page[data-preview-size] .webpage-preview-stage {
+  max-width: min(100%, var(--preview-width));
+  justify-self: center;
 }
 
 .review-page[data-preview-size] .shots-size .compare,
@@ -1294,6 +1308,16 @@ body.debug-layout-on .empty-preview {
 
 .webpage-preview-stage {
   grid-column: 1 / -1;
+}
+
+.review-canvas > .screen-tabs,
+.review-canvas > .webpage-preview-stage,
+.review-canvas > .compare,
+.review-canvas > .empty-preview,
+.review-canvas > .viewport-note,
+.review-canvas > .preview-scale-controls,
+.review-canvas > .preview-status {
+  grid-column: 1;
 }
 
 /* Admin-only edit control on each review page section. */

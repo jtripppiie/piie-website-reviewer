@@ -139,10 +139,11 @@
     const canFitTwoCards = cardsFitSideBySide(stage, scaledWidth);
 
     stage.style.setProperty('display', 'flex', 'important');
-    stage.style.setProperty('flex-wrap', 'wrap', 'important');
+    stage.style.setProperty('flex-direction', canFitTwoCards ? 'row' : 'column', 'important');
+    stage.style.setProperty('flex-wrap', canFitTwoCards ? 'wrap' : 'nowrap', 'important');
     stage.style.setProperty('gap', `${STAGE_GAP}px`, 'important');
-    stage.style.setProperty('align-items', 'flex-start', 'important');
-    stage.style.setProperty('justify-content', canFitTwoCards ? 'center' : 'stretch', 'important');
+    stage.style.setProperty('align-items', canFitTwoCards ? 'flex-start' : 'center', 'important');
+    stage.style.setProperty('justify-content', 'center', 'important');
     stage.style.setProperty('width', '100%', 'important');
     stage.style.setProperty('min-width', '0', 'important');
     stage.style.setProperty('max-width', 'none', 'important');
@@ -152,10 +153,11 @@
     cards.forEach(card => {
       const scaler = ensureScaler(card);
       card.style.setProperty('min-width', '0', 'important');
-      card.style.setProperty('width', canFitTwoCards ? 'auto' : '100%', 'important');
+      card.style.setProperty('width', 'auto', 'important');
       card.style.setProperty('max-width', canFitTwoCards ? 'none' : '100%', 'important');
-      card.style.setProperty('flex', canFitTwoCards ? '0 0 auto' : '1 1 100%', 'important');
+      card.style.setProperty('flex', '0 0 auto', 'important');
       card.style.setProperty('overflow', canFitTwoCards ? 'hidden' : 'auto', 'important');
+      card.style.setProperty('align-self', canFitTwoCards ? 'auto' : 'center', 'important');
 
       if (!scaler) return;
 
