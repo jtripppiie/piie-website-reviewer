@@ -526,6 +526,18 @@ button.secondary {
   --preview-width: 1280px;
 }
 
+.review-page[data-preview-size="laptop-15-6"] .review-canvas {
+  --preview-width: 1366px;
+}
+
+.review-page[data-preview-size="laptop-14-5"] .review-canvas {
+  --preview-width: 1280px;
+}
+
+.review-page[data-preview-size="laptop-13"] .review-canvas {
+  --preview-width: 1180px;
+}
+
 .review-page[data-preview-size="tablet"] .review-canvas {
   --preview-width: 768px;
 }

@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '0.4.3';
+const APP_VERSION = '0.4.4';
 
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
