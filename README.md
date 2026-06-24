@@ -79,7 +79,19 @@ true native size in a new tab.
   **Collapse / Expand** button so it never covers the review work.
 - Open **View all notes** (button on the cover page) to see every note grouped
   by page, then use **Download notes** to save them as a spreadsheet file you
-  can open in Excel or Google Sheets.
+  can open in Excel or Google Sheets. You can filter by page or status first,
+  and the download respects that filter.
+
+### Demo vs the real app
+
+The GitHub Pages **demo** mirrors the look and feel but has no server, so a few
+things differ on purpose:
+
+- The demo's **View notes** opens an in-page panel (notes live only in your
+  browser); the real app has a full **View all notes** page with filters and a
+  spreadsheet download.
+- Uploading images, capturing screenshots, and saving quick edits only work on
+  the real app.
 
 
 ---

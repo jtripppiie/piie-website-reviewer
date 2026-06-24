@@ -706,21 +706,35 @@ function csvCell(value) {
   return `"${text.replace(/"/g, '""')}"`;
 }
 
+// Shared page/status filtering for the notes view and download.
+function filterNotes(list, query) {
+  const pageId = query.page || '';
+  const status = query.status || '';
+  return list.filter(r => {
+    if (pageId && r.pageId !== pageId) return false;
+    if (status && (r.status || '') !== status) return false;
+    return true;
+  });
+}
+
 app.get('/r/:shareToken/notes', requireReviewer, async (req, res) => {
   const packets = await getPackets();
   const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
   if (!packet) return res.status(404).send('Review packet not found or not published.');
 
   const responses = await getResponses();
-  const packetResponses = responses
-    .filter(r => r.packetId === packet.packetId)
-    .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+  const packetResponses = filterNotes(
+    responses.filter(r => r.packetId === packet.packetId),
+    req.query
+  ).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
 
   res.render('notes', {
     packet,
     responses: packetResponses,
     humanScreenSize,
     humanStatus,
+    filterPage: req.query.page || '',
+    filterStatus: req.query.status || '',
     isAdminView: isAdmin(req),
     adminKeyValue: isAdmin(req) ? adminKey(req) : ''
   });
@@ -732,9 +746,10 @@ app.get('/r/:shareToken/notes/download', requireReviewer, async (req, res) => {
   if (!packet) return res.status(404).send('Review packet not found or not published.');
 
   const responses = await getResponses();
-  const packetResponses = responses
-    .filter(r => r.packetId === packet.packetId)
-    .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+  const packetResponses = filterNotes(
+    responses.filter(r => r.packetId === packet.packetId),
+    req.query
+  ).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
 
   const pageTitle = id => {
     const page = packet.pages.find(p => p.pageId === id);

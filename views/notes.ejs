@@ -12,10 +12,41 @@
         <div class="notes-actions">
           <a class="button" href="/r/<%= packet.shareToken %><%= adminKeyValue ? '?key=' + adminKeyValue : '' %>">Back to review</a>
           <% if (responses.length) { %>
-            <a class="button primary" href="/r/<%= packet.shareToken %>/notes/download">Download notes</a>
+            <%
+              const dlParams = [];
+              if (filterPage) dlParams.push('page=' + encodeURIComponent(filterPage));
+              if (filterStatus) dlParams.push('status=' + encodeURIComponent(filterStatus));
+              const dlQuery = dlParams.length ? '?' + dlParams.join('&') : '';
+            %>
+            <a class="button primary" href="/r/<%= packet.shareToken %>/notes/download<%= dlQuery %>">Download notes</a>
           <% } %>
         </div>
       </header>
+
+      <% const statusOptions = ['approved','approved-after-these-changes','needs-design-changes','needs-content-changes','needs-mobile-review','blocked-cannot-review','not-approved']; %>
+      <form class="notes-filter" method="get" action="/r/<%= packet.shareToken %>/notes">
+        <% if (adminKeyValue) { %><input type="hidden" name="key" value="<%= adminKeyValue %>"><% } %>
+        <label>Page
+          <select name="page">
+            <option value="">All pages</option>
+            <% packet.pages.forEach(p => { %>
+              <option value="<%= p.pageId %>" <%= filterPage === p.pageId ? 'selected' : '' %>><%= p.title || 'Untitled page' %></option>
+            <% }) %>
+          </select>
+        </label>
+        <label>Status
+          <select name="status">
+            <option value="">All statuses</option>
+            <% statusOptions.forEach(s => { %>
+              <option value="<%= s %>" <%= filterStatus === s ? 'selected' : '' %>><%= humanStatus(s) %></option>
+            <% }) %>
+          </select>
+        </label>
+        <button type="submit">Apply</button>
+        <% if (filterPage || filterStatus) { %>
+          <a class="button" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>">Clear</a>
+        <% } %>
+      </form>
 
       <% if (!responses.length) { %>
         <p class="notes-empty">No notes have been left yet. Once reviewers save notes, they show up here.</p>
