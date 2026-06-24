@@ -154,3 +154,81 @@
   opacity: 1;
   transform: translate(-50%, 0);
 }
+
+/* Quick edit panel - hidden until triple-click toggles quick edit mode. */
+.quick-edit {
+  display: none;
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px dashed #2563eb;
+  border-radius: 10px;
+  background: #eff6ff;
+}
+
+body.quick-edit-on .quick-edit {
+  display: block;
+}
+
+.quick-edit__head {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+  margin: 0 0 8px;
+}
+
+.quick-edit__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+
+@media (max-width: 700px) {
+  .quick-edit__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.quick-edit__form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.quick-edit__form input[type="url"] {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  padding: 6px 8px;
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.quick-edit__form button[type="submit"] {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.quick-edit__fill {
+  margin: 8px 0 0;
+  border: 1px solid #d8dee6;
+  background: #fff;
+  color: #111827;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}

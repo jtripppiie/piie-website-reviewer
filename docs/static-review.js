@@ -1,7 +1,8 @@
 const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
+const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '0.3.4';
+const APP_VERSION = '0.3.5';
 
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
@@ -19,7 +20,8 @@ const state = {
   activeSizes: {},
   scaleModes: {},
   notes: JSON.parse(localStorage.getItem(NOTES_KEY) || '[]'),
-  cleared: JSON.parse(localStorage.getItem(CLEARED_KEY) || '[]')
+  cleared: JSON.parse(localStorage.getItem(CLEARED_KEY) || '[]'),
+  urlOverrides: JSON.parse(localStorage.getItem(URLS_KEY) || '{}')
 };
 
 const app = document.querySelector('#app');
@@ -41,6 +43,22 @@ function saveNotes() {
 
 function saveCleared() {
   localStorage.setItem(CLEARED_KEY, JSON.stringify(state.cleared));
+}
+
+function saveUrlOverrides() {
+  localStorage.setItem(URLS_KEY, JSON.stringify(state.urlOverrides));
+}
+
+// On the static demo there is no server, so URL edits are kept in this browser
+// and re-applied to the packet each time the page loads.
+function applyUrlOverrides() {
+  const overrides = state.urlOverrides || {};
+  (state.packet?.pages || []).forEach(page => {
+    const override = overrides[page.pageId];
+    if (!override) return;
+    if (typeof override.devUrl === 'string') page.devUrl = override.devUrl;
+    if (typeof override.liveUrl === 'string') page.liveUrl = override.liveUrl;
+  });
 }
 
 function screenSizeLabel(size) {
@@ -177,6 +195,22 @@ function renderPage(page, index) {
             ${page.devUrl ? `<a class="button" href="${escapeHtml(page.devUrl)}" target="_blank" rel="noopener">Open Dev</a>` : ''}
             ${page.liveUrl ? `<a class="button" href="${escapeHtml(page.liveUrl)}" target="_blank" rel="noopener">Open Live</a>` : ''}
           </div>
+        </div>
+
+        <div class="quick-edit" data-quick-edit>
+          <div class="quick-edit__head">Quick edit - preview only (saved in this browser)</div>
+          <form class="quick-edit__form" data-url-form="${escapeHtml(page.pageId)}">
+            <div class="quick-edit__row">
+              <label>Dev URL
+                <input type="url" name="devUrl" value="${escapeHtml(page.devUrl || '')}" placeholder="https://dev.example.com">
+              </label>
+              <label>Live URL
+                <input type="url" name="liveUrl" value="${escapeHtml(page.liveUrl || '')}" placeholder="https://www.example.com">
+              </label>
+            </div>
+            <button type="submit">Update preview</button>
+          </form>
+          <button type="button" class="quick-edit__fill" data-fill-sample>Fill a sample review note</button>
         </div>
 
         <aside class="feedback-panel">
@@ -411,6 +445,12 @@ function render() {
 }
 
 app.addEventListener('click', event => {
+  const fillButton = event.target.closest('button[data-fill-sample]');
+  if (fillButton) {
+    fillDemoData();
+    return;
+  }
+
   const clearButton = event.target.closest('button[data-clear-notes]');
   if (clearButton) {
     const pageEl = clearButton.closest('.review-page');
@@ -473,6 +513,13 @@ window.addEventListener('resize', () => {
 });
 
 app.addEventListener('submit', event => {
+  const urlForm = event.target.closest('[data-url-form]');
+  if (urlForm) {
+    event.preventDefault();
+    handleUrlForm(urlForm);
+    return;
+  }
+
   const form = event.target.closest('[data-note-form]');
   if (!form) return;
 
@@ -495,6 +542,35 @@ app.addEventListener('submit', event => {
   form.reset();
   render();
 });
+
+// Apply a URL edit from the demo quick-edit panel. Preview only - it updates
+// the in-memory packet and remembers the change in this browser.
+function handleUrlForm(form) {
+  const pageId = form.dataset.urlForm;
+  const page = state.packet.pages.find(p => p.pageId === pageId);
+  if (!page) return;
+
+  const data = new FormData(form);
+  const isHttpUrl = value => /^https?:\/\/\S+$/i.test((value || '').trim());
+  const dev = (data.get('devUrl') || '').trim();
+  const live = (data.get('liveUrl') || '').trim();
+
+  if (dev !== '' && !isHttpUrl(dev)) {
+    showDemoToast('Dev URL must start with http:// or https://');
+    return;
+  }
+  if (live !== '' && !isHttpUrl(live)) {
+    showDemoToast('Live URL must start with http:// or https://');
+    return;
+  }
+
+  page.devUrl = dev;
+  page.liveUrl = live;
+  state.urlOverrides[pageId] = { devUrl: dev, liveUrl: live };
+  saveUrlOverrides();
+  render();
+  showDemoToast('Preview updated. This is saved in your browser only.');
+}
 
 document.querySelector('#exportNotes').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(allNotes(), null, 2)], { type: 'application/json' });
@@ -563,7 +639,7 @@ function fillDemoData() {
   const trigger = document.querySelector('.app-header h1');
   if (!trigger) return;
   trigger.style.cursor = 'pointer';
-  trigger.title = 'Triple-click to fill the demo forms with sample data';
+  trigger.title = 'Triple-click to toggle quick edit (change URLs in this browser)';
   let clicks = 0;
   let timer = null;
   trigger.addEventListener('click', () => {
@@ -573,7 +649,8 @@ function fillDemoData() {
     if (clicks >= 3) {
       clicks = 0;
       clearTimeout(timer);
-      fillDemoData();
+      const on = document.body.classList.toggle('quick-edit-on');
+      showDemoToast(on ? 'Quick edit on. Change the URLs below, then Update preview.' : 'Quick edit off.');
     }
   });
 })();
@@ -582,6 +659,7 @@ fetch('packet.json')
   .then(response => response.json())
   .then(packet => {
     state.packet = packet;
+    applyUrlOverrides();
     render();
   })
   .catch(error => {
