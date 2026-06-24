@@ -878,7 +878,7 @@ body.debug-layout-on .empty-preview {
 /* 25% right: notes panel */
 .feedback-panel {
   grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-row: 1 / -1;
   position: sticky;
   top: 6px;
   z-index: 18;
@@ -1164,6 +1164,36 @@ body.debug-layout-on .empty-preview {
     max-height: none;
     overflow: visible;
   }
+}
+
+/* Collapsible notes panel so it does not cover the review while scrolling. */
+.feedback-panel__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.feedback-panel__toggle {
+  flex: none;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #111827;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.feedback-panel.is-collapsed {
+  max-height: none;
+  overflow: visible;
+}
+
+.feedback-panel.is-collapsed > *:not(.feedback-panel__bar) {
+  display: none;
 }
 
 .webpage-frame-card img,

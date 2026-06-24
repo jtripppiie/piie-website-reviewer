@@ -337,3 +337,19 @@ updatePageCounter(0);
     getActivePage
   };
 })();
+
+// Collapsible notes panel: lets reviewers fold the sticky panel away so it does
+// not cover the review work while scrolling.
+(function () {
+  document.addEventListener('click', event => {
+    const toggle = event.target.closest('[data-feedback-toggle]');
+    if (!toggle) return;
+
+    const panel = toggle.closest('[data-feedback-panel]');
+    if (!panel) return;
+
+    const collapsed = panel.classList.toggle('is-collapsed');
+    toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    toggle.textContent = collapsed ? 'Expand' : 'Collapse';
+  });
+})();

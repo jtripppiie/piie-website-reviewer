@@ -311,9 +311,13 @@ app.post('/admin/packets/:packetId/pages/:pageId/upload-shots', upload.fields(
     if (req.body[`removeLiveShot_${size}`] === 'true') delete page.liveShots[size];
   });
 
+  // Drop empty shot maps so the review page falls back to the single slider.
+  if (!Object.keys(page.devShots).length) delete page.devShots;
+  if (!Object.keys(page.liveShots).length) delete page.liveShots;
+
   // Keep the single screenshot fallbacks in sync for the compare slider.
-  page.devScreenshotPath = page.devShots['laptop-15-6'] || page.devShots.desktop || '';
-  page.liveScreenshotPath = page.liveShots['laptop-15-6'] || page.liveShots.desktop || '';
+  page.devScreenshotPath = (page.devShots && (page.devShots['laptop-15-6'] || page.devShots.desktop)) || '';
+  page.liveScreenshotPath = (page.liveShots && (page.liveShots['laptop-15-6'] || page.liveShots.desktop)) || '';
 
   page.updatedAt = new Date().toISOString();
   packet.updatedAt = new Date().toISOString();

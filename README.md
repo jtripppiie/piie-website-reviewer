@@ -61,6 +61,27 @@ Notes:
 - **URL compare** - enter a Dev URL and a Live URL. Some sites block previews,
   so you can also upload (or auto-capture) screenshots for each screen size.
 
+On URL compare pages, the admin edit screen has an **Upload screenshots by
+screen size** section. When a site cannot be captured automatically, you can
+hand-upload a Dev and Live screenshot for each size (Desktop, 15.6, 14.5, 13,
+Mobile). Each screenshot also has a **View at 100%** link that opens it at its
+true native size in a new tab.
+
+---
+
+## Reviewing and notes
+
+- Drag anywhere on the comparison (the whole line, not just the round handle) to
+  wipe between Before/After.
+- Pick a screen size in the notes panel and leave a note, optionally pointing at
+  a specific spot on the design.
+- The notes panel **follows along as you scroll** on wide screens, and has a
+  **Collapse / Expand** button so it never covers the review work.
+- Open **View all notes** (button on the cover page) to see every note grouped
+  by page, then use **Download notes** to save them as a spreadsheet file you
+  can open in Excel or Google Sheets.
+
+
 ---
 
 ## Admin vs reviewers

@@ -297,8 +297,11 @@
                 <% } %>
               </div>
 
-              <aside class="feedback-panel">
-                <h3>Notes by screen size</h3>
+              <aside class="feedback-panel" data-feedback-panel>
+                <div class="feedback-panel__bar">
+                  <h3>Notes by screen size</h3>
+                  <button type="button" class="feedback-panel__toggle" data-feedback-toggle aria-expanded="true">Collapse</button>
+                </div>
                 <p class="muted">Pick a screen size, then leave your notes for it.</p>
 
                 <% page.screenSizes.filter(size => size !== "tablet").forEach((size, sizeIndex) => { %>
