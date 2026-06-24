@@ -1,29 +1,33 @@
-# Wide Review Update
+# Update notes
 
-This update changes the reviewer experience.
+A short log of notable changes. See `README.md` for full setup and usage.
 
-## Main changes
+## Reviewer experience
 
-- Full-width review deck
-- Sticky top reviewer navigation
-- Wider before/after comparison area
-- Right-side feedback panel
-- More feedback statuses
-- Reviewer name/initials field
-- Comment dots on screenshot comparisons
-- URL review no longer depends on iframe embedding
-- Dev and Live URLs open in a new tab
-- Optional Dev and Live screenshots can be uploaded for URL comparison pages
+- Full-width review deck with sticky top navigation.
+- Wider before/after comparison area and a right-side feedback panel.
+- More feedback statuses, plus a reviewer name/initials field.
+- Comment dots you can pin to a specific spot on a comparison.
+- Honest screen-size presets (Desktop, 15.6, 14.5, 13, Mobile) with a fit/scale
+  control, since these are browser widths, not exact screen inches.
 
-## Why iframe was changed
+## URL review without iframes
 
-Pantheon and many secure sites block being embedded inside another site. Firefox correctly refuses to display those pages in iframes. The app now treats screenshots as the primary review method and URLs as open-in-new-tab references.
+Pantheon and many secure sites refuse to load inside an iframe. The app now
+treats screenshots as the main review method and opens Dev/Live URLs in a new
+tab instead of relying on embedding. URL pages can also auto-capture screenshots
+at each screen size.
 
-## How to install
+## Quick edit and sharing
 
-From the repo root:
+- Triple-click a page heading on a review page to set URLs or upload images
+  without opening admin.
+- `npm run share` exposes the local server with a free Cloudflare tunnel.
+
+## Install
 
 ```bash
-unzip -o before-after-wide-review-update.zip -d .
+npm install
+cp .env.example .env
 npm run dev
 ```
