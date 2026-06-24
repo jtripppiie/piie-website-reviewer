@@ -98,11 +98,17 @@ PORT=3000
 ADMIN_PASSWORD=change-me          # admin key used in ?key=...
 REVIEW_USERNAME=PIIE              # reviewer login name
 REVIEW_PASSWORD=change-me-too     # reviewer login password
+QUICK_EDIT_PASSWORD=              # optional, see below
 ```
 
 In production (`NODE_ENV=production`) the app refuses to start unless
 `ADMIN_PASSWORD`, `REVIEW_USERNAME`, and `REVIEW_PASSWORD` are all set, so there
 are no default passwords on a live server.
+
+`QUICK_EDIT_PASSWORD` is optional. Leave it blank and quick edit works for any
+logged-in reviewer (the default). Set it and reviewers must enter that password
+once per browser session before they can save quick edits, which is handy when
+you share the link more widely but only want a few people changing pages.
 
 ---
 

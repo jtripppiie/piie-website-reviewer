@@ -81,6 +81,9 @@ if (process.env.NODE_ENV === 'production' && (!REVIEW_USERNAME || !REVIEW_PASSWO
   throw new Error('REVIEW_USERNAME and REVIEW_PASSWORD are required when NODE_ENV=production.');
 }
 
+// Optional second password specifically for quick edit. Empty = gate disabled.
+const QUICK_EDIT_PASSWORD = process.env.QUICK_EDIT_PASSWORD || '';
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -475,6 +478,38 @@ function requireReviewer(req, res, next) {
   return res.redirect(`/review-login?next=${nextUrl}`);
 }
 
+function quickEditEnabled() {
+  return Boolean(QUICK_EDIT_PASSWORD);
+}
+
+function quickEditCookieValue() {
+  return crypto
+    .createHash('sha256')
+    .update(`quickedit:${QUICK_EDIT_PASSWORD}:${ADMIN_PASSWORD}`)
+    .digest('hex');
+}
+
+function isQuickEditUnlocked(req) {
+  if (!quickEditEnabled() || isAdmin(req)) return true;
+  return parseCookies(req).piie_quickedit === quickEditCookieValue();
+}
+
+function quickEditCookieHeader() {
+  // Session cookie (no Max-Age) so the unlock is remembered until the browser closes.
+  const parts = [
+    `piie_quickedit=${encodeURIComponent(quickEditCookieValue())}`,
+    'HttpOnly',
+    'SameSite=Lax',
+    'Path=/'
+  ];
+
+  if (process.env.NODE_ENV === 'production') {
+    parts.push('Secure');
+  }
+
+  return parts.join('; ');
+}
+
 app.get('/review-login', (req, res) => {
   const nextUrl = req.query.next || '/';
   const safeNext = String(nextUrl).replaceAll('"', '&quot;');
@@ -549,7 +584,10 @@ app.get('/r/:shareToken', requireReviewer, async (req, res) => {
     packet,
     responses: packetResponses,
     isAdminView: isAdmin(req),
-    adminKeyValue: isAdmin(req) ? adminKey(req) : ''
+    adminKeyValue: isAdmin(req) ? adminKey(req) : '',
+    quickEditGated: quickEditEnabled() && !isAdmin(req),
+    quickEditUnlocked: isQuickEditUnlocked(req),
+    quickEditError: Boolean(req.query.quickEditError)
   });
 });
 
@@ -611,6 +649,21 @@ app.post('/r/:shareToken/clear-notes', async (req, res) => {
   res.redirect(`/r/${packet.shareToken}${keyPart}${hash}`);
 });
 
+// Optional unlock step for quick edit. When QUICK_EDIT_PASSWORD is set, a
+// reviewer must enter it once per browser session before they can save edits.
+app.post('/r/:shareToken/quick-unlock', rateLimitQuickUpdate, requireReviewer, (req, res) => {
+  const shareToken = req.params.shareToken;
+  const pageId = (req.body.pageId || '').trim();
+  const anchor = pageId ? `#${encodeURIComponent(pageId)}` : '';
+
+  if (!quickEditEnabled() || (req.body.quickEditPassword || '') === QUICK_EDIT_PASSWORD) {
+    if (quickEditEnabled()) res.setHeader('Set-Cookie', quickEditCookieHeader());
+    return res.redirect(`/r/${shareToken}${anchor}`);
+  }
+
+  return res.redirect(`/r/${shareToken}?quickEditError=1${anchor}`);
+});
+
 // Quick edit from the review page itself. Reviewers (no admin key needed) can
 // set Dev/Live URLs and drop in screenshots or before/after images. URLs are
 // limited to http(s) so a javascript: URL cannot be stored and run later.
@@ -626,6 +679,11 @@ app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireReviewer, u
 
   const page = packet.pages.find(p => p.pageId === req.body.pageId);
   if (!page) return res.status(404).send('Page not found');
+
+  if (!isQuickEditUnlocked(req)) {
+    const anchor = page.pageId ? `#${encodeURIComponent(page.pageId)}` : '';
+    return res.redirect(`/r/${req.params.shareToken}?quickEditError=1${anchor}`);
+  }
 
   const isHttpUrl = value => /^https?:\/\/\S+$/i.test((value || '').trim());
 
