@@ -78,6 +78,17 @@ Dev/Live URLs or drop in images and save them straight to the packet - handy
 when you do not want to open the admin screens. It also has a button to fill a
 sample review note for testing.
 
+### Hidden shortcuts on the GitHub Pages demo
+
+The static demo keeps two helpers out of sight so regular viewers do not trip
+over them. Hover shows a tooltip on each:
+
+- **Triple-click the title** ("PIIE Web Reviewer") to toggle quick edit, where
+  you can change the Dev/Live URLs for your own preview (saved in your browser
+  only, not shared).
+- **Triple-click the eyebrow line** ("Static GitHub Pages Demo") to show or hide
+  the debug box.
+
 ---
 
 ## Configuration (`.env`)
