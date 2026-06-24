@@ -134,30 +134,31 @@
     slide.dataset.previewSize = state.size;
 
     const scale = computeScale(slide, preset);
+    const isDesktop = state.size === 'desktop';
 
     const scaledWidth = Math.round(preset.w * scale);
     const canFitTwoCards = cardsFitSideBySide(stage, scaledWidth);
 
     stage.style.setProperty('display', 'flex', 'important');
-    stage.style.setProperty('flex-direction', canFitTwoCards ? 'row' : 'column', 'important');
-    stage.style.setProperty('flex-wrap', canFitTwoCards ? 'wrap' : 'nowrap', 'important');
+    stage.style.setProperty('flex-direction', isDesktop ? 'column' : (canFitTwoCards ? 'row' : 'column'), 'important');
+    stage.style.setProperty('flex-wrap', isDesktop ? 'nowrap' : (canFitTwoCards ? 'wrap' : 'nowrap'), 'important');
     stage.style.setProperty('gap', `${STAGE_GAP}px`, 'important');
-    stage.style.setProperty('align-items', canFitTwoCards ? 'flex-start' : 'center', 'important');
+    stage.style.setProperty('align-items', isDesktop ? 'stretch' : (canFitTwoCards ? 'flex-start' : 'center'), 'important');
     stage.style.setProperty('justify-content', 'center', 'important');
     stage.style.setProperty('width', '100%', 'important');
     stage.style.setProperty('min-width', '0', 'important');
     stage.style.setProperty('max-width', 'none', 'important');
-    stage.style.setProperty('overflow-x', canFitTwoCards ? 'auto' : 'hidden', 'important');
+    stage.style.setProperty('overflow-x', isDesktop ? 'hidden' : (canFitTwoCards ? 'auto' : 'hidden'), 'important');
 
     const cards = stage.querySelectorAll('.webpage-frame-card');
     cards.forEach(card => {
       const scaler = ensureScaler(card);
       card.style.setProperty('min-width', '0', 'important');
-      card.style.setProperty('width', 'auto', 'important');
-      card.style.setProperty('max-width', canFitTwoCards ? 'none' : '100%', 'important');
-      card.style.setProperty('flex', '0 0 auto', 'important');
-      card.style.setProperty('overflow', canFitTwoCards ? 'hidden' : 'auto', 'important');
-      card.style.setProperty('align-self', canFitTwoCards ? 'auto' : 'center', 'important');
+      card.style.setProperty('width', isDesktop ? '100%' : 'auto', 'important');
+      card.style.setProperty('max-width', isDesktop ? '100%' : (canFitTwoCards ? 'none' : '100%'), 'important');
+      card.style.setProperty('flex', isDesktop ? '1 1 100%' : '0 0 auto', 'important');
+      card.style.setProperty('overflow', isDesktop ? 'hidden' : (canFitTwoCards ? 'hidden' : 'auto'), 'important');
+      card.style.setProperty('align-self', isDesktop ? 'stretch' : (canFitTwoCards ? 'auto' : 'center'), 'important');
 
       if (!scaler) return;
 

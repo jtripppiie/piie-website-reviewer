@@ -521,9 +521,14 @@ button.secondary {
 
 /* .review-canvas is display:contents, so center the children directly within
    the parent grid cell instead of relying on justify-items on the canvas. */
-.review-page[data-preview-size] .compare,
-.review-page[data-preview-size] .empty-preview,
-.review-page[data-preview-size] .webpage-preview-stage {
+.review-page[data-preview-size="laptop-15-6"] .compare,
+.review-page[data-preview-size="laptop-15-6"] .empty-preview,
+.review-page[data-preview-size="laptop-14-5"] .compare,
+.review-page[data-preview-size="laptop-14-5"] .empty-preview,
+.review-page[data-preview-size="laptop-13"] .compare,
+.review-page[data-preview-size="laptop-13"] .empty-preview,
+.review-page[data-preview-size="mobile"] .compare,
+.review-page[data-preview-size="mobile"] .empty-preview {
   justify-self: center;
 }
 
@@ -545,17 +550,6 @@ button.secondary {
 .review-page[data-preview-size] .empty-preview,
 .review-page[data-preview-size] .compare {
   width: 100%;
-}
-
-.review-page[data-preview-size] .page-heading,
-.review-page[data-preview-size] .url-note,
-.review-page[data-preview-size] .screen-tabs,
-.review-page[data-preview-size] .viewport-note,
-.review-page[data-preview-size] .preview-scale-controls,
-.review-page[data-preview-size] .preview-status,
-.review-page[data-preview-size] .webpage-preview-stage {
-  max-width: min(100%, var(--preview-width));
-  justify-self: center;
 }
 
 .review-page[data-preview-size] .shots-size .compare,
@@ -1308,16 +1302,6 @@ body.debug-layout-on .empty-preview {
 
 .webpage-preview-stage {
   grid-column: 1 / -1;
-}
-
-.review-canvas > .screen-tabs,
-.review-canvas > .webpage-preview-stage,
-.review-canvas > .compare,
-.review-canvas > .empty-preview,
-.review-canvas > .viewport-note,
-.review-canvas > .preview-scale-controls,
-.review-canvas > .preview-status {
-  grid-column: 1;
 }
 
 /* Admin-only edit control on each review page section. */
