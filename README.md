@@ -69,6 +69,26 @@ hand-upload a Dev and Live screenshot for each size (Desktop, 15.6, 14.5, 13,
 Mobile). Each screenshot also has a **View at 100%** link that opens it at its
 true native size in a new tab.
 
+## Review deck rules
+
+These rules are intentional and should not be changed casually:
+
+- A single **URL compare** page means one comparison: **Dev vs Live** only.
+  That is exactly two URLs or two screenshot columns, not more.
+- The app should not auto-create multiple URL compare pages for the default demo
+  flow. The built-in test packet is meant to open with one URL comparison page.
+- Review is **either URL or image**, not both at once. If a packet has at least
+  one usable URL compare page, the review deck renders the URL compare pages and
+  hides image compare pages from the review flow.
+- If you want to review screenshots/photos instead, use a packet with no usable
+  URL compare pages.
+
+Current source of truth:
+
+- Demo packet generation lives in [server.js](/home/jt/projects/before-after/server.js).
+- Review deck selection lives in [views/review.ejs](/home/jt/projects/before-after/views/review.ejs).
+- The local saved packet data lives in [data/packets.json](/home/jt/projects/before-after/data/packets.json), but that file is git-ignored.
+
 ---
 
 ## Reviewing and notes
@@ -90,12 +110,20 @@ The admin dashboard includes **Create Test Packet**. It creates a published demo
 packet immediately with:
 
 - a cover page
-- a built-in generic photo comparison page
-- two same-origin Dev vs Live demo pages
+- a built-in generic photo comparison page kept in the packet data for image testing
+- one same-origin Dev vs Live demo page for the default review flow
 - seeded review notes across multiple screen sizes
 
-Use that when you want to test the presentation flow without setting up a real
-project first.
+Important:
+
+- The default review flow for the test packet is the single URL compare page.
+- Because URL review takes precedence, the photo comparison page is hidden in
+  the review deck for that packet.
+- If you need to test photo review, create or edit a packet so it does not have
+  a usable URL compare page.
+
+Use the test packet when you want to verify the presentation flow without
+setting up a real project first.
 
 ### Demo vs the real app
 
@@ -183,6 +211,11 @@ data/uploads/         # uploaded and captured images
 
 These files are ignored by git. If you delete them, the app recreates empty ones
 on the next start.
+
+That matters for debugging: changing the generator in [server.js](/home/jt/projects/before-after/server.js)
+does not rewrite an already-created packet in [data/packets.json](/home/jt/projects/before-after/data/packets.json).
+If a demo packet already exists with bad page data, fix or delete that local
+packet data as well.
 
 ---
 
