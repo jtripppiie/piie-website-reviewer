@@ -75,14 +75,27 @@ true native size in a new tab.
 
 - Drag anywhere on the comparison (the whole line, not just the round handle) to
   wipe between Before/After.
-- Pick a screen size in the notes panel and leave a note, optionally pointing at
-  a specific spot on the design.
+- Pick a screen size in the notes panel and leave a note for that specific
+  screen size.
 - The notes panel **follows along as you scroll** on wide screens, and has a
   **Collapse / Expand** button so it never covers the review work.
 - Open **View all notes** (button on the cover page) to see every note grouped
   by page, then use **Download notes** to save them as a spreadsheet file you
   can open in Excel or Google Sheets. You can filter by page or status first,
   and the download respects that filter.
+
+### Fast test packet
+
+The admin dashboard includes **Create Test Packet**. It creates a published demo
+packet immediately with:
+
+- a cover page
+- a built-in generic photo comparison page
+- two same-origin Dev vs Live demo pages
+- seeded review notes across multiple screen sizes
+
+Use that when you want to test the presentation flow without setting up a real
+project first.
 
 ### Demo vs the real app
 
@@ -106,17 +119,26 @@ things differ on purpose:
 - **Reviewers** log in with a shared username/password (set in `.env`) and open
   the review link. They leave notes; they cannot reach admin.
 
+When an admin opens a packet from the dashboard's **Review Link**, the app keeps
+the admin key on the review page so **Back to admin**, **Clear review results**,
+and the page-level edit actions stay available during review.
+
 `Clear review results` only removes saved review notes for that packet. It does
 not remove the packet itself or its screenshots. Use `Delete project` when you
 are done with a review and want to remove the whole project from the admin list.
 
-### Quick edit on the review page (no admin needed)
+### Quick edit on the review page
 
-On the real app, **triple-click any page heading** on a review page to toggle
-"quick edit" mode. That reveals a small panel per page where you can set the
-Dev/Live URLs or drop in images and save them straight to the packet - handy
-when you do not want to open the admin screens. It also has a button to fill a
-sample review note for testing.
+On the real app, quick edit is now **admin-only**. In admin review mode, each
+work page shows a small quick-edit panel where you can:
+
+- set Dev and Live URLs
+- upload Dev and Live screenshots
+- upload Before and After images
+- fill a sample review note for testing
+
+That keeps reviewers focused on reviewing while still giving admins a fast way
+to tune a packet without going back to the full edit screen.
 
 ### Hidden shortcuts on the GitHub Pages demo
 
@@ -145,10 +167,9 @@ In production (`NODE_ENV=production`) the app refuses to start unless
 `ADMIN_PASSWORD`, `REVIEW_USERNAME`, and `REVIEW_PASSWORD` are all set, so there
 are no default passwords on a live server.
 
-`QUICK_EDIT_PASSWORD` is optional. Leave it blank and quick edit works for any
-logged-in reviewer (the default). Set it and reviewers must enter that password
-once per browser session before they can save quick edits, which is handy when
-you share the link more widely but only want a few people changing pages.
+`QUICK_EDIT_PASSWORD` is optional legacy config for the quick-edit gate. The
+current review flow keeps quick edit in admin mode, so most setups can leave it
+blank.
 
 ---
 
@@ -184,6 +205,9 @@ For a free always-on URL, the Cloudflare tunnel above is usually the better fit.
 /healthz                   # quick "is it running" check
 /admin/debug?key=PASSWORD  # routes and runtime info
 ```
+
+In practice, use the **Review Link** button from the admin dashboard when you
+want admin review mode, because it opens the packet with the admin key attached.
 
 ---
 
