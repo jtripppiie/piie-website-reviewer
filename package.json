@@ -1,11 +1,12 @@
 {
   "name": "piie-website-reviewer",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "No-database web review tool for PIIE design and content QA",
   "main": "server.js",
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "share": "bash share.sh"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

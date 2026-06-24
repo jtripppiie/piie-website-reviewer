@@ -1,7 +1,7 @@
 const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 
-const APP_VERSION = '0.3.2';
+const APP_VERSION = '0.3.3';
 
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
