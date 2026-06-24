@@ -99,9 +99,14 @@ things differ on purpose:
 ## Admin vs reviewers
 
 - **Admin** is gated by a password passed as `?key=...`. Admins create packets,
-  edit pages, upload images, capture screenshots, and clear results.
+  edit pages, upload images, capture screenshots, clear review results, and
+  delete finished projects from the dashboard.
 - **Reviewers** log in with a shared username/password (set in `.env`) and open
   the review link. They leave notes; they cannot reach admin.
+
+`Clear review results` only removes saved review notes for that packet. It does
+not remove the packet itself or its screenshots. Use `Delete project` when you
+are done with a review and want to remove the whole project from the admin list.
 
 ### Quick edit on the review page (no admin needed)
 

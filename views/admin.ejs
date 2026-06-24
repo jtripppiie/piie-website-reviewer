@@ -33,6 +33,10 @@
                 <input type="hidden" name="key" value="<%= key %>">
                 <button type="submit" class="button danger">Clear review results</button>
               </form>
+              <form method="post" action="/admin/packets/<%= packet.packetId %>/delete" onsubmit="return confirm('Delete this project and all of its review data? This cannot be undone.');">
+                <input type="hidden" name="key" value="<%= key %>">
+                <button type="submit" class="button danger">Delete project</button>
+              </form>
             </div>
           </article>
         <% }) %>

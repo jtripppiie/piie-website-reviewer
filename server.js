@@ -143,6 +143,33 @@ function removeUploadFile(webPath) {
   fs.promises.unlink(full).catch(() => {});
 }
 
+function removePacketUploads(packet) {
+  if (!packet || !Array.isArray(packet.pages)) return;
+
+  const uploadPaths = new Set();
+
+  packet.pages.forEach(page => {
+    [
+      page.beforeImagePath,
+      page.afterImagePath,
+      page.devScreenshotPath,
+      page.liveScreenshotPath
+    ].forEach(filePath => {
+      if (filePath) uploadPaths.add(filePath);
+    });
+
+    Object.values(page.devShots || {}).forEach(filePath => {
+      if (filePath) uploadPaths.add(filePath);
+    });
+
+    Object.values(page.liveShots || {}).forEach(filePath => {
+      if (filePath) uploadPaths.add(filePath);
+    });
+  });
+
+  uploadPaths.forEach(removeUploadFile);
+}
+
 app.get('/', (req, res) => {
   res.redirect('/admin');
 });
@@ -942,6 +969,25 @@ app.post('/admin/packets/:packetId/clear-results', async (req, res) => {
   const responses = await getResponses();
   const kept = responses.filter(response => response.packetId !== packet.packetId);
   await saveResponses(kept);
+
+  res.redirect(`/admin?key=${encodeURIComponent(adminKey(req))}`);
+});
+
+app.post('/admin/packets/:packetId/delete', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const packet = packets.find(p => p.packetId === req.params.packetId);
+  if (!packet) return res.status(404).send('Packet not found');
+
+  removePacketUploads(packet);
+
+  const keptPackets = packets.filter(p => p.packetId !== packet.packetId);
+  await savePackets(keptPackets);
+
+  const responses = await getResponses();
+  const keptResponses = responses.filter(response => response.packetId !== packet.packetId);
+  await saveResponses(keptResponses);
 
   res.redirect(`/admin?key=${encodeURIComponent(adminKey(req))}`);
 });
