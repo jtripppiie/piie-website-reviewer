@@ -136,7 +136,6 @@ function makeDemoPacket(titleOverride = '') {
   const coverPageId = makeId('page');
   const photoCompareId = makeId('page');
   const homepageId = makeId('page');
-  const pricingId = makeId('page');
 
   const packet = {
     packetId,
@@ -180,16 +179,6 @@ function makeDemoPacket(titleOverride = '') {
         liveUrl: '/public/demo/live-home.html',
         screenSizes: DEFAULT_SCREEN_SIZES,
         order: 2
-      },
-      {
-        pageId: pricingId,
-        type: 'urlCompare',
-        title: 'Pricing page review',
-        instructions: 'Check pricing-card hierarchy, plan labels, and the mobile stack for overflow or spacing drift.',
-        devUrl: '/public/demo/dev-pricing.html',
-        liveUrl: '/public/demo/live-pricing.html',
-        screenSizes: DEFAULT_SCREEN_SIZES,
-        order: 3
       }
     ]
   };
@@ -243,19 +232,6 @@ function makeDemoPacket(titleOverride = '') {
       initials: 'JT',
       status: 'needs-mobile-review',
       comment: 'The stacked hero content should have more breathing room above the primary button on mobile.',
-      dotX: '',
-      dotY: '',
-      createdAt: now
-    },
-    {
-      responseId: makeId('response'),
-      packetId,
-      pageId: pricingId,
-      screenSize: 'laptop-14-5',
-      reviewerName: 'Design Team',
-      initials: 'DT',
-      status: 'needs-design-changes',
-      comment: 'Card shadows and pricing emphasis differ too much between versions. Bring the visual weight closer together.',
       dotX: '',
       dotY: '',
       createdAt: now
