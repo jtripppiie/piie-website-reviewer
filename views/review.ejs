@@ -30,10 +30,11 @@
         }
 
         const defaultScreenSizes = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
-        const renderedPages = packet.pages.filter(page => {
-          if (page.type !== 'urlCompare') return true;
-          return page.devUrl || page.liveUrl || page.devShots || page.liveShots || page.devScreenshotPath || page.liveScreenshotPath;
-        });
+        const preferredUrlPages = packet.pages.filter(page =>
+          page.type === 'urlCompare' &&
+          (page.devUrl || page.liveUrl || page.devShots || page.liveShots || page.devScreenshotPath || page.liveScreenshotPath)
+        );
+        const renderedPages = preferredUrlPages.length ? preferredUrlPages : packet.pages;
         const visiblePageCount = renderedPages.length;
       %>
       <% renderedPages.forEach((page, index) => { %>
