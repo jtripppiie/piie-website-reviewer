@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '0.4.9';
+const APP_VERSION = '0.5.0';
 
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
@@ -594,6 +594,7 @@ function renderNotesView() {
               <span>${statusLabel(note.status)}</span>
             </div>
             ${note.comment ? `<p>${escapeHtml(note.comment)}</p>` : '<p class="muted">No comment.</p>'}
+            ${note.createdAt ? `<p class="muted note-date">${escapeHtml(new Date(note.createdAt).toLocaleString())}</p>` : ''}
           </div>
         </li>
       `).join('');
@@ -627,12 +628,18 @@ function openNotesView() {
   overlay.addEventListener('click', event => {
     if (event.target === overlay || event.target.id === 'closeNotesView') closeNotesView();
   });
+  document.addEventListener('keydown', onNotesViewKey);
   document.body.appendChild(overlay);
+}
+
+function onNotesViewKey(event) {
+  if (event.key === 'Escape') closeNotesView();
 }
 
 function closeNotesView() {
   const existing = document.querySelector('#notesView');
   if (existing) existing.remove();
+  document.removeEventListener('keydown', onNotesViewKey);
 }
 
 document.querySelector('#viewNotes').addEventListener('click', openNotesView);

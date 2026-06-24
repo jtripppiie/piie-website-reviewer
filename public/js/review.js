@@ -30,6 +30,23 @@ document.querySelectorAll('[data-compare]').forEach(compare => {
   compare.addEventListener('pointercancel', () => {
     dragging = false;
   });
+
+  // Keyboard support: focus the comparison and nudge the reveal line.
+  if (!compare.hasAttribute('tabindex')) compare.setAttribute('tabindex', '0');
+
+  compare.addEventListener('keydown', event => {
+    const current = parseFloat(compare.style.getPropertyValue('--reveal')) || 50;
+    let next = current;
+
+    if (event.key === 'ArrowLeft') next = current - (event.shiftKey ? 10 : 2);
+    else if (event.key === 'ArrowRight') next = current + (event.shiftKey ? 10 : 2);
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = 100;
+    else return;
+
+    event.preventDefault();
+    compare.style.setProperty('--reveal', Math.max(0, Math.min(100, next)));
+  });
 });
 
 document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {

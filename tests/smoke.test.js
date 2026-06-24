@@ -72,3 +72,19 @@ test('quick-update URL contract accepts http(s) and rejects junk', () => {
   assert.ok(!isHttpUrl('example.com'));
   assert.ok(!isHttpUrl(''));
 });
+
+test('server exposes the notes and per-size upload routes', () => {
+  const server = read('server.js');
+
+  assert.match(server, /\/r\/:shareToken\/notes['"`]/, 'view notes route missing');
+  assert.match(server, /\/r\/:shareToken\/notes\/download/, 'download notes route missing');
+  assert.match(server, /\/pages\/:pageId\/upload-shots/, 'per-size upload route missing');
+});
+
+test('removeUploadFile only targets files inside data/uploads', () => {
+  const server = read('server.js');
+
+  // The cleanup helper must refuse paths outside the uploads folder.
+  assert.match(server, /function removeUploadFile/, 'removeUploadFile helper missing');
+  assert.match(server, /startsWith\('\/uploads\/'\)/, 'removeUploadFile should guard the /uploads/ prefix');
+});

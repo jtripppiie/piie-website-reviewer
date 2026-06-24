@@ -4,6 +4,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
+const fs = require('fs');
 
 const {
   ensureDataFiles,
@@ -126,6 +127,22 @@ function uploadPath(file) {
   return file ? `/uploads/${file.filename}` : '';
 }
 
+// Safely delete a previously uploaded file when it is replaced or removed, so
+// the data/uploads folder does not fill up with orphans. Only touches files
+// inside data/uploads and never throws.
+function removeUploadFile(webPath) {
+  if (!webPath || typeof webPath !== 'string') return;
+  if (!webPath.startsWith('/uploads/')) return;
+
+  const name = path.basename(webPath);
+  const full = path.join(__dirname, 'data', 'uploads', name);
+  const base = path.join(__dirname, 'data', 'uploads');
+
+  if (!full.startsWith(base + path.sep)) return;
+
+  fs.promises.unlink(full).catch(() => {});
+}
+
 app.get('/', (req, res) => {
   res.redirect('/admin');
 });
@@ -234,11 +251,23 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
     const before = req.files?.beforeImage?.[0];
     const after = req.files?.afterImage?.[0];
 
-    if (before) page.beforeImagePath = uploadPath(before);
-    if (after) page.afterImagePath = uploadPath(after);
+    if (before) {
+      removeUploadFile(page.beforeImagePath);
+      page.beforeImagePath = uploadPath(before);
+    }
+    if (after) {
+      removeUploadFile(page.afterImagePath);
+      page.afterImagePath = uploadPath(after);
+    }
 
-    if (req.body.removeBeforeImage === 'true') page.beforeImagePath = '';
-    if (req.body.removeAfterImage === 'true') page.afterImagePath = '';
+    if (req.body.removeBeforeImage === 'true') {
+      removeUploadFile(page.beforeImagePath);
+      page.beforeImagePath = '';
+    }
+    if (req.body.removeAfterImage === 'true') {
+      removeUploadFile(page.afterImagePath);
+      page.afterImagePath = '';
+    }
   }
 
   if (page.type === 'urlCompare') {
@@ -252,19 +281,23 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
     // A manual screenshot upload or removal replaces any auto captured shots,
     // so clear the per size captures to keep the review display consistent.
     if (devScreenshot) {
+      removeUploadFile(page.devScreenshotPath);
       page.devScreenshotPath = uploadPath(devScreenshot);
       delete page.devShots;
     }
     if (liveScreenshot) {
+      removeUploadFile(page.liveScreenshotPath);
       page.liveScreenshotPath = uploadPath(liveScreenshot);
       delete page.liveShots;
     }
 
     if (req.body.removeDevScreenshot === 'true') {
+      removeUploadFile(page.devScreenshotPath);
       page.devScreenshotPath = '';
       delete page.devShots;
     }
     if (req.body.removeLiveScreenshot === 'true') {
+      removeUploadFile(page.liveScreenshotPath);
       page.liveScreenshotPath = '';
       delete page.liveShots;
     }
@@ -305,10 +338,22 @@ app.post('/admin/packets/:packetId/pages/:pageId/upload-shots', upload.fields(
   sizes.forEach(size => {
     const dev = req.files?.[`devShot_${size}`]?.[0];
     const live = req.files?.[`liveShot_${size}`]?.[0];
-    if (dev) page.devShots[size] = uploadPath(dev);
-    if (live) page.liveShots[size] = uploadPath(live);
-    if (req.body[`removeDevShot_${size}`] === 'true') delete page.devShots[size];
-    if (req.body[`removeLiveShot_${size}`] === 'true') delete page.liveShots[size];
+    if (dev) {
+      removeUploadFile(page.devShots[size]);
+      page.devShots[size] = uploadPath(dev);
+    }
+    if (live) {
+      removeUploadFile(page.liveShots[size]);
+      page.liveShots[size] = uploadPath(live);
+    }
+    if (req.body[`removeDevShot_${size}`] === 'true') {
+      removeUploadFile(page.devShots[size]);
+      delete page.devShots[size];
+    }
+    if (req.body[`removeLiveShot_${size}`] === 'true') {
+      removeUploadFile(page.liveShots[size]);
+      delete page.liveShots[size];
+    }
   });
 
   // Drop empty shot maps so the review page falls back to the single slider.
