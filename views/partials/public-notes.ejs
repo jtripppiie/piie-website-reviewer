@@ -33,6 +33,18 @@
     if (status === 'approved-minor-changes' || status === 'approved-after-these-changes') return 'is-approved-after-changes';
     return 'is-needs-review';
   }
+
+  function screenSizeLabel(size) {
+    const labels = {
+      desktop: 'Desktop',
+      'laptop-15-6': '15.6 display',
+      'laptop-14-5': '14.5 display',
+      'laptop-13': '13 display',
+      mobile: 'Mobile'
+    };
+
+    return labels[size] || size || 'Not specified';
+  }
 %>
 
 <section class="public-notes" aria-label="Visible review notes">
@@ -48,6 +60,7 @@
             <div class="public-note__meta">
               <strong><%= note.reviewerName || note.initials || 'Reviewer' %></strong>
               <span><%= statusLabel(note.status) %></span>
+              <span><%= screenSizeLabel(note.screenSize) %></span>
             </div>
 
             <% if (note.comment) { %>

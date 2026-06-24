@@ -3,7 +3,7 @@
   <%- include('partials/head', { title: packet.title + ' - Notes' }) %>
   <body class="notes-body">
     <main class="notes-page">
-      <header class="notes-header">
+      <header class="notes-header" data-notes-header data-admin-href="/admin<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>">
         <div>
           <p class="eyebrow">Review notes</p>
           <h1><%= packet.title %></h1>
@@ -81,5 +81,32 @@
         <% }) %>
       <% } %>
     </main>
+
+    <script>
+      (function () {
+        const header = document.querySelector('[data-notes-header]');
+        if (!header) return;
+
+        const adminHref = header.getAttribute('data-admin-href') || '/admin';
+        let clicks = 0;
+        let timer = null;
+
+        header.addEventListener('click', event => {
+          if (!event.target.closest('.eyebrow, h1, .muted')) return;
+
+          clicks += 1;
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            clicks = 0;
+          }, 600);
+
+          if (clicks >= 3) {
+            clicks = 0;
+            clearTimeout(timer);
+            window.location.assign(adminHref);
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

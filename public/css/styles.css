@@ -163,6 +163,10 @@ button.secondary {
   white-space: nowrap;
 }
 
+.review-nav form {
+  margin: 0;
+}
+
 .review-deck {
   width: min(1800px, calc(100% - 24px));
   margin: 0 auto;
@@ -828,11 +832,6 @@ body.debug-layout-on .empty-preview {
 
 .review-page--work {
   padding: 6px;
-}
-
-/* Kill the old topbar if it still exists */
-.review-topbar {
-  display: none !important;
 }
 
 /* Main page layout */

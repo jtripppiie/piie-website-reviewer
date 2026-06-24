@@ -6,9 +6,13 @@
       <h1><%= packet.title %></h1>
       <div class="review-nav">
         <a class="button secondary" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>">View all notes</a>
-        <button type="button" id="prevPage">Previous</button>
-        <span id="pageCounter" aria-live="polite"></span>
-        <button type="button" id="nextPage">Next</button>
+        <% if (isAdminView) { %>
+          <a class="button secondary" href="/admin?key=<%= adminKeyValue %>">Back to admin</a>
+          <form method="post" action="/admin/packets/<%= packet.packetId %>/clear-results" onsubmit="return confirm('Clear all review results for this packet? This cannot be undone.');">
+            <input type="hidden" name="key" value="<%= adminKeyValue %>">
+            <button type="submit" class="button danger">Clear review results</button>
+          </form>
+        <% } %>
       </div>
     </header>
     <main class="review-deck">
@@ -26,8 +30,13 @@
         }
 
         const defaultScreenSizes = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+        const preferredUrlPages = packet.pages.filter(page =>
+          page.type === 'urlCompare' &&
+          (page.devUrl || page.liveUrl || page.devShots || page.liveShots || page.devScreenshotPath || page.liveScreenshotPath)
+        );
+        const renderedPages = preferredUrlPages.length ? preferredUrlPages : packet.pages;
       %>
-      <% packet.pages.forEach((page, index) => { %>
+      <% renderedPages.forEach((page, index) => { %>
         <% const pageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
 
         <% if (page.type === 'cover') { %>

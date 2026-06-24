@@ -4,9 +4,8 @@
  * Important concept:
  * - Test viewport is the real CSS pixel size being reviewed. It never changes
  *   when you change preview scale.
- * - Preview scale only shrinks the preview visually so it fits the reviewer
- *   screen. Fit to screen, 100%, 75%, and 50% only change how big the preview
- *   looks, not what size is being tested.
+ * - Preview scale only changes how big the preview looks, not what size is
+ *   being tested.
  *
  * The friendly labels (15.6 display, 14.5 display, 13 display, Mobile) are
  * laptop-class viewport presets, not guaranteed physical screen inches.
@@ -21,7 +20,7 @@
     mobile: { label: 'Mobile', w: 390, h: 844 }
   };
 
-  const SCALE_MODES = ['fit', '100', '75', '50'];
+  const SCALE_MODES = ['100', '75', '50'];
   const STAGE_GAP = 16;
 
   function presetFor(size) {
@@ -30,7 +29,7 @@
 
   function slideState(slide) {
     if (!slide._previewState) {
-      slide._previewState = { size: 'desktop', scaleMode: 'fit' };
+      slide._previewState = { size: 'desktop', scaleMode: '100' };
     }
     return slide._previewState;
   }
@@ -67,7 +66,6 @@
       controls.appendChild(labelText);
 
       const buttonLabels = {
-        fit: 'Fit to screen',
         '100': '100%',
         '75': '75%',
         '50': '50%'
@@ -106,14 +104,7 @@
     if (state.scaleMode === '75') return 0.75;
     if (state.scaleMode === '50') return 0.5;
 
-    // Fit to screen: Desktop fills the available width (it is not a fixed
-    // device, so it scales up or down to fill the row). The laptop presets and
-    // mobile represent real device widths, so they only ever scale down.
-    const stage = slide.querySelector('.webpage-preview-stage');
-    const cardCount = Math.max(1, stage.querySelectorAll('.webpage-frame-card').length);
-    const available = stage.clientWidth - STAGE_GAP * (cardCount - 1);
-    const raw = (available / cardCount) / preset.w;
-    return state.size === 'desktop' ? raw : Math.min(1, raw);
+    return 1;
   }
 
   function verifyIframe(scaler, preset) {
@@ -189,16 +180,13 @@
 
     const state = slideState(slide);
     const scaleLabel = {
-      fit: 'Fit to screen',
       '100': '100%',
       '75': '75%',
       '50': '50%'
     }[state.scaleMode];
 
     const percent = Math.round(scale * 100);
-    const scaleText = state.scaleMode === 'fit'
-      ? `Fit to screen (${percent}%)`
-      : `${scaleLabel} (${percent}%)`;
+    const scaleText = `${scaleLabel} (${percent}%)`;
 
     const scalers = slide.querySelectorAll('.viewport-scaler');
     const verifyText = scalers.length ? verifyIframe(scalers[0], preset) : '';
