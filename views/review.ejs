@@ -2,6 +2,15 @@
 <html lang="en">
   <%- include('partials/head', { title: packet.title }) %>
   <body class="review-body">
+    <header class="review-topbar">
+      <h1><%= packet.title %></h1>
+      <div class="review-nav">
+        <a class="button secondary" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>">View all notes</a>
+        <button type="button" id="prevPage">Previous</button>
+        <span id="pageCounter" aria-live="polite"></span>
+        <button type="button" id="nextPage">Next</button>
+      </div>
+    </header>
     <main class="review-deck">
       <%
         function screenSizeLabel(size) {

@@ -110,7 +110,7 @@
     // device, so it scales up or down to fill the row). The laptop presets and
     // mobile represent real device widths, so they only ever scale down.
     const stage = slide.querySelector('.webpage-preview-stage');
-    const cardCount = state.size === 'mobile' ? 2 : 1;
+    const cardCount = Math.max(1, stage.querySelectorAll('.webpage-frame-card').length);
     const available = stage.clientWidth - STAGE_GAP * (cardCount - 1);
     const raw = (available / cardCount) / preset.w;
     return state.size === 'desktop' ? raw : Math.min(1, raw);
@@ -142,14 +142,13 @@
 
     slide.dataset.previewSize = state.size;
 
-    const cardCount = state.size === 'mobile' ? 2 : 1;
     const scale = computeScale(slide, preset);
 
     stage.style.setProperty('display', 'flex', 'important');
     stage.style.setProperty('flex-wrap', 'wrap', 'important');
     stage.style.setProperty('gap', `${STAGE_GAP}px`, 'important');
     stage.style.setProperty('align-items', 'flex-start', 'important');
-    stage.style.setProperty('justify-content', state.size === 'desktop' ? 'flex-start' : 'center', 'important');
+    stage.style.setProperty('justify-content', 'center', 'important');
     stage.style.setProperty('width', '100%', 'important');
     stage.style.setProperty('max-width', 'none', 'important');
     stage.style.setProperty('overflow-x', 'auto', 'important');
