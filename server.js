@@ -217,11 +217,25 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
     const devScreenshot = req.files?.devScreenshot?.[0];
     const liveScreenshot = req.files?.liveScreenshot?.[0];
 
-    if (devScreenshot) page.devScreenshotPath = uploadPath(devScreenshot);
-    if (liveScreenshot) page.liveScreenshotPath = uploadPath(liveScreenshot);
+    // A manual screenshot upload or removal replaces any auto captured shots,
+    // so clear the per size captures to keep the review display consistent.
+    if (devScreenshot) {
+      page.devScreenshotPath = uploadPath(devScreenshot);
+      delete page.devShots;
+    }
+    if (liveScreenshot) {
+      page.liveScreenshotPath = uploadPath(liveScreenshot);
+      delete page.liveShots;
+    }
 
-    if (req.body.removeDevScreenshot === 'true') page.devScreenshotPath = '';
-    if (req.body.removeLiveScreenshot === 'true') page.liveScreenshotPath = '';
+    if (req.body.removeDevScreenshot === 'true') {
+      page.devScreenshotPath = '';
+      delete page.devShots;
+    }
+    if (req.body.removeLiveScreenshot === 'true') {
+      page.liveScreenshotPath = '';
+      delete page.liveShots;
+    }
   }
 
   page.updatedAt = new Date().toISOString();
