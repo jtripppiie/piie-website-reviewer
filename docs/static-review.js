@@ -1,7 +1,7 @@
 const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 
-const APP_VERSION = '0.2.8';
+const APP_VERSION = '0.2.9';
 
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
@@ -512,6 +512,71 @@ document.querySelector('#clearNotes').addEventListener('click', () => {
   saveNotes();
   render();
 });
+
+// Hidden demo helper: triple-click the title to auto-fill every feedback form
+// with sample data so the demo is quick to show without typing it all out.
+const SAMPLE_REVIEWERS = ['JT', 'Alex P.', 'Sam Rivera', 'Design Team', 'M. Chen'];
+const SAMPLE_STATUSES = ['approved', 'approved-after-these-changes', 'needs-design-changes', 'needs-content-changes', 'needs-mobile-review'];
+const SAMPLE_COMMENTS = [
+  'Header spacing looks tighter on live, can we match the dev padding?',
+  'Looks great on desktop. Mobile menu could use a bit more breathing room.',
+  'Colors are good. The hero font feels a touch small to me.',
+  'Good to go once the footer links are updated.',
+  'Buttons line up nicely now, thanks for the fix.'
+];
+
+function pickSample(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function showDemoToast(message) {
+  let toast = document.querySelector('.demo-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'demo-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add('is-visible');
+  clearTimeout(showDemoToast.timer);
+  showDemoToast.timer = setTimeout(() => toast.classList.remove('is-visible'), 2600);
+}
+
+function fillDemoData() {
+  const forms = document.querySelectorAll('[data-note-form]');
+  if (!forms.length) {
+    showDemoToast('No forms to fill yet.');
+    return;
+  }
+  forms.forEach(form => {
+    const name = form.querySelector('[name="reviewerName"]');
+    const status = form.querySelector('[name="status"]');
+    const comment = form.querySelector('[name="comment"]');
+    if (name) name.value = pickSample(SAMPLE_REVIEWERS);
+    if (status) status.value = pickSample(SAMPLE_STATUSES);
+    if (comment) comment.value = pickSample(SAMPLE_COMMENTS);
+  });
+  showDemoToast(`Filled ${forms.length} form${forms.length === 1 ? '' : 's'} with sample data. Hit Save note to add them.`);
+}
+
+(function wireDemoHelper() {
+  const trigger = document.querySelector('.app-header h1');
+  if (!trigger) return;
+  trigger.style.cursor = 'pointer';
+  trigger.title = 'Triple-click to fill the demo forms with sample data';
+  let clicks = 0;
+  let timer = null;
+  trigger.addEventListener('click', () => {
+    clicks += 1;
+    clearTimeout(timer);
+    timer = setTimeout(() => { clicks = 0; }, 600);
+    if (clicks >= 3) {
+      clicks = 0;
+      clearTimeout(timer);
+      fillDemoData();
+    }
+  });
+})();
 
 fetch('packet.json')
   .then(response => response.json())
