@@ -1147,13 +1147,23 @@ body.debug-layout-on .empty-preview {
 /* ============================================================
    Merged from review-overrides.css
    ============================================================ */
-/* Review panel should stay at the top of each review page, not pin while scrolling. */
+/* Review panel follows along as you scroll on wide layouts. */
 .feedback-panel {
-  position: static !important;
-  top: auto !important;
-  z-index: auto !important;
-  max-height: none !important;
-  overflow: visible !important;
+  position: sticky;
+  top: 12px;
+  align-self: start;
+  z-index: 18;
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+}
+
+/* On stacked / narrow layouts it sits in normal flow instead of pinning. */
+@media (max-width: 1100px) {
+  .feedback-panel {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
 }
 
 .webpage-frame-card img,
