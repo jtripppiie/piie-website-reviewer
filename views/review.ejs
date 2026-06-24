@@ -31,6 +31,9 @@
             <h1><%= page.title %></h1>
             <% if (page.subtitle) { %><h2><%= page.subtitle %></h2><% } %>
             <% if (page.body) { %><p><%= page.body %></p><% } %>
+            <p class="cover-notes-link">
+              <a class="button" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>">View all notes</a>
+            </p>
           </section>
         <% } %>
 

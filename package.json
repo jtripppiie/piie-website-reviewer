@@ -1,6 +1,6 @@
 {
   "name": "piie-website-reviewer",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "No-database web review tool for PIIE design and content QA",
   "main": "server.js",
   "scripts": {

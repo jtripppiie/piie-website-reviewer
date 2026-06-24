@@ -636,6 +636,87 @@ app.get('/r/:shareToken', requireReviewer, async (req, res) => {
   });
 });
 
+function humanScreenSize(size) {
+  const labels = {
+    desktop: 'Desktop',
+    'laptop-15-6': '15.6 display',
+    'laptop-14-5': '14.5 display',
+    'laptop-13': '13 display',
+    mobile: 'Mobile'
+  };
+  return labels[size] || size || 'General';
+}
+
+function humanStatus(status) {
+  if (!status) return '';
+  return status.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+}
+
+function csvCell(value) {
+  const text = String(value == null ? '' : value);
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+app.get('/r/:shareToken/notes', requireReviewer, async (req, res) => {
+  const packets = await getPackets();
+  const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
+  if (!packet) return res.status(404).send('Review packet not found or not published.');
+
+  const responses = await getResponses();
+  const packetResponses = responses
+    .filter(r => r.packetId === packet.packetId)
+    .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+
+  res.render('notes', {
+    packet,
+    responses: packetResponses,
+    humanScreenSize,
+    humanStatus,
+    isAdminView: isAdmin(req),
+    adminKeyValue: isAdmin(req) ? adminKey(req) : ''
+  });
+});
+
+app.get('/r/:shareToken/notes/download', requireReviewer, async (req, res) => {
+  const packets = await getPackets();
+  const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
+  if (!packet) return res.status(404).send('Review packet not found or not published.');
+
+  const responses = await getResponses();
+  const packetResponses = responses
+    .filter(r => r.packetId === packet.packetId)
+    .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+
+  const pageTitle = id => {
+    const page = packet.pages.find(p => p.pageId === id);
+    return page ? (page.title || 'Untitled page') : id;
+  };
+
+  const header = ['Page', 'Screen size', 'Reviewer', 'Status', 'Comment', 'Marked a spot', 'Date'];
+  const rows = packetResponses.map(r => [
+    pageTitle(r.pageId),
+    humanScreenSize(r.screenSize),
+    r.reviewerName || r.initials || '',
+    humanStatus(r.status),
+    r.comment || '',
+    r.dotX && r.dotY ? 'Yes' : '',
+    r.createdAt ? new Date(r.createdAt).toLocaleString() : ''
+  ]);
+
+  const csv = [header, ...rows]
+    .map(cols => cols.map(csvCell).join(','))
+    .join('\r\n');
+
+  const safeName = (packet.title || 'review-notes')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'review-notes';
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${safeName}-notes.csv"`);
+  res.send('\ufeff' + csv);
+});
+
 app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
   const packets = await getPackets();
   const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);

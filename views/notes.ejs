@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <%- include('partials/head', { title: packet.title + ' - Notes' }) %>
+  <body class="notes-body">
+    <main class="notes-page">
+      <header class="notes-header">
+        <div>
+          <p class="eyebrow">Review notes</p>
+          <h1><%= packet.title %></h1>
+          <p class="muted"><%= responses.length %> <%= responses.length === 1 ? 'note' : 'notes' %> so far.</p>
+        </div>
+        <div class="notes-actions">
+          <a class="button" href="/r/<%= packet.shareToken %><%= adminKeyValue ? '?key=' + adminKeyValue : '' %>">Back to review</a>
+          <% if (responses.length) { %>
+            <a class="button primary" href="/r/<%= packet.shareToken %>/notes/download">Download notes</a>
+          <% } %>
+        </div>
+      </header>
+
+      <% if (!responses.length) { %>
+        <p class="notes-empty">No notes have been left yet. Once reviewers save notes, they show up here.</p>
+      <% } else { %>
+        <% packet.pages.forEach(page => { %>
+          <% const pageNotes = responses.filter(r => r.pageId === page.pageId); %>
+          <% if (pageNotes.length) { %>
+            <section class="notes-group">
+              <h2><%= page.title || 'Untitled page' %></h2>
+              <ol class="notes-cards">
+                <% pageNotes.forEach(note => { %>
+                  <li class="note-card">
+                    <div class="note-card__top">
+                      <strong><%= note.reviewerName || note.initials || 'Reviewer' %></strong>
+                      <span class="note-pill"><%= humanStatus(note.status) %></span>
+                      <span class="note-size"><%= humanScreenSize(note.screenSize) %></span>
+                    </div>
+                    <% if (note.comment) { %>
+                      <p class="note-comment"><%= note.comment %></p>
+                    <% } else { %>
+                      <p class="note-comment muted">No comment.</p>
+                    <% } %>
+                    <p class="note-meta muted">
+                      <% if (note.dotX && note.dotY) { %>Marked a spot &middot; <% } %>
+                      <%= note.createdAt ? new Date(note.createdAt).toLocaleString() : '' %>
+                    </p>
+                  </li>
+                <% }) %>
+              </ol>
+            </section>
+          <% } %>
+        <% }) %>
+      <% } %>
+    </main>
+  </body>
+</html>
