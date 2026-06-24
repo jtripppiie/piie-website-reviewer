@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '0.4.8';
+const APP_VERSION = '0.4.9';
 
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
@@ -116,7 +116,7 @@ function updateDebug() {
     limitations: [
       'No Express server on GitHub Pages',
       'Notes save only to this browser localStorage',
-      'Use Export Notes JSON to share notes',
+      'Use View notes to see everyone\'s feedback',
       'Iframe previews may be blocked by the target site'
     ]
   }, null, 2);
@@ -572,15 +572,70 @@ function handleUrlForm(form) {
   showDemoToast('Preview updated. This is saved in your browser only.');
 }
 
-document.querySelector('#exportNotes').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(allNotes(), null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'piie-web-reviewer-notes.json';
-  link.click();
-  URL.revokeObjectURL(url);
-});
+function renderNotesView() {
+  const pages = Array.isArray(state.packet?.pages) ? state.packet.pages : [];
+  const notes = allNotes();
+
+  const sections = pages.map(page => {
+    const forPage = notes.filter(note => note.pageId === page.pageId);
+    if (!forPage.length) return '';
+
+    const sizes = (page.screenSizes || ['desktop', 'mobile']).filter(size => size !== 'tablet');
+    const bySize = sizes.map(size => {
+      const sizeNotes = forPage.filter(note => note.screenSize === size);
+      if (!sizeNotes.length) return '';
+
+      const items = sizeNotes.map(note => `
+        <li class="note ${note.status}">
+          <span class="note-icon" aria-hidden="true">${statusIcon(note.status)}</span>
+          <div>
+            <div class="note-meta">
+              <strong>${escapeHtml(note.reviewerName || 'Reviewer')}</strong>
+              <span>${statusLabel(note.status)}</span>
+            </div>
+            ${note.comment ? `<p>${escapeHtml(note.comment)}</p>` : '<p class="muted">No comment.</p>'}
+          </div>
+        </li>
+      `).join('');
+
+      return `<h4>${escapeHtml(screenSizeLabel(size))}</h4><ol class="notes-list">${items}</ol>`;
+    }).join('');
+
+    return `<section class="notes-view__group"><h3>${escapeHtml(page.title || 'Untitled page')}</h3>${bySize}</section>`;
+  }).join('');
+
+  const body = sections || '<p class="muted">No notes have been left yet.</p>';
+
+  return `
+    <div class="notes-view__panel" role="dialog" aria-label="All review notes">
+      <div class="notes-view__bar">
+        <h2>All notes</h2>
+        <button type="button" id="closeNotesView">Close</button>
+      </div>
+      <p class="muted">${notes.length} ${notes.length === 1 ? 'note' : 'notes'} across all screen sizes.</p>
+      ${body}
+    </div>
+  `;
+}
+
+function openNotesView() {
+  closeNotesView();
+  const overlay = document.createElement('div');
+  overlay.className = 'notes-view';
+  overlay.id = 'notesView';
+  overlay.innerHTML = renderNotesView();
+  overlay.addEventListener('click', event => {
+    if (event.target === overlay || event.target.id === 'closeNotesView') closeNotesView();
+  });
+  document.body.appendChild(overlay);
+}
+
+function closeNotesView() {
+  const existing = document.querySelector('#notesView');
+  if (existing) existing.remove();
+}
+
+document.querySelector('#viewNotes').addEventListener('click', openNotesView);
 
 document.querySelector('#clearNotes').addEventListener('click', () => {
   if (!confirm('Clear notes saved in this browser? Demo notes will remain visible.')) return;

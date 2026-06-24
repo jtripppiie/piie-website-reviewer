@@ -332,3 +332,54 @@ iframe {
     flex-direction: column;
   }
 }
+
+/* All notes overlay */
+.notes-view {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, .55);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 16px;
+  overflow: auto;
+}
+
+.notes-view__panel {
+  background: #fff;
+  border-radius: 14px;
+  max-width: 760px;
+  width: 100%;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .35);
+}
+
+.notes-view__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.notes-view__bar h2 {
+  margin: 0;
+}
+
+.notes-view__group {
+  margin-top: 18px;
+}
+
+.notes-view__group h3 {
+  margin: 0 0 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.notes-view__group h4 {
+  margin: 12px 0 6px;
+  font-size: 14px;
+  color: #475569;
+}
+
