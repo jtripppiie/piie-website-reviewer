@@ -7,6 +7,13 @@
 
       <h1>Edit Packet</h1>
 
+      <section class="card admin-simple-flow">
+        <h2>Simple editing flow</h2>
+        <p>Keep this page to one job at a time.</p>
+        <p><strong>For a URL review page:</strong> set the title, set the instructions, enter one Dev URL and one Live URL, then save.</p>
+        <p>Only use screenshot capture or per-size uploads if the site preview is blocked or you need manual fallbacks.</p>
+      </section>
+
       <section class="card">
         <h2>Packet Details</h2>
 
@@ -113,6 +120,7 @@
 
               <% if (page.type === 'imageCompare') { %>
                 <% const presetList = [['desktop','Desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
+                <p class="muted">This page is one image comparison: one Before image and one After image.</p>
                 <label>
                   Instructions
                   <textarea name="instructions"><%= page.instructions || '' %></textarea>
@@ -150,34 +158,37 @@
                   </label>
                 <% } %>
 
-                <h4>Upload images by screen size</h4>
-                <p class="muted">Optional: upload a separate Before and After image for Desktop, 15.6, 14.5, 13, and Mobile. If a size is missing, reviewers fall back to the main Before/After images above.</p>
-                <form method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/upload-shots" enctype="multipart/form-data">
-                  <input type="hidden" name="key" value="<%= key %>">
-                  <% presetList.forEach(([sizeKey, sizeLabel]) => { %>
-                    <fieldset class="shot-upload">
-                      <legend><%= sizeLabel %></legend>
-                      <label>Before image
-                        <input type="file" name="beforeShot_<%= sizeKey %>" accept="image/*">
-                      </label>
-                      <% if (page.beforeShots && page.beforeShots[sizeKey]) { %>
-                        <p class="muted">Current Before: <a href="<%= page.beforeShots[sizeKey] %>" target="_blank" rel="noopener">view</a></p>
-                        <label class="remove-toggle"><input type="checkbox" name="removeBeforeShot_<%= sizeKey %>" value="true"> Remove Before</label>
-                      <% } %>
-                      <label>After image
-                        <input type="file" name="afterShot_<%= sizeKey %>" accept="image/*">
-                      </label>
-                      <% if (page.afterShots && page.afterShots[sizeKey]) { %>
-                        <p class="muted">Current After: <a href="<%= page.afterShots[sizeKey] %>" target="_blank" rel="noopener">view</a></p>
-                        <label class="remove-toggle"><input type="checkbox" name="removeAfterShot_<%= sizeKey %>" value="true"> Remove After</label>
-                      <% } %>
-                    </fieldset>
-                  <% }) %>
-                  <button type="submit">Save uploaded images</button>
-                </form>
+                <details class="advanced-tools">
+                  <summary>Optional per-size image uploads</summary>
+                  <p class="muted">Upload separate Before and After images for Desktop, 15.6, 14.5, 13, and Mobile only when you need size-specific assets.</p>
+                  <form method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/upload-shots" enctype="multipart/form-data">
+                    <input type="hidden" name="key" value="<%= key %>">
+                    <% presetList.forEach(([sizeKey, sizeLabel]) => { %>
+                      <fieldset class="shot-upload">
+                        <legend><%= sizeLabel %></legend>
+                        <label>Before image
+                          <input type="file" name="beforeShot_<%= sizeKey %>" accept="image/*">
+                        </label>
+                        <% if (page.beforeShots && page.beforeShots[sizeKey]) { %>
+                          <p class="muted">Current Before: <a href="<%= page.beforeShots[sizeKey] %>" target="_blank" rel="noopener">view</a></p>
+                          <label class="remove-toggle"><input type="checkbox" name="removeBeforeShot_<%= sizeKey %>" value="true"> Remove Before</label>
+                        <% } %>
+                        <label>After image
+                          <input type="file" name="afterShot_<%= sizeKey %>" accept="image/*">
+                        </label>
+                        <% if (page.afterShots && page.afterShots[sizeKey]) { %>
+                          <p class="muted">Current After: <a href="<%= page.afterShots[sizeKey] %>" target="_blank" rel="noopener">view</a></p>
+                          <label class="remove-toggle"><input type="checkbox" name="removeAfterShot_<%= sizeKey %>" value="true"> Remove After</label>
+                        <% } %>
+                      </fieldset>
+                    <% }) %>
+                    <button type="submit">Save uploaded images</button>
+                  </form>
+                </details>
               <% } %>
 
               <% if (page.type === 'urlCompare') { %>
+                <p class="muted"><strong>One URL comparison only:</strong> this page should have one Dev URL and one Live URL.</p>
                 <label>
                   Instructions
                   <textarea name="instructions"><%= page.instructions || '' %></textarea>
@@ -193,34 +204,40 @@
                   <input type="url" name="liveUrl" value="<%= page.liveUrl || '' %>">
                 </label>
 
-                <p class="muted">Current Dev screenshot: <%= page.devScreenshotPath || 'None' %></p>
-                <label>
-                  Replace Dev screenshot
-                  <input type="file" name="devScreenshot" accept="image/*">
-                </label>
-                <% if (page.devScreenshotPath) { %>
-                  <label class="remove-toggle">
-                    <input type="checkbox" name="removeDevScreenshot" value="true"> Remove Dev screenshot
-                  </label>
-                <% } %>
+                <details class="advanced-tools">
+                  <summary>Optional basic screenshot replacements</summary>
+                  <p class="muted">Use these only if you want one manual Dev screenshot and one manual Live screenshot for the page.</p>
 
-                <p class="muted">Current Live screenshot: <%= page.liveScreenshotPath || 'None' %></p>
-                <label>
-                  Replace Live screenshot
-                  <input type="file" name="liveScreenshot" accept="image/*">
-                </label>
-                <% if (page.liveScreenshotPath) { %>
-                  <label class="remove-toggle">
-                    <input type="checkbox" name="removeLiveScreenshot" value="true"> Remove Live screenshot
+                  <p class="muted">Current Dev screenshot: <%= page.devScreenshotPath || 'None' %></p>
+                  <label>
+                    Replace Dev screenshot
+                    <input type="file" name="devScreenshot" accept="image/*">
                   </label>
-                <% } %>
+                  <% if (page.devScreenshotPath) { %>
+                    <label class="remove-toggle">
+                      <input type="checkbox" name="removeDevScreenshot" value="true"> Remove Dev screenshot
+                    </label>
+                  <% } %>
+
+                  <p class="muted">Current Live screenshot: <%= page.liveScreenshotPath || 'None' %></p>
+                  <label>
+                    Replace Live screenshot
+                    <input type="file" name="liveScreenshot" accept="image/*">
+                  </label>
+                  <% if (page.liveScreenshotPath) { %>
+                    <label class="remove-toggle">
+                      <input type="checkbox" name="removeLiveScreenshot" value="true"> Remove Live screenshot
+                    </label>
+                  <% } %>
+                </details>
               <% } %>
 
               <button type="submit">Save Page Changes</button>
             </form>
 
             <% if (page.type === 'urlCompare') { %>
-              <div class="capture-block">
+              <details class="capture-block advanced-tools">
+                <summary>Advanced screenshot tools</summary>
                 <h4>Auto screenshots</h4>
                 <p class="muted">Capture full page screenshots of the Dev and Live URLs at every preset (Desktop, 15.6, 14.5, 13, Mobile). Save the URLs above first. Recapture any time after the site updates.</p>
 
@@ -284,7 +301,7 @@
                   <% }) %>
                   <button type="submit">Save uploaded screenshots</button>
                 </form>
-              </div>
+              </details>
             <% } %>
           </article>
         <% }) %>
@@ -294,5 +311,35 @@
         <% } %>
       </section>
     </main>
+    <style>
+      .admin-simple-flow {
+        margin-bottom: 1rem;
+      }
+
+      .admin-simple-flow h2 {
+        margin-bottom: 0.5rem;
+      }
+
+      .admin-simple-flow p {
+        margin: 0.4rem 0;
+      }
+
+      .advanced-tools {
+        margin-top: 1rem;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        background: #fafafa;
+      }
+
+      .advanced-tools summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .advanced-tools[open] summary {
+        margin-bottom: 0.75rem;
+      }
+    </style>
   </body>
 </html>
