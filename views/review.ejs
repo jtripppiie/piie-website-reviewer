@@ -30,11 +30,11 @@
         }
 
         const defaultScreenSizes = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
-        const preferredUrlPages = packet.pages.filter(page =>
-          page.type === 'urlCompare' &&
-          (page.devUrl || page.liveUrl || page.devShots || page.liveShots || page.devScreenshotPath || page.liveScreenshotPath)
-        );
-        const renderedPages = preferredUrlPages.length ? preferredUrlPages : packet.pages;
+        const renderedPages = packet.pages.filter(page => {
+          if (page.type !== 'urlCompare') return true;
+          return page.devUrl || page.liveUrl || page.devShots || page.liveShots || page.devScreenshotPath || page.liveScreenshotPath;
+        });
+        const visiblePageCount = renderedPages.length;
       %>
       <% renderedPages.forEach((page, index) => { %>
         <% const pageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
@@ -50,7 +50,7 @@
             <h1><%= page.title %></h1>
             <% if (page.subtitle) { %><h2><%= page.subtitle %></h2><% } %>
             <% if (page.body) { %><p><%= page.body %></p><% } %>
-            <p class="muted cover-count"><%= packet.pages.length %> <%= packet.pages.length === 1 ? 'page' : 'pages' %> &middot; <%= responses.length %> <%= responses.length === 1 ? 'note' : 'notes' %> so far</p>
+            <p class="muted cover-count"><%= visiblePageCount %> <%= visiblePageCount === 1 ? 'page' : 'pages' %> &middot; <%= responses.length %> <%= responses.length === 1 ? 'note' : 'notes' %> so far</p>
             <p class="cover-notes-link">
               <a class="button" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>">View all notes</a>
             </p>
@@ -78,20 +78,12 @@
                   <% }) %>
                 </div>
 
-                <div class="quick-edit" data-quick-edit>
-                  <div class="quick-edit__head">Quick edit (no admin needed)</div>
-                  <% if (quickEditGated && !quickEditUnlocked) { %>
-                    <form class="quick-edit__form" method="post" action="/r/<%= packet.shareToken %>/quick-unlock">
-                      <input type="hidden" name="pageId" value="<%= page.pageId %>">
-                      <% if (quickEditError) { %><p class="error">That quick edit password did not match. Try again.</p><% } %>
-                      <label>Quick edit password
-                        <input type="password" name="quickEditPassword" autocomplete="off" required>
-                      </label>
-                      <button type="submit">Unlock quick edit</button>
-                    </form>
-                  <% } else { %>
+                <% if (isAdminView) { %>
+                  <div class="quick-edit" data-quick-edit>
+                    <div class="quick-edit__head">Quick edit</div>
                     <form class="quick-edit__form" method="post" action="/r/<%= packet.shareToken %>/quick-update" enctype="multipart/form-data">
                       <input type="hidden" name="pageId" value="<%= page.pageId %>">
+                      <input type="hidden" name="key" value="<%= adminKeyValue %>">
                       <div class="quick-edit__row">
                         <label>Before image
                           <input type="file" name="beforeImage" accept="image/*">
@@ -103,8 +95,8 @@
                       <button type="submit">Save to this page</button>
                     </form>
                     <button type="button" class="quick-edit__fill" data-fill-sample>Fill a sample review note</button>
-                  <% } %>
-                </div>
+                  </div>
+                <% } %>
 
                 <div class="shots-stage" data-shots-stage>
                   <% defaultScreenSizes.forEach((size, sizeIndex) => { %>
@@ -202,20 +194,12 @@
                   <% if (page.instructions) { %><p><%= page.instructions %></p><% } %>
                 </div>
 
-                <div class="quick-edit" data-quick-edit>
-                  <div class="quick-edit__head">Quick edit (no admin needed)</div>
-                  <% if (quickEditGated && !quickEditUnlocked) { %>
-                    <form class="quick-edit__form" method="post" action="/r/<%= packet.shareToken %>/quick-unlock">
-                      <input type="hidden" name="pageId" value="<%= page.pageId %>">
-                      <% if (quickEditError) { %><p class="error">That quick edit password did not match. Try again.</p><% } %>
-                      <label>Quick edit password
-                        <input type="password" name="quickEditPassword" autocomplete="off" required>
-                      </label>
-                      <button type="submit">Unlock quick edit</button>
-                    </form>
-                  <% } else { %>
+                <% if (isAdminView) { %>
+                  <div class="quick-edit" data-quick-edit>
+                    <div class="quick-edit__head">Quick edit</div>
                     <form class="quick-edit__form" method="post" action="/r/<%= packet.shareToken %>/quick-update" enctype="multipart/form-data">
                       <input type="hidden" name="pageId" value="<%= page.pageId %>">
+                      <input type="hidden" name="key" value="<%= adminKeyValue %>">
                       <div class="quick-edit__row">
                         <label>Dev URL
                           <input type="url" name="devUrl" value="<%= page.devUrl || '' %>" placeholder="https://dev.example.com">
@@ -235,8 +219,8 @@
                       <button type="submit">Save to this page</button>
                     </form>
                     <button type="button" class="quick-edit__fill" data-fill-sample>Fill a sample review note</button>
-                  <% } %>
-                </div>
+                  </div>
+                <% } %>
 
                 <div class="url-note">
                   <p>Some sites won't load inside a preview. Open them in a new tab if the embedded preview is blank.</p>

@@ -127,6 +127,144 @@ function uploadPath(file) {
   return file ? `/uploads/${file.filename}` : '';
 }
 
+const DEFAULT_SCREEN_SIZES = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+
+function makeDemoPacket(titleOverride = '') {
+  const packetId = makeId('packet');
+  const shareToken = makeId('share');
+  const now = new Date().toISOString();
+  const coverPageId = makeId('page');
+  const photoCompareId = makeId('page');
+  const homepageId = makeId('page');
+  const pricingId = makeId('page');
+
+  const packet = {
+    packetId,
+    shareToken,
+    title: titleOverride || `Demo Review Packet ${new Date().toLocaleDateString()}`,
+    published: true,
+    createdAt: now,
+    updatedAt: now,
+    pages: [
+      {
+        pageId: coverPageId,
+        type: 'cover',
+        title: 'Website Review Demo',
+        subtitle: 'Generated test packet',
+        body: 'Use this packet to test review notes, screen sizes, filters, clear actions, and the full admin-to-review workflow without entering real project data.',
+        order: 0
+      },
+      {
+        pageId: photoCompareId,
+        type: 'imageCompare',
+        title: 'Generic photo comparison',
+        instructions: 'Use this page to test the screenshot comparison flow with built-in generic before and after images.',
+        beforeLabel: 'Before',
+        afterLabel: 'After',
+        beforeImagePath: '/public/demo/photo-before.svg',
+        afterImagePath: '/public/demo/photo-after.svg',
+        beforeShots: {
+          mobile: '/public/demo/photo-before-mobile.svg'
+        },
+        afterShots: {
+          mobile: '/public/demo/photo-after-mobile.svg'
+        },
+        order: 1
+      },
+      {
+        pageId: homepageId,
+        type: 'urlCompare',
+        title: 'Homepage review',
+        instructions: 'Compare the hero, spacing, and call-to-action treatment between dev and live.',
+        devUrl: '/public/demo/dev-home.html',
+        liveUrl: '/public/demo/live-home.html',
+        screenSizes: DEFAULT_SCREEN_SIZES,
+        order: 2
+      },
+      {
+        pageId: pricingId,
+        type: 'urlCompare',
+        title: 'Pricing page review',
+        instructions: 'Check pricing-card hierarchy, plan labels, and the mobile stack for overflow or spacing drift.',
+        devUrl: '/public/demo/dev-pricing.html',
+        liveUrl: '/public/demo/live-pricing.html',
+        screenSizes: DEFAULT_SCREEN_SIZES,
+        order: 3
+      }
+    ]
+  };
+
+  const responses = [
+    {
+      responseId: makeId('response'),
+      packetId,
+      pageId: photoCompareId,
+      screenSize: 'desktop',
+      reviewerName: 'Morgan Lee',
+      initials: 'ML',
+      status: 'approved-after-these-changes',
+      comment: 'The after image feels more polished, but the caption area needs a little more margin below the photo.',
+      dotX: '',
+      dotY: '',
+      createdAt: now
+    },
+    {
+      responseId: makeId('response'),
+      packetId,
+      pageId: photoCompareId,
+      screenSize: 'mobile',
+      reviewerName: 'JT',
+      initials: 'JT',
+      status: 'needs-mobile-review',
+      comment: 'Mobile crop is useful for testing the side-by-side image layout and note filtering by screen size.',
+      dotX: '',
+      dotY: '',
+      createdAt: now
+    },
+    {
+      responseId: makeId('response'),
+      packetId,
+      pageId: homepageId,
+      screenSize: 'desktop',
+      reviewerName: 'Alex P.',
+      initials: 'AP',
+      status: 'approved-after-these-changes',
+      comment: 'Hero layout is close. Tighten the headline width and align the button row with the card edge.',
+      dotX: '',
+      dotY: '',
+      createdAt: now
+    },
+    {
+      responseId: makeId('response'),
+      packetId,
+      pageId: homepageId,
+      screenSize: 'mobile',
+      reviewerName: 'JT',
+      initials: 'JT',
+      status: 'needs-mobile-review',
+      comment: 'The stacked hero content should have more breathing room above the primary button on mobile.',
+      dotX: '',
+      dotY: '',
+      createdAt: now
+    },
+    {
+      responseId: makeId('response'),
+      packetId,
+      pageId: pricingId,
+      screenSize: 'laptop-14-5',
+      reviewerName: 'Design Team',
+      initials: 'DT',
+      status: 'needs-design-changes',
+      comment: 'Card shadows and pricing emphasis differ too much between versions. Bring the visual weight closer together.',
+      dotX: '',
+      dotY: '',
+      createdAt: now
+    }
+  ];
+
+  return { packet, responses };
+}
+
 // Safely delete a previously uploaded file when it is replaced or removed, so
 // the data/uploads folder does not fill up with orphans. Only touches files
 // inside data/uploads and never throws.
@@ -219,6 +357,22 @@ app.post('/admin/packets', async (req, res) => {
 
   packets.push(packet);
   await savePackets(packets);
+
+  res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
+});
+
+app.post('/admin/packets/demo', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const responses = await getResponses();
+  const { packet, responses: demoResponses } = makeDemoPacket((req.body.title || '').trim());
+
+  packets.push(packet);
+  responses.push(...demoResponses);
+
+  await savePackets(packets);
+  await saveResponses(responses);
 
   res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
 });
@@ -868,7 +1022,8 @@ app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
   await saveResponses(responses);
 
   const hash = req.body.pageId ? `#${req.body.pageId}` : '';
-  res.redirect(`/r/${packet.shareToken}${hash}`);
+  const keyPart = adminKey(req) ? `?key=${encodeURIComponent(adminKey(req))}` : '';
+  res.redirect(`/r/${packet.shareToken}${keyPart}${hash}`);
 });
 
 app.post('/r/:shareToken/clear-notes', async (req, res) => {
@@ -904,6 +1059,8 @@ app.post('/r/:shareToken/clear-notes', async (req, res) => {
 // Optional unlock step for quick edit. When QUICK_EDIT_PASSWORD is set, a
 // reviewer must enter it once per browser session before they can save edits.
 app.post('/r/:shareToken/quick-unlock', rateLimitQuickUpdate, requireReviewer, (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
   const shareToken = req.params.shareToken;
   const pageId = (req.body.pageId || '').trim();
   const anchor = pageId ? `#${encodeURIComponent(pageId)}` : '';
@@ -925,6 +1082,8 @@ app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireReviewer, u
   { name: 'devScreenshot', maxCount: 1 },
   { name: 'liveScreenshot', maxCount: 1 }
 ]), async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
   const packets = await getPackets();
   const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
   if (!packet) return res.status(404).send('Review packet not found or not published.');

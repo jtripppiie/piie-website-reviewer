@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Dev Pricing</title>
+  <style>
+    :root {
+      --bg: #f7f4ee;
+      --ink: #24313d;
+      --muted: #627180;
+      --line: #d7cfc2;
+      --accent: #c9713d;
+      --card: #fff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--ink); }
+    main { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 36px 0 60px; }
+    h1 { margin: 0 0 10px; font: 700 clamp(2rem, 4vw, 3.4rem)/1.02 Georgia, serif; }
+    p { margin: 0 0 24px; color: var(--muted); font-size: 1rem; line-height: 1.6; }
+    .plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .plan { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 24px; }
+    .plan.featured { border-color: var(--accent); box-shadow: 0 14px 28px rgba(201, 113, 61, 0.12); }
+    .label { color: var(--accent); text-transform: uppercase; letter-spacing: 0.16em; font-size: 11px; font-weight: 700; }
+    .price { margin: 16px 0 12px; font-size: 2rem; font-weight: 700; }
+    ul { padding-left: 18px; margin: 0 0 18px; color: var(--muted); line-height: 1.7; }
+    .cta { display: inline-block; padding: 12px 16px; border-radius: 999px; background: var(--ink); color: #fff; text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Choose a plan that fits your review cycle.</h1>
+    <p>Dev version with stronger emphasis on the middle plan and slightly tighter card spacing.</p>
+    <section class="plans">
+      <article class="plan">
+        <div class="label">Starter</div>
+        <div class="price">$29</div>
+        <ul><li>Single packet</li><li>Unlimited notes</li><li>Email support</li></ul>
+        <a class="cta" href="#">Start starter</a>
+      </article>
+      <article class="plan featured">
+        <div class="label">Team</div>
+        <div class="price">$79</div>
+        <ul><li>Five active packets</li><li>Multi-reviewer notes</li><li>Priority support</li></ul>
+        <a class="cta" href="#">Start team</a>
+      </article>
+      <article class="plan">
+        <div class="label">Scale</div>
+        <div class="price">$149</div>
+        <ul><li>Unlimited packets</li><li>Exports and archives</li><li>Admin controls</li></ul>
+        <a class="cta" href="#">Talk to sales</a>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

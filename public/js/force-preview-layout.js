@@ -135,22 +135,26 @@
 
     const scale = computeScale(slide, preset);
 
+    const scaledWidth = Math.round(preset.w * scale);
+    const canFitTwoCards = cardsFitSideBySide(stage, scaledWidth);
+
     stage.style.setProperty('display', 'flex', 'important');
     stage.style.setProperty('flex-wrap', 'wrap', 'important');
     stage.style.setProperty('gap', `${STAGE_GAP}px`, 'important');
     stage.style.setProperty('align-items', 'flex-start', 'important');
-    stage.style.setProperty('justify-content', 'center', 'important');
+    stage.style.setProperty('justify-content', canFitTwoCards ? 'center' : 'stretch', 'important');
     stage.style.setProperty('width', '100%', 'important');
     stage.style.setProperty('max-width', 'none', 'important');
-    stage.style.setProperty('overflow-x', 'auto', 'important');
+    stage.style.setProperty('overflow-x', canFitTwoCards ? 'auto' : 'visible', 'important');
 
     const cards = stage.querySelectorAll('.webpage-frame-card');
     cards.forEach(card => {
       const scaler = ensureScaler(card);
       card.style.setProperty('min-width', '0', 'important');
-      card.style.setProperty('width', 'auto', 'important');
-      card.style.setProperty('max-width', 'none', 'important');
-      card.style.setProperty('flex', '0 0 auto', 'important');
+      card.style.setProperty('width', canFitTwoCards ? 'auto' : '100%', 'important');
+      card.style.setProperty('max-width', canFitTwoCards ? 'none' : '100%', 'important');
+      card.style.setProperty('flex', canFitTwoCards ? '0 0 auto' : '1 1 100%', 'important');
+      card.style.setProperty('overflow', canFitTwoCards ? 'hidden' : 'auto', 'important');
 
       if (!scaler) return;
 
@@ -165,13 +169,21 @@
         iframe.style.setProperty('display', 'block', 'important');
       }
 
-      scaler.style.setProperty('width', `${Math.round(preset.w * scale)}px`, 'important');
+      scaler.style.setProperty('width', `${scaledWidth}px`, 'important');
       scaler.style.setProperty('height', `${Math.round(preset.h * scale)}px`, 'important');
       scaler.style.setProperty('overflow', 'hidden', 'important');
       scaler.style.setProperty('max-width', '100%', 'important');
     });
 
     updateStatus(slide, preset, scale);
+  }
+
+  function cardsFitSideBySide(stage, scaledWidth) {
+    const cardCount = stage.querySelectorAll('.webpage-frame-card').length;
+    if (cardCount <= 1) return false;
+
+    const requiredWidth = scaledWidth * cardCount + STAGE_GAP * (cardCount - 1);
+    return stage.clientWidth >= requiredWidth;
   }
 
   function updateStatus(slide, preset, scale) {

@@ -16,6 +16,19 @@
         <button type="submit">Create Packet</button>
       </form>
 
+      <form class="card" method="post" action="/admin/packets/demo">
+        <input type="hidden" name="key" value="<%= key %>">
+
+        <label>
+          Test packet title
+          <input type="text" name="title" placeholder="Example: Demo Review Packet">
+        </label>
+
+        <p class="muted">Creates a published packet with a cover page, generic photo comparison, two local demo web pages, and seeded notes so you can test review, notes, filters, and clear actions immediately.</p>
+
+        <button type="submit">Create Test Packet</button>
+      </form>
+
       <section class="stack">
         <% packets.forEach(packet => { %>
           <article class="card">
@@ -27,7 +40,7 @@
               <a class="button" href="/admin/packets/<%= packet.packetId %>/edit?key=<%= key %>">Edit</a>
               <a class="button" href="/admin/packets/<%= packet.packetId %>/results?key=<%= key %>">Results</a>
               <% if (packet.published) { %>
-                <a class="button" href="/r/<%= packet.shareToken %>">Review Link</a>
+                <a class="button" href="/r/<%= packet.shareToken %>?key=<%= key %>">Review Link</a>
               <% } %>
               <form method="post" action="/admin/packets/<%= packet.packetId %>/clear-results" onsubmit="return confirm('Clear all review results for this packet? This cannot be undone.');">
                 <input type="hidden" name="key" value="<%= key %>">

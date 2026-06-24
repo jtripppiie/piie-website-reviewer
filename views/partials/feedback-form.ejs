@@ -3,6 +3,9 @@
   <input type="hidden" name="screenSize" value="<%= screenSize %>">
   <input type="hidden" name="dotX" value="">
   <input type="hidden" name="dotY" value="">
+  <% if (typeof adminKeyValue !== 'undefined' && adminKeyValue) { %>
+    <input type="hidden" name="key" value="<%= adminKeyValue %>">
+  <% } %>
 
   <div class="feedback-grid">
     <label>

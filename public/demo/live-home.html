@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Live Home</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #2b2f33;
+      --accent: #426d59;
+      --paper: #f6f3ec;
+      --card: #fffdf7;
+      --line: #d5cdc0;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #fbf7ef 0%, #ffffff 100%);
+    }
+    main {
+      width: min(980px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 40px 0 64px;
+    }
+    .hero {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 34px 36px 40px;
+      display: grid;
+      gap: 18px;
+    }
+    .eyebrow {
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font: 700 12px/1.2 Arial, sans-serif;
+      color: var(--accent);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 3.7vw, 4rem);
+      line-height: 1.02;
+      max-width: 12ch;
+    }
+    .lede {
+      margin: 0;
+      font: 400 1.05rem/1.7 Arial, sans-serif;
+      max-width: 58ch;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 999px;
+      font: 700 14px/1 Arial, sans-serif;
+      text-decoration: none;
+    }
+    .button.primary { background: var(--accent); color: #fff; }
+    .button.secondary { border: 1px solid var(--line); color: var(--ink); background: var(--card); }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 10px 24px rgba(58, 54, 43, 0.05);
+    }
+    .stat strong {
+      display: block;
+      font: 700 1.45rem/1 Arial, sans-serif;
+      margin-bottom: 10px;
+    }
+    .stat span { font: 400 0.95rem/1.55 Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Live preview</p>
+      <h1>Launch a calmer review flow.</h1>
+      <p class="lede">This paired page is slightly different on purpose so a seeded test packet gives you real before-and-after notes to look at.</p>
+      <div class="actions">
+        <a class="button primary" href="#">Review live</a>
+        <a class="button secondary" href="#">Compare details</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong>9</strong><span>Open review threads</span></div>
+        <div class="stat"><strong>1</strong><span>Page waiting on mobile QA</span></div>
+        <div class="stat"><strong>88%</strong><span>Reviewer completion rate</span></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

@@ -79,6 +79,7 @@ test('server exposes the notes and per-size upload routes', () => {
   assert.match(server, /\/r\/:shareToken\/notes['"`]/, 'view notes route missing');
   assert.match(server, /\/r\/:shareToken\/notes\/download/, 'download notes route missing');
   assert.match(server, /\/pages\/:pageId\/upload-shots/, 'per-size upload route missing');
+  assert.match(server, /\/admin\/packets\/demo['"`]/, 'demo packet route missing');
 });
 
 test('removeUploadFile only targets files inside data/uploads', () => {

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Dev Home</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17324d;
+      --accent: #1b6da8;
+      --paper: #f3f8fb;
+      --card: #ffffff;
+      --line: #c8d9e6;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #eef6fb 0%, #ffffff 100%);
+    }
+    main {
+      width: min(980px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+    .hero {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 40px;
+      display: grid;
+      gap: 20px;
+    }
+    .eyebrow {
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font: 700 12px/1.2 Arial, sans-serif;
+      color: var(--accent);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 4vw, 4.4rem);
+      line-height: 0.96;
+      max-width: 10ch;
+    }
+    .lede {
+      margin: 0;
+      font: 400 1.15rem/1.7 Arial, sans-serif;
+      max-width: 54ch;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 20px;
+      border-radius: 999px;
+      font: 700 14px/1 Arial, sans-serif;
+      text-decoration: none;
+    }
+    .button.primary { background: var(--accent); color: #fff; }
+    .button.secondary { border: 1px solid var(--line); color: var(--ink); background: #fff; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .stat strong {
+      display: block;
+      font: 700 1.5rem/1 Arial, sans-serif;
+      margin-bottom: 8px;
+    }
+    .stat span { font: 400 0.95rem/1.5 Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Dev preview</p>
+      <h1>Launch a cleaner review flow.</h1>
+      <p class="lede">This local demo page is meant for packet testing. It gives the reviewer a predictable same-origin layout that will load inside the app preview.</p>
+      <div class="actions">
+        <a class="button primary" href="#">Start review</a>
+        <a class="button secondary" href="#">See workflow</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong>12</strong><span>Open review threads</span></div>
+        <div class="stat"><strong>3</strong><span>Pages waiting on mobile QA</span></div>
+        <div class="stat"><strong>94%</strong><span>Reviewer completion rate</span></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

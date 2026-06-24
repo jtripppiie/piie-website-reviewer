@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1280" role="img" aria-labelledby="title desc">
+  <title id="title">Generic before photo mobile</title>
+  <desc id="desc">Mobile crop of the built-in before image for testing the mobile comparison layout.</desc>
+  <rect width="720" height="1280" fill="#efe8dc"/>
+  <rect x="64" y="88" width="592" height="1104" rx="38" fill="#fbfaf7" stroke="#bdb2a1" stroke-width="8"/>
+  <rect x="118" y="152" width="484" height="430" rx="30" fill="#d7cab2"/>
+  <circle cx="360" cy="340" r="116" fill="#b78a61"/>
+  <rect x="204" y="514" width="312" height="58" rx="29" fill="#8f7257"/>
+  <rect x="128" y="658" width="456" height="30" rx="15" fill="#b8afa1"/>
+  <rect x="128" y="708" width="420" height="30" rx="15" fill="#c7beb0"/>
+  <rect x="128" y="758" width="388" height="30" rx="15" fill="#c7beb0"/>
+  <rect x="128" y="842" width="246" height="62" rx="31" fill="#9a7f63"/>
+  <text x="128" y="1010" font-family="Arial, sans-serif" font-size="40" font-weight="700" fill="#5b5146">Before</text>
+  <text x="128" y="1060" font-family="Arial, sans-serif" font-size="26" fill="#756a5f">Tighter mobile crop</text>
+</svg>
