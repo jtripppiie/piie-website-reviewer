@@ -1,5 +1,9 @@
 document.querySelectorAll('[data-compare]').forEach(compare => {
   let dragging = false;
+  let zoom = 1;
+  const MIN = 1;
+  const MAX = 4;
+  const STEP = 0.25;
 
   function setReveal(clientX) {
     const rect = compare.getBoundingClientRect();
@@ -8,6 +12,55 @@ document.querySelectorAll('[data-compare]').forEach(compare => {
   }
 
   compare.style.setProperty('--reveal', 50);
+
+  // Wrap the comparison viewer so it can be zoomed and scrolled (panned).
+  const wrap = document.createElement('div');
+  wrap.className = 'compare-zoom';
+
+  const bar = document.createElement('div');
+  bar.className = 'compare-zoom__bar';
+  bar.innerHTML = `
+    <button type="button" data-zoom-out aria-label="Zoom out">-</button>
+    <span data-zoom-label>100%</span>
+    <button type="button" data-zoom-in aria-label="Zoom in">+</button>
+    <button type="button" data-zoom-reset>Reset</button>
+  `;
+
+  const parent = compare.parentNode;
+  parent.insertBefore(bar, compare);
+  parent.insertBefore(wrap, compare);
+  wrap.appendChild(compare);
+
+  const label = bar.querySelector('[data-zoom-label]');
+
+  // Lock the wrapper to the slider's natural height so zooming overflows
+  // into a scrollable (pannable) area instead of pushing the page around.
+  requestAnimationFrame(() => {
+    const baseHeight = compare.getBoundingClientRect().height;
+    if (baseHeight) wrap.style.height = `${Math.round(baseHeight)}px`;
+  });
+
+  function applyZoom() {
+    zoom = Math.max(MIN, Math.min(MAX, Math.round(zoom * 100) / 100));
+    compare.style.zoom = zoom;
+    wrap.classList.toggle('is-zoomed', zoom > 1);
+    label.textContent = `${Math.round(zoom * 100)}%`;
+  }
+
+  bar.querySelector('[data-zoom-in]').addEventListener('click', () => { zoom += STEP; applyZoom(); });
+  bar.querySelector('[data-zoom-out]').addEventListener('click', () => { zoom -= STEP; applyZoom(); });
+  bar.querySelector('[data-zoom-reset]').addEventListener('click', () => {
+    zoom = 1;
+    applyZoom();
+    wrap.scrollTo({ left: 0, top: 0 });
+  });
+
+  wrap.addEventListener('wheel', event => {
+    if (!(event.ctrlKey || event.metaKey)) return;
+    event.preventDefault();
+    zoom += event.deltaY < 0 ? STEP : -STEP;
+    applyZoom();
+  }, { passive: false });
 
   compare.addEventListener('pointerdown', event => {
     if (event.target.closest('.comment-dot')) return;
@@ -29,6 +82,8 @@ document.querySelectorAll('[data-compare]').forEach(compare => {
   compare.addEventListener('pointercancel', () => {
     dragging = false;
   });
+
+  applyZoom();
 });
 
 document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {
