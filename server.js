@@ -582,6 +582,61 @@ app.post('/r/:shareToken/clear-notes', async (req, res) => {
   res.redirect(`/r/${packet.shareToken}${keyPart}${hash}`);
 });
 
+// Quick edit from the review page itself. Reviewers (no admin key needed) can
+// set Dev/Live URLs and drop in screenshots or before/after images. URLs are
+// limited to http(s) so a javascript: URL cannot be stored and run later.
+app.post('/r/:shareToken/quick-update', requireReviewer, upload.fields([
+  { name: 'beforeImage', maxCount: 1 },
+  { name: 'afterImage', maxCount: 1 },
+  { name: 'devScreenshot', maxCount: 1 },
+  { name: 'liveScreenshot', maxCount: 1 }
+]), async (req, res) => {
+  const packets = await getPackets();
+  const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
+  if (!packet) return res.status(404).send('Review packet not found or not published.');
+
+  const page = packet.pages.find(p => p.pageId === req.body.pageId);
+  if (!page) return res.status(404).send('Page not found');
+
+  const isHttpUrl = value => /^https?:\/\/\S+$/i.test((value || '').trim());
+
+  if (page.type === 'urlCompare') {
+    if ('devUrl' in req.body) {
+      const value = (req.body.devUrl || '').trim();
+      if (value === '' || isHttpUrl(value)) page.devUrl = value;
+    }
+    if ('liveUrl' in req.body) {
+      const value = (req.body.liveUrl || '').trim();
+      if (value === '' || isHttpUrl(value)) page.liveUrl = value;
+    }
+
+    const devScreenshot = req.files?.devScreenshot?.[0];
+    const liveScreenshot = req.files?.liveScreenshot?.[0];
+    if (devScreenshot) {
+      page.devScreenshotPath = uploadPath(devScreenshot);
+      delete page.devShots;
+    }
+    if (liveScreenshot) {
+      page.liveScreenshotPath = uploadPath(liveScreenshot);
+      delete page.liveShots;
+    }
+  }
+
+  if (page.type === 'imageCompare') {
+    const before = req.files?.beforeImage?.[0];
+    const after = req.files?.afterImage?.[0];
+    if (before) page.beforeImagePath = uploadPath(before);
+    if (after) page.afterImagePath = uploadPath(after);
+  }
+
+  page.updatedAt = new Date().toISOString();
+  packet.updatedAt = new Date().toISOString();
+  await savePackets(packets);
+
+  const keyPart = adminKey(req) ? `?key=${encodeURIComponent(adminKey(req))}` : '';
+  res.redirect(`/r/${packet.shareToken}${keyPart}#${page.pageId}`);
+});
+
 app.get('/admin/packets/:packetId/results', async (req, res) => {
   if (!isAdmin(req)) return res.status(403).send('Forbidden');
 

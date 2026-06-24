@@ -1,5 +1,7 @@
-// Local helper: triple-click any page heading to fill every feedback form on
-// the review page with sample data. Fill only - you still click Save to submit.
+// Local power tools for the review page.
+// Triple-click any page heading to toggle "quick edit" mode. That reveals the
+// per-page panels for setting Dev/Live URLs and dropping in images, plus a
+// button to fill a sample review note. Filling never auto-submits.
 (function () {
   const SAMPLE_REVIEWERS = ['JT', 'Alex P.', 'Sam Rivera', 'Design Team', 'M. Chen'];
   const SAMPLE_STATUSES = ['approved', 'approved-after-these-changes', 'needs-design-changes', 'needs-content-changes', 'needs-mobile-review'];
@@ -28,8 +30,9 @@
     showToast.timer = setTimeout(() => toast.classList.remove('is-visible'), 2600);
   }
 
-  function fillForms() {
-    const forms = document.querySelectorAll('form.feedback');
+  function fillForms(scope) {
+    const root = scope || document;
+    const forms = root.querySelectorAll('form.feedback');
     if (!forms.length) {
       showToast('No forms to fill here.');
       return;
@@ -45,9 +48,20 @@
     showToast('Filled ' + forms.length + ' form' + (forms.length === 1 ? '' : 's') + ' with sample data. Hit Save note to submit.');
   }
 
+  function toggleQuickEdit() {
+    const on = document.body.classList.toggle('quick-edit-on');
+    showToast(on ? 'Quick edit on. Set URLs or drop in images, then Save.' : 'Quick edit off.');
+  }
+
   let clicks = 0;
   let timer = null;
   document.addEventListener('click', event => {
+    const fillButton = event.target.closest('[data-fill-sample]');
+    if (fillButton) {
+      fillForms(fillButton.closest('.review-page') || document);
+      return;
+    }
+
     if (!event.target.closest('.page-heading') && !event.target.closest('.cover-slide')) return;
     clicks += 1;
     clearTimeout(timer);
@@ -55,7 +69,7 @@
     if (clicks >= 3) {
       clicks = 0;
       clearTimeout(timer);
-      fillForms();
+      toggleQuickEdit();
     }
   });
 })();

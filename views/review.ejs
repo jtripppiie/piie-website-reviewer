@@ -50,6 +50,23 @@
                   <% if (page.instructions) { %><p><%= page.instructions %></p><% } %>
                 </div>
 
+                <div class="quick-edit" data-quick-edit>
+                  <div class="quick-edit__head">Quick edit (no admin needed)</div>
+                  <form class="quick-edit__form" method="post" action="/r/<%= packet.shareToken %>/quick-update" enctype="multipart/form-data">
+                    <input type="hidden" name="pageId" value="<%= page.pageId %>">
+                    <div class="quick-edit__row">
+                      <label>Before image
+                        <input type="file" name="beforeImage" accept="image/*">
+                      </label>
+                      <label>After image
+                        <input type="file" name="afterImage" accept="image/*">
+                      </label>
+                    </div>
+                    <button type="submit">Save to this page</button>
+                  </form>
+                  <button type="button" class="quick-edit__fill" data-fill-sample>Fill a sample review note</button>
+                </div>
+
                 <div class="compare wide-compare" data-compare data-annotatable>
                   <img class="before" src="<%= page.beforeImagePath %>" alt="<%= page.beforeLabel || 'Before' %>">
                   <img class="after" src="<%= page.afterImagePath %>" alt="<%= page.afterLabel || 'After' %>">
@@ -104,6 +121,31 @@
                   <p class="eyebrow">Page <%= index + 1 %></p>
                   <h2><%= page.title %></h2>
                   <% if (page.instructions) { %><p><%= page.instructions %></p><% } %>
+                </div>
+
+                <div class="quick-edit" data-quick-edit>
+                  <div class="quick-edit__head">Quick edit (no admin needed)</div>
+                  <form class="quick-edit__form" method="post" action="/r/<%= packet.shareToken %>/quick-update" enctype="multipart/form-data">
+                    <input type="hidden" name="pageId" value="<%= page.pageId %>">
+                    <div class="quick-edit__row">
+                      <label>Dev URL
+                        <input type="url" name="devUrl" value="<%= page.devUrl || '' %>" placeholder="https://dev.example.com">
+                      </label>
+                      <label>Live URL
+                        <input type="url" name="liveUrl" value="<%= page.liveUrl || '' %>" placeholder="https://www.example.com">
+                      </label>
+                    </div>
+                    <div class="quick-edit__row">
+                      <label>Dev screenshot
+                        <input type="file" name="devScreenshot" accept="image/*">
+                      </label>
+                      <label>Live screenshot
+                        <input type="file" name="liveScreenshot" accept="image/*">
+                      </label>
+                    </div>
+                    <button type="submit">Save to this page</button>
+                  </form>
+                  <button type="button" class="quick-edit__fill" data-fill-sample>Fill a sample review note</button>
                 </div>
 
                 <div class="url-note">
