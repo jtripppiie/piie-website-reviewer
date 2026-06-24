@@ -279,6 +279,51 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
 });
 
 
+app.post('/admin/packets/:packetId/pages/:pageId/upload-shots', upload.fields(
+  ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'].flatMap(size => [
+    { name: `devShot_${size}`, maxCount: 1 },
+    { name: `liveShot_${size}`, maxCount: 1 }
+  ])
+), async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const packet = packets.find(p => p.packetId === req.params.packetId);
+  if (!packet) return res.status(404).send('Packet not found');
+
+  const page = packet.pages.find(p => p.pageId === req.params.pageId);
+  if (!page) return res.status(404).send('Page not found');
+
+  if (page.type !== 'urlCompare') {
+    return res.status(400).send('Per size uploads are only available for Dev vs Live pages.');
+  }
+
+  const sizes = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+  page.devShots = page.devShots || {};
+  page.liveShots = page.liveShots || {};
+
+  sizes.forEach(size => {
+    const dev = req.files?.[`devShot_${size}`]?.[0];
+    const live = req.files?.[`liveShot_${size}`]?.[0];
+    if (dev) page.devShots[size] = uploadPath(dev);
+    if (live) page.liveShots[size] = uploadPath(live);
+    if (req.body[`removeDevShot_${size}`] === 'true') delete page.devShots[size];
+    if (req.body[`removeLiveShot_${size}`] === 'true') delete page.liveShots[size];
+  });
+
+  // Keep the single screenshot fallbacks in sync for the compare slider.
+  page.devScreenshotPath = page.devShots['laptop-15-6'] || page.devShots.desktop || '';
+  page.liveScreenshotPath = page.liveShots['laptop-15-6'] || page.liveShots.desktop || '';
+
+  page.updatedAt = new Date().toISOString();
+  packet.updatedAt = new Date().toISOString();
+
+  await savePackets(packets);
+
+  res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}#page-${page.pageId}`);
+});
+
+
 app.post('/admin/packets/:packetId/pages/:pageId/capture', async (req, res) => {
   if (!isAdmin(req)) return res.status(403).send('Forbidden');
 

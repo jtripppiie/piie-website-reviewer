@@ -13,6 +13,7 @@ document.querySelectorAll('[data-compare]').forEach(compare => {
     if (event.target.closest('.comment-dot')) return;
     if (compare.dataset.pinTarget === 'true') return;
 
+    event.preventDefault();
     dragging = true;
     setReveal(event.clientX);
     compare.setPointerCapture(event.pointerId);

@@ -231,6 +231,32 @@
                     <% }) %>
                   </div>
                 <% } %>
+
+                <h4>Upload screenshots by screen size</h4>
+                <p class="muted">When you cannot capture the live site, upload a screenshot for each size by hand. These fill the same per size view reviewers see.</p>
+                <form method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/upload-shots" enctype="multipart/form-data">
+                  <input type="hidden" name="key" value="<%= key %>">
+                  <% presetList.forEach(([sizeKey, sizeLabel]) => { %>
+                    <fieldset class="shot-upload">
+                      <legend><%= sizeLabel %></legend>
+                      <label>Dev screenshot
+                        <input type="file" name="devShot_<%= sizeKey %>" accept="image/*">
+                      </label>
+                      <% if (page.devShots && page.devShots[sizeKey]) { %>
+                        <p class="muted">Current Dev: <a href="<%= page.devShots[sizeKey] %>" target="_blank" rel="noopener">view</a></p>
+                        <label class="remove-toggle"><input type="checkbox" name="removeDevShot_<%= sizeKey %>" value="true"> Remove Dev</label>
+                      <% } %>
+                      <label>Live screenshot
+                        <input type="file" name="liveShot_<%= sizeKey %>" accept="image/*">
+                      </label>
+                      <% if (page.liveShots && page.liveShots[sizeKey]) { %>
+                        <p class="muted">Current Live: <a href="<%= page.liveShots[sizeKey] %>" target="_blank" rel="noopener">view</a></p>
+                        <label class="remove-toggle"><input type="checkbox" name="removeLiveShot_<%= sizeKey %>" value="true"> Remove Live</label>
+                      <% } %>
+                    </fieldset>
+                  <% }) %>
+                  <button type="submit">Save uploaded screenshots</button>
+                </form>
               </div>
             <% } %>
           </article>
