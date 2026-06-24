@@ -523,12 +523,26 @@ button.secondary {
   justify-self: center;
 }
 
+.review-page[data-preview-size] .shots-stage {
+  display: block;
+}
+
+.review-page[data-preview-size] .shots-size.active {
+  display: grid;
+  justify-items: center;
+}
+
 .review-page[data-preview-size] .page-heading,
 .review-page[data-preview-size] .url-note,
 .review-page[data-preview-size] .screen-tabs,
 .review-page[data-preview-size] .empty-preview,
 .review-page[data-preview-size] .compare {
   width: 100%;
+}
+
+.review-page[data-preview-size] .shots-size .compare,
+.review-page[data-preview-size] .shots-size .empty-preview {
+  width: min(100%, var(--preview-width));
 }
 
 .review-page[data-preview-size="desktop"] .review-canvas {
@@ -1365,6 +1379,12 @@ body.debug-layout-on .empty-preview {
 }
 
 .shots-pair--row {
+  grid-template-columns: 1fr 1fr;
+  max-width: 900px;
+  margin-inline: auto;
+}
+
+.shots-pair--mobile-fixed {
   grid-template-columns: 1fr 1fr;
   max-width: 900px;
   margin-inline: auto;

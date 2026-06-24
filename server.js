@@ -165,6 +165,14 @@ function removePacketUploads(packet) {
     Object.values(page.liveShots || {}).forEach(filePath => {
       if (filePath) uploadPaths.add(filePath);
     });
+
+    Object.values(page.beforeShots || {}).forEach(filePath => {
+      if (filePath) uploadPaths.add(filePath);
+    });
+
+    Object.values(page.afterShots || {}).forEach(filePath => {
+      if (filePath) uploadPaths.add(filePath);
+    });
   });
 
   uploadPaths.forEach(removeUploadFile);
@@ -342,7 +350,9 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
 app.post('/admin/packets/:packetId/pages/:pageId/upload-shots', upload.fields(
   ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'].flatMap(size => [
     { name: `devShot_${size}`, maxCount: 1 },
-    { name: `liveShot_${size}`, maxCount: 1 }
+    { name: `liveShot_${size}`, maxCount: 1 },
+    { name: `beforeShot_${size}`, maxCount: 1 },
+    { name: `afterShot_${size}`, maxCount: 1 }
   ])
 ), async (req, res) => {
   if (!isAdmin(req)) return res.status(403).send('Forbidden');
@@ -354,42 +364,67 @@ app.post('/admin/packets/:packetId/pages/:pageId/upload-shots', upload.fields(
   const page = packet.pages.find(p => p.pageId === req.params.pageId);
   if (!page) return res.status(404).send('Page not found');
 
-  if (page.type !== 'urlCompare') {
-    return res.status(400).send('Per size uploads are only available for Dev vs Live pages.');
-  }
-
   const sizes = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
-  page.devShots = page.devShots || {};
-  page.liveShots = page.liveShots || {};
+  if (page.type === 'urlCompare') {
+    page.devShots = page.devShots || {};
+    page.liveShots = page.liveShots || {};
 
-  sizes.forEach(size => {
-    const dev = req.files?.[`devShot_${size}`]?.[0];
-    const live = req.files?.[`liveShot_${size}`]?.[0];
-    if (dev) {
-      removeUploadFile(page.devShots[size]);
-      page.devShots[size] = uploadPath(dev);
-    }
-    if (live) {
-      removeUploadFile(page.liveShots[size]);
-      page.liveShots[size] = uploadPath(live);
-    }
-    if (req.body[`removeDevShot_${size}`] === 'true') {
-      removeUploadFile(page.devShots[size]);
-      delete page.devShots[size];
-    }
-    if (req.body[`removeLiveShot_${size}`] === 'true') {
-      removeUploadFile(page.liveShots[size]);
-      delete page.liveShots[size];
-    }
-  });
+    sizes.forEach(size => {
+      const dev = req.files?.[`devShot_${size}`]?.[0];
+      const live = req.files?.[`liveShot_${size}`]?.[0];
+      if (dev) {
+        removeUploadFile(page.devShots[size]);
+        page.devShots[size] = uploadPath(dev);
+      }
+      if (live) {
+        removeUploadFile(page.liveShots[size]);
+        page.liveShots[size] = uploadPath(live);
+      }
+      if (req.body[`removeDevShot_${size}`] === 'true') {
+        removeUploadFile(page.devShots[size]);
+        delete page.devShots[size];
+      }
+      if (req.body[`removeLiveShot_${size}`] === 'true') {
+        removeUploadFile(page.liveShots[size]);
+        delete page.liveShots[size];
+      }
+    });
 
-  // Drop empty shot maps so the review page falls back to the single slider.
-  if (!Object.keys(page.devShots).length) delete page.devShots;
-  if (!Object.keys(page.liveShots).length) delete page.liveShots;
+    if (!Object.keys(page.devShots).length) delete page.devShots;
+    if (!Object.keys(page.liveShots).length) delete page.liveShots;
 
-  // Keep the single screenshot fallbacks in sync for the compare slider.
-  page.devScreenshotPath = (page.devShots && (page.devShots['laptop-15-6'] || page.devShots.desktop)) || '';
-  page.liveScreenshotPath = (page.liveShots && (page.liveShots['laptop-15-6'] || page.liveShots.desktop)) || '';
+    page.devScreenshotPath = (page.devShots && (page.devShots['laptop-15-6'] || page.devShots.desktop)) || '';
+    page.liveScreenshotPath = (page.liveShots && (page.liveShots['laptop-15-6'] || page.liveShots.desktop)) || '';
+  } else if (page.type === 'imageCompare') {
+    page.beforeShots = page.beforeShots || {};
+    page.afterShots = page.afterShots || {};
+
+    sizes.forEach(size => {
+      const before = req.files?.[`beforeShot_${size}`]?.[0];
+      const after = req.files?.[`afterShot_${size}`]?.[0];
+      if (before) {
+        removeUploadFile(page.beforeShots[size]);
+        page.beforeShots[size] = uploadPath(before);
+      }
+      if (after) {
+        removeUploadFile(page.afterShots[size]);
+        page.afterShots[size] = uploadPath(after);
+      }
+      if (req.body[`removeBeforeShot_${size}`] === 'true') {
+        removeUploadFile(page.beforeShots[size]);
+        delete page.beforeShots[size];
+      }
+      if (req.body[`removeAfterShot_${size}`] === 'true') {
+        removeUploadFile(page.afterShots[size]);
+        delete page.afterShots[size];
+      }
+    });
+
+    if (!Object.keys(page.beforeShots).length) delete page.beforeShots;
+    if (!Object.keys(page.afterShots).length) delete page.afterShots;
+  } else {
+    return res.status(400).send('Per size uploads are only available for comparison pages.');
+  }
 
   page.updatedAt = new Date().toISOString();
   packet.updatedAt = new Date().toISOString();

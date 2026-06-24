@@ -112,6 +112,7 @@
               <% } %>
 
               <% if (page.type === 'imageCompare') { %>
+                <% const presetList = [['desktop','Desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
                 <label>
                   Instructions
                   <textarea name="instructions"><%= page.instructions || '' %></textarea>
@@ -148,6 +149,32 @@
                     <input type="checkbox" name="removeAfterImage" value="true"> Remove after image
                   </label>
                 <% } %>
+
+                <h4>Upload images by screen size</h4>
+                <p class="muted">Optional: upload a separate Before and After image for Desktop, 15.6, 14.5, 13, and Mobile. If a size is missing, reviewers fall back to the main Before/After images above.</p>
+                <form method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/upload-shots" enctype="multipart/form-data">
+                  <input type="hidden" name="key" value="<%= key %>">
+                  <% presetList.forEach(([sizeKey, sizeLabel]) => { %>
+                    <fieldset class="shot-upload">
+                      <legend><%= sizeLabel %></legend>
+                      <label>Before image
+                        <input type="file" name="beforeShot_<%= sizeKey %>" accept="image/*">
+                      </label>
+                      <% if (page.beforeShots && page.beforeShots[sizeKey]) { %>
+                        <p class="muted">Current Before: <a href="<%= page.beforeShots[sizeKey] %>" target="_blank" rel="noopener">view</a></p>
+                        <label class="remove-toggle"><input type="checkbox" name="removeBeforeShot_<%= sizeKey %>" value="true"> Remove Before</label>
+                      <% } %>
+                      <label>After image
+                        <input type="file" name="afterShot_<%= sizeKey %>" accept="image/*">
+                      </label>
+                      <% if (page.afterShots && page.afterShots[sizeKey]) { %>
+                        <p class="muted">Current After: <a href="<%= page.afterShots[sizeKey] %>" target="_blank" rel="noopener">view</a></p>
+                        <label class="remove-toggle"><input type="checkbox" name="removeAfterShot_<%= sizeKey %>" value="true"> Remove After</label>
+                      <% } %>
+                    </fieldset>
+                  <% }) %>
+                  <button type="submit">Save uploaded images</button>
+                </form>
               <% } %>
 
               <% if (page.type === 'urlCompare') { %>

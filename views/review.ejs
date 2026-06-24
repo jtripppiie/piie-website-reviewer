@@ -15,6 +15,8 @@
 
           return labels[size] || size;
         }
+
+        const defaultScreenSizes = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
       %>
       <% packet.pages.forEach((page, index) => { %>
         <% const pageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
@@ -27,7 +29,6 @@
                 <a class="button" href="/admin/packets/<%= packet.packetId %>/edit?key=<%= adminKeyValue %>#page-<%= page.pageId %>">Edit this page</a>
               </div>
             <% } %>
-            <p class="eyebrow">Page <%= index + 1 %></p>
             <h1><%= page.title %></h1>
             <% if (page.subtitle) { %><h2><%= page.subtitle %></h2><% } %>
             <% if (page.body) { %><p><%= page.body %></p><% } %>
@@ -49,9 +50,14 @@
                   </div>
                 <% } %>
                 <div class="page-heading">
-                  <p class="eyebrow">Page <%= index + 1 %></p>
                   <h2><%= page.title %></h2>
                   <% if (page.instructions) { %><p><%= page.instructions %></p><% } %>
+                </div>
+
+                <div class="screen-tabs" data-url-tabs>
+                  <% defaultScreenSizes.forEach((size, sizeIndex) => { %>
+                    <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= screenSizeLabel(size) %></button>
+                  <% }) %>
                 </div>
 
                 <div class="quick-edit" data-quick-edit>
@@ -82,45 +88,82 @@
                   <% } %>
                 </div>
 
-                <div class="compare wide-compare" data-compare data-annotatable>
-                  <img class="before" src="<%= page.beforeImagePath %>" alt="<%= page.beforeLabel || 'Before' %>">
-                  <img class="after" src="<%= page.afterImagePath %>" alt="<%= page.afterLabel || 'After' %>">
-                  <span class="badge before-label"><%= page.beforeLabel || 'Before' %></span>
-                  <span class="badge after-label"><%= page.afterLabel || 'After' %></span>
-                  <div class="divider"></div>
-                  <button class="handle" type="button" aria-label="Drag comparison handle"></button>
+                <div class="shots-stage" data-shots-stage>
+                  <% defaultScreenSizes.forEach((size, sizeIndex) => { %>
+                    <% const beforeImage = (page.beforeShots && page.beforeShots[size]) || page.beforeImagePath; %>
+                    <% const afterImage = (page.afterShots && page.afterShots[size]) || page.afterImagePath; %>
+                    <div class="shots-size <%= sizeIndex === 0 ? 'active' : '' %>" data-shots-size="<%= size %>">
+                      <% if (beforeImage && afterImage) { %>
+                        <% if (size === 'mobile') { %>
+                          <div class="shots-pair shots-pair--mobile-fixed">
+                            <figure class="shot-card">
+                              <figcaption><%= page.beforeLabel || 'Before' %></figcaption>
+                              <img src="<%= beforeImage %>" alt="<%= page.beforeLabel || 'Before' %> at <%= screenSizeLabel(size) %>">
+                            </figure>
+                            <figure class="shot-card">
+                              <figcaption><%= page.afterLabel || 'After' %></figcaption>
+                              <img src="<%= afterImage %>" alt="<%= page.afterLabel || 'After' %> at <%= screenSizeLabel(size) %>">
+                            </figure>
+                          </div>
+                          <p class="muted">View at 100%:
+                            <% if (beforeImage) { %><a href="<%= beforeImage %>" target="_blank" rel="noopener"><%= page.beforeLabel || 'Before' %></a><% } %>
+                            <% if (afterImage) { %><a href="<%= afterImage %>" target="_blank" rel="noopener"><%= page.afterLabel || 'After' %></a><% } %>
+                          </p>
+                        <% } else { %>
+                          <div class="compare wide-compare" data-compare data-annotatable>
+                            <img class="before" src="<%= beforeImage %>" alt="<%= page.beforeLabel || 'Before' %> at <%= screenSizeLabel(size) %>">
+                            <img class="after" src="<%= afterImage %>" alt="<%= page.afterLabel || 'After' %> at <%= screenSizeLabel(size) %>">
+                            <span class="badge before-label"><%= page.beforeLabel || 'Before' %></span>
+                            <span class="badge after-label"><%= page.afterLabel || 'After' %></span>
+                            <div class="divider"></div>
+                            <button class="handle" type="button" aria-label="Drag comparison handle"></button>
 
-                  <% pageDots.forEach((dot, dotIndex) => { %>
-                    <button
-                      class="comment-dot"
-                      type="button"
-                      style="left: <%= dot.dotX %>%; top: <%= dot.dotY %>%"
-                      title="<%= (dot.reviewerName || dot.initials || 'Reviewer') + ': ' + dot.status + (dot.comment ? ' - ' + dot.comment : '') %>">
-                      <%= dotIndex + 1 %>
-                    </button>
+                            <% pageDots.forEach((dot, dotIndex) => { %>
+                              <button
+                                class="comment-dot"
+                                type="button"
+                                style="left: <%= dot.dotX %>%; top: <%= dot.dotY %>%"
+                                title="<%= (dot.reviewerName || dot.initials || 'Reviewer') + ': ' + dot.status + (dot.comment ? ' - ' + dot.comment : '') %>">
+                                <%= dotIndex + 1 %>
+                              </button>
+                            <% }) %>
+                          </div>
+
+                          <p class="muted">View at 100%:
+                            <% if (beforeImage) { %><a href="<%= beforeImage %>" target="_blank" rel="noopener"><%= page.beforeLabel || 'Before' %></a><% } %>
+                            <% if (afterImage) { %><a href="<%= afterImage %>" target="_blank" rel="noopener"><%= page.afterLabel || 'After' %></a><% } %>
+                          </p>
+                        <% } %>
+                      <% } else { %>
+                        <div class="shot-empty">No before/after images for <%= screenSizeLabel(size) %> yet.</div>
+                      <% } %>
+                    </div>
                   <% }) %>
                 </div>
-
-                <p class="muted">Tip: matching image sizes make the before/after slider line up better.</p>
-                <p class="muted">View at 100%:
-                  <% if (page.beforeImagePath) { %><a href="<%= page.beforeImagePath %>" target="_blank" rel="noopener"><%= page.beforeLabel || 'Before' %></a><% } %>
-                  <% if (page.afterImagePath) { %><a href="<%= page.afterImagePath %>" target="_blank" rel="noopener"><%= page.afterLabel || 'After' %></a><% } %>
-                </p>
               </div>
 
-              <aside class="feedback-panel">
-                <h3>Review Notes</h3>
-                <p class="muted">Want to point at something specific? Use the dot button.</p>
-                <%- include('partials/public-notes', { responses, page, screenSize: '' }) %>
-                <%- include('partials/feedback-form', { packet, page, screenSize: '' }) %>
-                <% if (isAdminView) { %>
-                  <form class="clear-notes-form" method="post" action="/r/<%= packet.shareToken %>/clear-notes?key=<%= adminKeyValue %>" onsubmit="return confirm('Clear review notes for this page? This cannot be undone.');">
-                    <input type="hidden" name="key" value="<%= adminKeyValue %>">
-                    <input type="hidden" name="pageId" value="<%= page.pageId %>">
-                    <input type="hidden" name="screenSize" value="">
-                    <button type="submit">Clear notes for this page (admin only)</button>
-                  </form>
-                <% } %>
+              <aside class="feedback-panel" data-feedback-panel>
+                <div class="feedback-panel__bar">
+                  <h3>Notes by screen size</h3>
+                  <button type="button" class="feedback-panel__toggle" data-feedback-toggle aria-expanded="true">Collapse</button>
+                </div>
+                <p class="muted">Pick a screen size, then leave your notes for it.</p>
+
+                <% defaultScreenSizes.forEach((size, sizeIndex) => { %>
+                  <div class="screen-feedback <%= sizeIndex === 0 ? 'active' : '' %>" data-feedback-size="<%= size %>">
+                    <h4><%= screenSizeLabel(size) %></h4>
+                    <%- include('partials/public-notes', { responses, page, screenSize: size }) %>
+                    <%- include('partials/feedback-form', { packet, page, screenSize: size }) %>
+                    <% if (isAdminView) { %>
+                      <form class="clear-notes-form" method="post" action="/r/<%= packet.shareToken %>/clear-notes?key=<%= adminKeyValue %>" onsubmit="return confirm('Clear review notes for this page and screen size? This cannot be undone.');">
+                        <input type="hidden" name="key" value="<%= adminKeyValue %>">
+                        <input type="hidden" name="pageId" value="<%= page.pageId %>">
+                        <input type="hidden" name="screenSize" value="<%= size %>">
+                        <button type="submit">Clear notes for <%= screenSizeLabel(size) %> (admin only)</button>
+                      </form>
+                    <% } %>
+                  </div>
+                <% }) %>
               </aside>
             </div>
           </section>
@@ -137,7 +180,6 @@
                   </div>
                 <% } %>
                 <div class="page-heading">
-                  <p class="eyebrow">Page <%= index + 1 %></p>
                   <h2><%= page.title %></h2>
                   <% if (page.instructions) { %><p><%= page.instructions %></p><% } %>
                 </div>
@@ -179,7 +221,7 @@
                 </div>
 
                 <div class="url-note">
-                  <p>Some sites won't load inside a preview. Open them in a new tab and use the screenshots below.</p>
+                  <p>Some sites won't load inside a preview. Open them in a new tab if the embedded preview is blank.</p>
                   <div class="actions">
                     <% if (page.devUrl) { %>
                       <a class="button" href="<%= page.devUrl %>" target="_blank" rel="noopener">Open Dev in new tab</a>
@@ -200,7 +242,41 @@
                   Heads up: these are common screen widths, not exact inch sizes. Zoom, display scaling, and your monitor can all change what actually fits. We go by the browser width listed for each one.
                 </p>
 
-                <% if (page.devShots || page.liveShots) { %>
+                <% if (page.devUrl || page.liveUrl) { %>
+                  <div class="webpage-preview-stage" data-webpage-preview>
+                    <div class="webpage-frame-card">
+                      <div class="webpage-frame-card__header">
+                        <strong>Dev preview</strong>
+                        <% if (page.devUrl) { %>
+                          <a href="<%= page.devUrl %>" target="_blank" rel="noopener">Open Dev</a>
+                        <% } %>
+                      </div>
+
+                      <% if (page.devUrl) { %>
+                        <iframe src="<%= page.devUrl %>" title="Dev webpage preview"></iframe>
+                      <% } else { %>
+                        <div class="webpage-frame-empty">No Dev URL entered.</div>
+                      <% } %>
+                    </div>
+
+                    <div class="webpage-frame-card">
+                      <div class="webpage-frame-card__header">
+                        <strong>Live preview</strong>
+                        <% if (page.liveUrl) { %>
+                          <a href="<%= page.liveUrl %>" target="_blank" rel="noopener">Open Live</a>
+                        <% } %>
+                      </div>
+
+                      <% if (page.liveUrl) { %>
+                        <iframe src="<%= page.liveUrl %>" title="Live webpage preview"></iframe>
+                      <% } else { %>
+                        <div class="webpage-frame-empty">No Live URL entered.</div>
+                      <% } %>
+                    </div>
+                  </div>
+
+                  <p class="muted">If a preview is blank, the site won't load in a frame. Use the Open Dev / Open Live links, or clear the URLs if you want to review uploaded screenshots instead.</p>
+                <% } else if (page.devShots || page.liveShots) { %>
                   <%
                     const shotSizes = page.screenSizes.filter(size => size !== "tablet");
                     const cssDims = {
@@ -266,35 +342,19 @@
                     <div class="webpage-frame-card">
                       <div class="webpage-frame-card__header">
                         <strong>Dev preview</strong>
-                        <% if (page.devUrl) { %>
-                          <a href="<%= page.devUrl %>" target="_blank" rel="noopener">Open Dev</a>
-                        <% } %>
                       </div>
-
-                      <% if (page.devUrl) { %>
-                        <iframe src="<%= page.devUrl %>" title="Dev webpage preview"></iframe>
-                      <% } else { %>
-                        <div class="webpage-frame-empty">No Dev URL entered.</div>
-                      <% } %>
+                      <div class="webpage-frame-empty">No Dev URL entered.</div>
                     </div>
 
                     <div class="webpage-frame-card">
                       <div class="webpage-frame-card__header">
                         <strong>Live preview</strong>
-                        <% if (page.liveUrl) { %>
-                          <a href="<%= page.liveUrl %>" target="_blank" rel="noopener">Open Live</a>
-                        <% } %>
                       </div>
-
-                      <% if (page.liveUrl) { %>
-                        <iframe src="<%= page.liveUrl %>" title="Live webpage preview"></iframe>
-                      <% } else { %>
-                        <div class="webpage-frame-empty">No Live URL entered.</div>
-                      <% } %>
+                      <div class="webpage-frame-empty">No Live URL entered.</div>
                     </div>
                   </div>
 
-                  <p class="muted">If a preview is blank, the site won't load in a frame. Use the Open Dev / Open Live links, or add screenshots from the admin page.</p>
+                  <p class="muted">Add Dev and Live URLs to preview the webpages here, or upload screenshots from the admin page.</p>
                 <% } %>
               </div>
 

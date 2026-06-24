@@ -233,16 +233,13 @@ function renderPage(page, index) {
                 <option value="approved">Approved</option>
                 <option value="approved-after-these-changes">Approved after these changes</option>
                 <option value="needs-design-changes">Needs design changes</option>
-                <option value="needs-content-changes">Needs content changes</option>
                 <option value="needs-mobile-review">Needs mobile review</option>
-                <option value="blocked-cannot-review">Blocked / cannot review</option>
-                <option value="not-approved">Not approved</option>
               </select>
             </label>
 
             <label>
               Comment
-              <textarea name="comment" placeholder="What did you notice?"></textarea>
+              <textarea name="comment"></textarea>
             </label>
 
             <button type="submit">Save note</button>
