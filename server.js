@@ -21,17 +21,22 @@ const APP_VERSION = require('./package.json').version;
 const app = express();
 
 // PIIE_WEB_REVIEWER_REQUEST_LOGGER
+function safeUrlForLog(url) {
+  // Hide the admin key so it never lands in server logs.
+  return String(url).replace(/([?&]key=)[^&]*/gi, '$1***');
+}
+
 app.use((req, res, next) => {
   const started = Date.now();
   const requestId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
   req.requestId = requestId;
 
-  console.log(`[${requestId}] --> ${req.method} ${req.originalUrl}`);
+  console.log(`[${requestId}] --> ${req.method} ${safeUrlForLog(req.originalUrl)}`);
 
   res.on('finish', () => {
     const duration = Date.now() - started;
-    console.log(`[${requestId}] <-- ${res.statusCode} ${req.method} ${req.originalUrl} ${duration}ms`);
+    console.log(`[${requestId}] <-- ${res.statusCode} ${req.method} ${safeUrlForLog(req.originalUrl)} ${duration}ms`);
   });
 
   next();

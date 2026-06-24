@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+data
+_backup-old-static
+docs
+*.zip
+*.code-search
+README-update-notes.md

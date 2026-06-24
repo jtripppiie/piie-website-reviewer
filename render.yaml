@@ -1,0 +1,27 @@
+# Render Blueprint for the PIIE Web Reviewer.
+# In the Render dashboard choose New > Blueprint, point it at this repo, and
+# Render will read this file. You will be asked to fill in the three secret
+# values (ADMIN_PASSWORD, REVIEW_USERNAME, REVIEW_PASSWORD) during setup.
+services:
+  - type: web
+    name: piie-web-reviewer
+    runtime: docker
+    plan: starter
+    region: oregon
+    healthCheckPath: /healthz
+    autoDeploy: true
+    # Persistent storage so packets, responses, and uploaded images survive
+    # restarts and redeploys. Without this, data would reset on every deploy.
+    disk:
+      name: reviewer-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: REVIEW_USERNAME
+        sync: false
+      - key: REVIEW_PASSWORD
+        sync: false
