@@ -155,6 +155,15 @@
   transform: translate(-50%, 0);
 }
 
+/* Debug box is hidden until you triple-click the eyebrow line. */
+.debug-panel {
+  display: none;
+}
+
+body.debug-on .debug-panel {
+  display: block;
+}
+
 /* Quick edit panel - hidden until triple-click toggles quick edit mode. */
 .quick-edit {
   display: none;

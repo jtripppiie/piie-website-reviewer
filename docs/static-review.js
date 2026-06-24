@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '0.3.6';
+const APP_VERSION = '0.3.7';
 
 const PRESETS = {
   desktop: { label: 'Desktop', w: 1440, h: 900 },
@@ -651,6 +651,26 @@ function fillDemoData() {
       clearTimeout(timer);
       const on = document.body.classList.toggle('quick-edit-on');
       showDemoToast(on ? 'Quick edit on. Change the URLs below, then Update preview.' : 'Quick edit off.');
+    }
+  });
+})();
+
+(function wireDebugToggle() {
+  const trigger = document.querySelector('.app-header .eyebrow');
+  if (!trigger) return;
+  trigger.style.cursor = 'pointer';
+  trigger.title = 'Triple-click to show or hide the debug box';
+  let clicks = 0;
+  let timer = null;
+  trigger.addEventListener('click', () => {
+    clicks += 1;
+    clearTimeout(timer);
+    timer = setTimeout(() => { clicks = 0; }, 600);
+    if (clicks >= 3) {
+      clicks = 0;
+      clearTimeout(timer);
+      const on = document.body.classList.toggle('debug-on');
+      showDemoToast(on ? 'Debug box shown.' : 'Debug box hidden.');
     }
   });
 })();
