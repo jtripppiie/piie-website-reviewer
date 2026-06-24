@@ -26,6 +26,30 @@ function safeUrlForLog(url) {
   return String(url).replace(/([?&]key=)[^&]*/gi, '$1***');
 }
 
+// Lightweight in-memory rate limit for the open-ish quick-update route.
+// Second layer behind reviewer auth; guards against runaway loops or abuse.
+const quickUpdateHits = new Map();
+function rateLimitQuickUpdate(req, res, next) {
+  const windowMs = 60 * 1000;
+  const maxHits = 30;
+  const now = Date.now();
+  const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const key = forwarded || req.ip || req.socket?.remoteAddress || 'unknown';
+  const entry = quickUpdateHits.get(key);
+
+  if (!entry || now - entry.start > windowMs) {
+    quickUpdateHits.set(key, { start: now, count: 1 });
+    return next();
+  }
+
+  entry.count += 1;
+  if (entry.count > maxHits) {
+    return res.status(429).send('Too many quick edits in a short time. Please wait a minute and try again.');
+  }
+
+  next();
+}
+
 app.use((req, res, next) => {
   const started = Date.now();
   const requestId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -590,7 +614,7 @@ app.post('/r/:shareToken/clear-notes', async (req, res) => {
 // Quick edit from the review page itself. Reviewers (no admin key needed) can
 // set Dev/Live URLs and drop in screenshots or before/after images. URLs are
 // limited to http(s) so a javascript: URL cannot be stored and run later.
-app.post('/r/:shareToken/quick-update', requireReviewer, upload.fields([
+app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireReviewer, upload.fields([
   { name: 'beforeImage', maxCount: 1 },
   { name: 'afterImage', maxCount: 1 },
   { name: 'devScreenshot', maxCount: 1 },
