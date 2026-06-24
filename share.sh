@@ -8,9 +8,10 @@
 set -euo pipefail
 
 PORT="${PORT:-3000}"
+STARTED_SERVER=0
 
 cleanup() {
-  if [[ -n "${SERVER_PID:-}" ]]; then
+  if [[ "$STARTED_SERVER" = "1" && -n "${SERVER_PID:-}" ]]; then
     kill "$SERVER_PID" 2>/dev/null || true
   fi
 }
@@ -21,12 +22,17 @@ if ! command -v cloudflared >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Starting the reviewer on http://localhost:${PORT} ..."
-PORT="$PORT" node server.js &
-SERVER_PID=$!
+if curl -fsS "http://localhost:${PORT}/healthz" >/dev/null 2>&1; then
+  echo "Reviewer already running on http://localhost:${PORT}; reusing it for sharing."
+else
+  echo "Starting the reviewer on http://localhost:${PORT} ..."
+  PORT="$PORT" node server.js &
+  SERVER_PID=$!
+  STARTED_SERVER=1
 
-# Give the server a moment to bind the port before opening the tunnel.
-sleep 2
+  # Give the server a moment to bind the port before opening the tunnel.
+  sleep 2
+fi
 
 echo ""
 echo "Opening a public Cloudflare tunnel."

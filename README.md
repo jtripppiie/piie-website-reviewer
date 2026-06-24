@@ -48,6 +48,8 @@ Watch the output for a line like `https://something.trycloudflare.com` - that is
 the link to share. Press **Ctrl+C** to stop.
 
 Notes:
+- If the app is already running on `localhost:3000`, the share command reuses
+  that running app instead of trying to start a second copy.
 - The link works only while that terminal stays open.
 - The URL changes each time you run it (that is how free quick tunnels work).
 - Set real passwords in `.env` before sharing, since the link is public.
