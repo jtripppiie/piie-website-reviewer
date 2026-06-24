@@ -8,20 +8,9 @@
       "pageId": "public_demo_page",
       "type": "urlCompare",
       "title": "Safe Dev vs Live Layout Demo",
-      "instructions": "Same-origin demo pages. This is the most reliable layout test because GitHub Pages can iframe these files.",
+      "instructions": "Each preview shows the live page when a site allows embedding, or a saved screenshot when it does not. Same section, either way. These same-origin demo files embed reliably on GitHub Pages.",
       "devUrl": "demo-dev.html",
       "liveUrl": "demo-live.html",
-      "screenSizes": ["desktop", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
-    },
-    {
-      "pageId": "screenshot_fallback_page",
-      "type": "urlCompare",
-      "title": "Screenshot Fallback Review",
-      "instructions": "Uses saved screenshots so reviewers can still compare work when Dev or Live blocks iframe embedding.",
-      "devUrl": "https://www.piie.com",
-      "liveUrl": "https://www.piie.com",
-      "devScreenshotPath": "demo-dev-screenshot.svg",
-      "liveScreenshotPath": "demo-live-screenshot.svg",
       "screenSizes": ["desktop", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
     }
   ],
@@ -43,15 +32,6 @@
       "status": "needs-design-changes",
       "comment": "Multiple reviewer notes need to be visible together so we can compare feedback quickly.",
       "createdAt": "2026-06-23T20:05:00.000Z"
-    },
-    {
-      "noteId": "demo_note_3",
-      "pageId": "screenshot_fallback_page",
-      "screenSize": "mobile",
-      "reviewerName": "Content",
-      "status": "approved",
-      "comment": "Screenshot fallback is useful when the iframe does not load.",
-      "createdAt": "2026-06-23T20:10:00.000Z"
     }
   ]
 }
