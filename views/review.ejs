@@ -263,10 +263,6 @@
                   <% } %>
                 </div>
 
-                <p class="viewport-note">
-                  Heads up: these are common screen widths, not exact inch sizes. Zoom, display scaling, and your monitor can all change what actually fits. We go by the browser width listed for each one.
-                </p>
-
                 <% if (page.devUrl || page.liveUrl) { %>
                   <% const webpageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
                   <div class="webpage-preview-stage" data-webpage-preview data-webpage-compare>
@@ -321,7 +317,6 @@
                     <% }) %>
                   </div>
 
-                  <p class="muted">If a preview is blank, the site won't load in a frame. Use the Open Dev / Open Live links, or clear the URLs if you want to review uploaded screenshots instead.</p>
                 <% } else if (page.devShots || page.liveShots) { %>
                   <%
                     const shotSizes = normalizedScreenSizes(page.screenSizes);

@@ -9,8 +9,8 @@
       "type": "urlCompare",
       "title": "Nelson Structural Default Demo",
       "instructions": "This real public site is the default demo because it currently allows iframe embedding and gives reviewers a more realistic page to inspect.",
-      "devUrl": "https://www.nelsonstructural.com/",
-      "liveUrl": "https://www.nelsonstructural.com/",
+      "devUrl": "https://nelsonengineeringalaska.com/",
+      "liveUrl": "https://nelsonengineeringalaska.com/",
       "screenSizes": ["desktop", "desktop-1440", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
     },
     {
