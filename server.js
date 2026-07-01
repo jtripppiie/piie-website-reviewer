@@ -128,9 +128,9 @@ function uploadPath(file) {
   return file ? `/uploads/${file.filename}` : '';
 }
 
-const PUBLIC_DEMO_BASE_URL = (process.env.PUBLIC_DEMO_BASE_URL || 'https://jtripppiie.github.io/piie-website-reviewer').replace(/\/$/, '');
-const DEFAULT_DEV_URL = `${PUBLIC_DEMO_BASE_URL}/demo-dev.html`;
-const DEFAULT_LIVE_URL = `${PUBLIC_DEMO_BASE_URL}/demo-live.html`;
+const DEFAULT_DEMO_URL = (process.env.DEFAULT_DEMO_URL || 'https://www.nelsonstructural.com/').trim();
+const DEFAULT_DEV_URL = DEFAULT_DEMO_URL;
+const DEFAULT_LIVE_URL = DEFAULT_DEMO_URL;
 const DEFAULT_SCREEN_SIZES = ['desktop', 'desktop-1440', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
 
 function isAllowedReviewUrl(value) {

@@ -7,19 +7,19 @@
     {
       "pageId": "public_demo_page",
       "type": "urlCompare",
-      "title": "Safe Dev vs Live Layout Demo",
-      "instructions": "Each preview shows the live page when a site allows embedding, or a saved screenshot when it does not. Same section, either way. These same-origin demo files embed reliably on GitHub Pages.",
-      "devUrl": "demo-dev.html",
-      "liveUrl": "demo-live.html",
+      "title": "Nelson Structural Default Demo",
+      "instructions": "This real public site is the default demo because it currently allows iframe embedding and gives reviewers a more realistic page to inspect.",
+      "devUrl": "https://www.nelsonstructural.com/",
+      "liveUrl": "https://www.nelsonstructural.com/",
       "screenSizes": ["desktop", "desktop-1440", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
     },
     {
-      "pageId": "public_real_site_page",
+      "pageId": "public_controlled_demo_page",
       "type": "urlCompare",
-      "title": "Real Website Embed Test",
-      "instructions": "Nelson Structural is included as a third-party real-site smoke test because it currently allows iframe embedding. If that ever changes, the controlled demo page above remains the reliable walkthrough.",
-      "devUrl": "https://www.nelsonstructural.com/",
-      "liveUrl": "https://www.nelsonstructural.com/",
+      "title": "Controlled Dev vs Live Layout Demo",
+      "instructions": "These same-origin demo files embed reliably on GitHub Pages and stay available as a fallback if a third-party site changes its iframe policy.",
+      "devUrl": "demo-dev.html",
+      "liveUrl": "demo-live.html",
       "screenSizes": ["desktop", "desktop-1440", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
     }
   ],
@@ -29,8 +29,8 @@
       "pageId": "public_demo_page",
       "screenSize": "desktop",
       "reviewerName": "JT",
-      "status": "approved-after-these-changes",
-      "comment": "Layout works. Review results should stay at the top of the page section, not follow me while scrolling.",
+      "status": "approved",
+      "comment": "Default demo page: use Nelson Structural to show a real public website loading inside the reviewer.",
       "createdAt": "2026-06-23T20:00:00.000Z"
     },
     {
@@ -38,17 +38,17 @@
       "pageId": "public_demo_page",
       "screenSize": "desktop",
       "reviewerName": "Design",
-      "status": "needs-design-changes",
-      "comment": "Multiple reviewer notes need to be visible together so we can compare feedback quickly.",
+      "status": "approved-after-these-changes",
+      "comment": "Try the Full desktop and 1440 desktop tabs to show how the review viewport changes.",
       "createdAt": "2026-06-23T20:05:00.000Z"
     },
     {
       "noteId": "demo_note_3",
-      "pageId": "public_real_site_page",
+      "pageId": "public_controlled_demo_page",
       "screenSize": "desktop",
       "reviewerName": "JT",
-      "status": "approved",
-      "comment": "Real website embed test: use this page to show that the reviewer can load a live public site when the site allows framing.",
+      "status": "approved-after-these-changes",
+      "comment": "Controlled fallback page: useful when you want a guaranteed same-origin embed during a walkthrough.",
       "createdAt": "2026-07-01T17:55:00.000Z"
     }
   ]
