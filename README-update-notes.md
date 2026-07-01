@@ -2,27 +2,50 @@
 
 A short log of notable changes. See `README.md` for full setup and usage.
 
+## Current v1.0 direction
+
+- The primary workflow is Dev vs Live URL review with live iframe previews when
+  the reviewed sites are embeddable.
+- The default demo URL remains the Nelson Structural site.
+- Admin also has a local testing mode that uses `public/demo/dev-home.html` and
+  `public/demo/live-home.html` for a predictable same-origin dry run.
+- Reviewers can work by screen size: Full desktop, 1440 desktop, 15.6 display,
+  14.5 display, 13 display, and Mobile.
+
 ## Reviewer experience
 
-- Full-width review deck with sticky top navigation.
-- Wider before/after comparison area and a right-side feedback panel.
-- More feedback statuses, plus a reviewer name/initials field.
-- Comment dots you can pin to a specific spot on a comparison.
-- Honest screen-size presets (Desktop, 15.6, 14.5, 13, Mobile) with a fit/scale
-  control, since these are browser widths, not exact screen inches.
+- Live Dev and Live previews can be viewed side by side in Interact mode.
+- Compare mode stacks Dev over Live with a draggable slider.
+- Annotate mode lets reviewers place note spots on the webpage preview.
+- Notes are grouped by screen size and can be managed or downloaded from the
+  notes view.
+- The notes panel can collapse so the review area stays usable on desktop.
 
-## URL review without iframes
+## Highlights and callouts
 
-Pantheon and many secure sites refuse to load inside an iframe. The app now
-treats screenshots as the main review method and opens Dev/Live URLs in a new
-tab instead of relying on embedding. URL pages can also auto-capture screenshots
-at each screen size.
+- URL compare pages now include **Find differences**.
+- When both iframe previews are inspectable, the app compares visible page
+  elements in the current viewport and draws blue difference boxes.
+- Clicking an auto-detected difference starts a pinned note at that spot.
+- Admins can add saved reviewer highlights from the edit packet screen.
+- Saved highlights can be a translucent box, underline, or arrow.
+- Clicking a saved admin highlight on the review page also starts a pinned note.
 
-## Quick edit and sharing
+## Admin workflow
 
-- Triple-click a page heading on a review page to set URLs or upload images
-  without opening admin.
-- `npm run share` exposes the local server with a free Cloudflare tunnel.
+- The admin dashboard can create a local test packet with seeded notes and
+  highlights.
+- Packet edit pages include URL fields, screenshot fallbacks, capture tools,
+  and reviewer highlight controls.
+- Admin review mode keeps admin-only actions available from the review page.
+- Starting a new round clears notes without deleting the packet.
+
+## Screenshot fallback
+
+- Screenshot capture and manual per-size uploads remain available for URL
+  compare pages.
+- Fallback screenshots are useful when a site is easier to review as a static
+  capture or when a stable reference is needed.
 
 ## Install
 
