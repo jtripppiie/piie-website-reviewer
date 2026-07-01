@@ -1947,3 +1947,409 @@ body.quick-edit-on .quick-edit {
   font-size: 12px;
   margin: 6px 0 0;
 }
+
+/* ============================================================
+   UI polish layer
+   ============================================================ */
+:root {
+  --blue: #2f75a8;
+  --blue-dark: #0f3858;
+  --blue-soft: #e8f2f8;
+  --green: #176f4a;
+  --green-soft: #e8f6ee;
+  --amber: #9a5b12;
+  --amber-soft: #fff3db;
+  --ink: #122333;
+  --muted: #617083;
+  --border: #d8e0e8;
+  --bg: #f3f6f9;
+  --panel: #f8fafc;
+  --ring: rgba(47, 117, 168, .28);
+  --shadow-sm: 0 1px 2px rgba(18, 35, 51, .06);
+  --shadow-md: 0 10px 28px rgba(18, 35, 51, .10);
+}
+
+body {
+  background:
+    linear-gradient(180deg, #eef4f8 0, var(--bg) 280px, #f7f9fb 100%);
+}
+
+.shell {
+  width: min(1180px, calc(100% - 36px));
+  margin: 28px auto 56px;
+}
+
+.shell > h1,
+.notes-header h1,
+.admin-hero h1 {
+  letter-spacing: 0;
+}
+
+.admin-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 4px 0;
+}
+
+.admin-hero h1 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.04;
+}
+
+.card,
+.feedback-panel,
+.public-notes,
+.notes-filter,
+.note-card,
+.shot-card,
+.capture-cell,
+.webpage-frame-card,
+.url-note,
+.empty-preview,
+.preview-status {
+  border-color: rgba(150, 164, 181, .42);
+  box-shadow: var(--shadow-sm);
+}
+
+.card {
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.card h2,
+.card h3 {
+  color: var(--ink);
+}
+
+.admin-primary-card {
+  position: relative;
+  overflow: hidden;
+  border-top: 4px solid var(--blue);
+}
+
+.admin-primary-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  height: 56px;
+  background: linear-gradient(180deg, rgba(47, 117, 168, .08), rgba(47, 117, 168, 0));
+  pointer-events: none;
+}
+
+.admin-secondary-tools {
+  background: #fbfcfe;
+}
+
+.admin-secondary-tools summary,
+.advanced-tools summary {
+  list-style: none;
+}
+
+.admin-secondary-tools summary::-webkit-details-marker,
+.advanced-tools summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-secondary-tools summary,
+.advanced-tools summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-secondary-tools summary::after,
+.advanced-tools summary::after {
+  content: "+";
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  font-weight: 900;
+}
+
+.admin-secondary-tools[open] summary::after,
+.advanced-tools[open] summary::after {
+  content: "-";
+}
+
+.packet-list {
+  margin-top: 18px;
+}
+
+.packet-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+}
+
+.packet-card h2 {
+  margin: 0 0 10px;
+  font-size: 21px;
+}
+
+.packet-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.status-pill,
+.note-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.status-pill.is-open {
+  background: var(--green-soft);
+  color: var(--green);
+  border: 1px solid rgba(23, 111, 74, .18);
+}
+
+.status-pill.is-draft {
+  background: var(--amber-soft);
+  color: var(--amber);
+  border: 1px solid rgba(154, 91, 18, .2);
+}
+
+label {
+  color: #26384a;
+  font-size: 14px;
+}
+
+input,
+textarea,
+select {
+  border-color: #cdd8e2;
+  background: #fff;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: #afbfcc;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 0;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+button,
+.button {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--blue-dark);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .16) inset;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
+}
+
+button:hover,
+.button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(18, 35, 51, .13);
+}
+
+button:focus-visible,
+.button:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 4px var(--ring), 0 8px 18px rgba(18, 35, 51, .13);
+}
+
+.button.secondary,
+button.secondary,
+.screen-tabs button,
+.preview-scale-controls button,
+.webpage-preview-controls button,
+.feedback-panel__toggle {
+  background: #e8eef4;
+  color: var(--ink);
+  border-color: rgba(150, 164, 181, .28);
+}
+
+.screen-tabs button,
+.preview-scale-controls button,
+.webpage-preview-controls button {
+  border-radius: 999px;
+}
+
+.screen-tabs button.active,
+.preview-scale-controls button.active,
+.webpage-preview-controls button.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(47, 117, 168, .24);
+}
+
+.button.danger,
+button.danger,
+.clear-notes-form button {
+  background: #fff;
+  border-color: #ef4444;
+  color: #b91c1c;
+}
+
+.review-body {
+  background: #e5ebf1;
+}
+
+.review-topbar {
+  padding: 10px 22px;
+  border-bottom-color: rgba(150, 164, 181, .5);
+  box-shadow: 0 8px 20px rgba(18, 35, 51, .08);
+}
+
+.review-topbar h1 {
+  font-size: 19px;
+}
+
+.review-page {
+  border-radius: 12px;
+  border-color: rgba(150, 164, 181, .46);
+  box-shadow: 0 10px 30px rgba(18, 35, 51, .08);
+}
+
+.review-page--work {
+  padding: 8px;
+}
+
+.page-heading,
+.url-note {
+  border-radius: 12px;
+}
+
+.page-heading {
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.feedback-panel {
+  background: rgba(248, 250, 252, .96);
+  border-radius: 12px;
+}
+
+.feedback-panel__bar h3 {
+  color: var(--ink);
+}
+
+.webpage-frame-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+}
+
+.webpage-frame-card__header,
+.shot-card figcaption {
+  background: #f8fafc;
+}
+
+.webpage-frame-card__header strong,
+.shot-card figcaption {
+  color: var(--ink);
+}
+
+.preview-status,
+.viewport-note {
+  background: #fff;
+}
+
+.public-note {
+  background: #fff;
+}
+
+.note-card {
+  border-radius: 14px;
+}
+
+.notes-page {
+  max-width: 980px;
+}
+
+.notes-header {
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(150, 164, 181, .38);
+}
+
+.notes-filter {
+  background: #fff;
+}
+
+.cover-slide {
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(47, 117, 168, .08), rgba(255, 255, 255, 0) 44%),
+    #fff;
+}
+
+.comment-dot {
+  background: var(--blue);
+  box-shadow: 0 5px 16px rgba(18, 35, 51, .32);
+}
+
+.app-version-badge {
+  box-shadow: 0 8px 20px rgba(18, 35, 51, .16);
+}
+
+@media (max-width: 760px) {
+  .shell {
+    width: min(100% - 24px, 1180px);
+    margin-top: 18px;
+  }
+
+  .admin-hero,
+  .packet-card {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-hero {
+    align-items: flex-start;
+  }
+
+  .packet-card .actions {
+    width: 100%;
+  }
+
+  .packet-card .actions .button,
+  .packet-card .actions button {
+    flex: 1 1 auto;
+  }
+
+  .review-nav {
+    width: 100%;
+    justify-content: flex-start;
+    white-space: normal;
+    flex-wrap: wrap;
+  }
+
+  .review-nav form {
+    display: inline-flex;
+  }
+
+  .review-nav .button,
+  .review-nav button {
+    padding: 9px 10px;
+    font-size: 14px;
+  }
+}

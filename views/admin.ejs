@@ -1,9 +1,15 @@
 <!doctype html>
 <html lang="en">
   <%- include('partials/head', { title: 'Admin Dashboard' }) %>
-  <body>
+  <body class="admin-body">
     <main class="shell">
-      <h1>Design Review Packets</h1>
+      <header class="admin-hero">
+        <div>
+          <p class="eyebrow">Internal review console</p>
+          <h1>Design Review Packets</h1>
+        </div>
+        <a class="button secondary" href="https://jtripppiie.github.io/piie-website-reviewer/" target="_blank" rel="noopener">Live demo</a>
+      </header>
 
       <form class="card admin-primary-card" method="post" action="/admin/packets">
         <input type="hidden" name="key" value="<%= key %>">
@@ -60,12 +66,17 @@
         </form>
       </details>
 
-      <section class="stack">
+      <section class="stack packet-list">
         <% packets.forEach(packet => { %>
-          <article class="card">
-            <h2><%= packet.title %></h2>
-            <p>Status: <strong><%= packet.published ? 'Published' : 'Draft' %></strong></p>
-            <p>Pages: <%= packet.pages.length %></p>
+          <article class="card packet-card">
+            <div>
+              <p class="eyebrow">Packet</p>
+              <h2><%= packet.title %></h2>
+              <div class="packet-meta">
+                <span class="status-pill <%= packet.published ? 'is-open' : 'is-draft' %>"><%= packet.published ? 'Open for review' : 'Draft' %></span>
+                <span><%= packet.pages.length %> <%= packet.pages.length === 1 ? 'page' : 'pages' %></span>
+              </div>
+            </div>
 
             <div class="actions">
               <a class="button" href="/admin/packets/<%= packet.packetId %>/edit?key=<%= key %>">Edit</a>

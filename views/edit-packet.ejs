@@ -1,11 +1,15 @@
 <!doctype html>
 <html lang="en">
   <%- include('partials/head', { title: 'Edit Packet' }) %>
-  <body>
+  <body class="admin-body">
     <main class="shell">
-      <p><a href="/admin?key=<%= key %>">Back to admin</a></p>
-
-      <h1>Edit Packet</h1>
+      <header class="admin-hero">
+        <div>
+          <p class="eyebrow">Packet setup</p>
+          <h1>Edit Packet</h1>
+        </div>
+        <a class="button secondary" href="/admin?key=<%= key %>">Back to admin</a>
+      </header>
 
       <section class="card admin-simple-flow">
         <p class="eyebrow">1.0 workflow</p>
@@ -31,7 +35,7 @@
 
       <section class="card">
         <h2>Review Status</h2>
-        <p>Status: <strong><%= packet.published ? 'Open for review' : 'Draft' %></strong></p>
+        <p>Status: <span class="status-pill <%= packet.published ? 'is-open' : 'is-draft' %>"><%= packet.published ? 'Open for review' : 'Draft' %></span></p>
 
         <form method="post" action="/admin/packets/<%= packet.packetId %>/publish">
           <input type="hidden" name="key" value="<%= key %>">
