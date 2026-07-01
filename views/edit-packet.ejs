@@ -56,8 +56,13 @@
 
           <label>Title <input type="text" name="title" required></label>
           <label>Instructions <textarea name="instructions"></textarea></label>
-          <label>Dev URL <input type="text" name="devUrl" inputmode="url" value="https://jtripppiie.github.io/piie-website-reviewer/demo-dev.html" placeholder="https://dev-example.pantheonsite.io or /public/demo/dev-home.html"></label>
-          <label>Live URL <input type="text" name="liveUrl" inputmode="url" value="https://jtripppiie.github.io/piie-website-reviewer/demo-live.html" placeholder="https://www.example.com or /public/demo/live-home.html"></label>
+          <label>Dev URL <input type="text" name="devUrl" inputmode="url" list="review-url-options" value="https://jtripppiie.github.io/piie-website-reviewer/demo-dev.html" placeholder="https://dev-example.pantheonsite.io or /public/demo/dev-home.html"></label>
+          <label>Live URL <input type="text" name="liveUrl" inputmode="url" list="review-url-options" value="https://jtripppiie.github.io/piie-website-reviewer/demo-live.html" placeholder="https://www.example.com or /public/demo/live-home.html"></label>
+          <datalist id="review-url-options">
+            <option value="https://jtripppiie.github.io/piie-website-reviewer/demo-dev.html" label="Controlled demo - Dev">
+            <option value="https://jtripppiie.github.io/piie-website-reviewer/demo-live.html" label="Controlled demo - Live">
+            <option value="https://www.nelsonstructural.com/" label="Real embed test - Nelson Structural">
+          </datalist>
 
           <details class="advanced-tools">
             <summary>Preview fallback screenshots</summary>
@@ -206,12 +211,12 @@
 
                 <label>
                   Dev URL
-                  <input type="text" name="devUrl" inputmode="url" value="<%= page.devUrl || '' %>" placeholder="https://dev-example.pantheonsite.io or /public/demo/dev-home.html">
+                  <input type="text" name="devUrl" inputmode="url" list="review-url-options" value="<%= page.devUrl || '' %>" placeholder="https://dev-example.pantheonsite.io or /public/demo/dev-home.html">
                 </label>
 
                 <label>
                   Live URL
-                  <input type="text" name="liveUrl" inputmode="url" value="<%= page.liveUrl || '' %>" placeholder="https://www.example.com or /public/demo/live-home.html">
+                  <input type="text" name="liveUrl" inputmode="url" list="review-url-options" value="<%= page.liveUrl || '' %>" placeholder="https://www.example.com or /public/demo/live-home.html">
                 </label>
 
                 <details class="advanced-tools">

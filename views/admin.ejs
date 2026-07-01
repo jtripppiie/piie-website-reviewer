@@ -28,13 +28,18 @@
         <div class="admin-url-grid">
           <label>
             Dev URL
-            <input type="text" name="devUrl" inputmode="url" value="https://jtripppiie.github.io/piie-website-reviewer/demo-dev.html" placeholder="https://dev.example.com or /public/demo/dev-home.html">
+            <input type="text" name="devUrl" inputmode="url" list="review-url-options" value="https://jtripppiie.github.io/piie-website-reviewer/demo-dev.html" placeholder="https://dev.example.com or /public/demo/dev-home.html">
           </label>
           <label>
             Live URL
-            <input type="text" name="liveUrl" inputmode="url" value="https://jtripppiie.github.io/piie-website-reviewer/demo-live.html" placeholder="https://www.example.com or /public/demo/live-home.html">
+            <input type="text" name="liveUrl" inputmode="url" list="review-url-options" value="https://jtripppiie.github.io/piie-website-reviewer/demo-live.html" placeholder="https://www.example.com or /public/demo/live-home.html">
           </label>
         </div>
+        <datalist id="review-url-options">
+          <option value="https://jtripppiie.github.io/piie-website-reviewer/demo-dev.html" label="Controlled demo - Dev">
+          <option value="https://jtripppiie.github.io/piie-website-reviewer/demo-live.html" label="Controlled demo - Live">
+          <option value="https://www.nelsonstructural.com/" label="Real embed test - Nelson Structural">
+        </datalist>
 
         <button type="submit">Create review packet</button>
       </form>

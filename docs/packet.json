@@ -12,6 +12,15 @@
       "devUrl": "demo-dev.html",
       "liveUrl": "demo-live.html",
       "screenSizes": ["desktop", "desktop-1440", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
+    },
+    {
+      "pageId": "public_real_site_page",
+      "type": "urlCompare",
+      "title": "Real Website Embed Test",
+      "instructions": "Nelson Structural is included as a third-party real-site smoke test because it currently allows iframe embedding. If that ever changes, the controlled demo page above remains the reliable walkthrough.",
+      "devUrl": "https://www.nelsonstructural.com/",
+      "liveUrl": "https://www.nelsonstructural.com/",
+      "screenSizes": ["desktop", "desktop-1440", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
     }
   ],
   "seedNotes": [
@@ -32,6 +41,15 @@
       "status": "needs-design-changes",
       "comment": "Multiple reviewer notes need to be visible together so we can compare feedback quickly.",
       "createdAt": "2026-06-23T20:05:00.000Z"
+    },
+    {
+      "noteId": "demo_note_3",
+      "pageId": "public_real_site_page",
+      "screenSize": "desktop",
+      "reviewerName": "JT",
+      "status": "approved",
+      "comment": "Real website embed test: use this page to show that the reviewer can load a live public site when the site allows framing.",
+      "createdAt": "2026-07-01T17:55:00.000Z"
     }
   ]
 }

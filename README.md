@@ -14,6 +14,8 @@ There are two versions of this app:
 
 Live demo: https://jtripppiie.github.io/piie-website-reviewer/
 
+Real-site iframe smoke test: https://www.nelsonstructural.com/
+
 > The demo is just a public preview. Anything that changes packets, uploads
 > images, or captures screenshots needs the real app.
 
