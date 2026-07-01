@@ -131,6 +131,8 @@ function uploadPath(file) {
 const DEFAULT_DEMO_URL = (process.env.DEFAULT_DEMO_URL || 'https://www.nelsonstructural.com/').trim();
 const DEFAULT_DEV_URL = DEFAULT_DEMO_URL;
 const DEFAULT_LIVE_URL = DEFAULT_DEMO_URL;
+const TEST_DEV_URL = '/public/demo/dev-home.html';
+const TEST_LIVE_URL = '/public/demo/live-home.html';
 const DEFAULT_SCREEN_SIZES = ['desktop', 'desktop-1440', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
 
 function isAllowedReviewUrl(value) {
@@ -208,10 +210,10 @@ function makeDemoPacket(titleOverride = '') {
       {
         pageId: homepageId,
         type: 'urlCompare',
-        title: 'Homepage review',
-        instructions: 'Compare the hero, spacing, and call-to-action treatment between dev and live.',
-        devUrl: DEFAULT_DEV_URL,
-        liveUrl: DEFAULT_LIVE_URL,
+        title: 'Local testing mode',
+        instructions: 'Use the controlled Dev and Live demo pages to test browsing, comparison, annotation, screen sizes, and note workflows without third-party iframe restrictions.',
+        devUrl: TEST_DEV_URL,
+        liveUrl: TEST_LIVE_URL,
         screenSizes: DEFAULT_SCREEN_SIZES,
         order: 2
       }
