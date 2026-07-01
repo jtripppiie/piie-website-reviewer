@@ -12,6 +12,8 @@ There are two versions of this app:
 | **The real app** (`server.js`) | Your computer, or any server | Yes - saves to JSON files on disk |
 | **The demo** (`docs/`) | GitHub Pages (static) | No - notes save only in your browser |
 
+Live demo: https://jtripppiie.github.io/piie-website-reviewer/
+
 > The demo is just a public preview. Anything that changes packets, uploads
 > images, or captures screenshots needs the real app.
 

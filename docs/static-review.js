@@ -2,10 +2,11 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '0.5.1';
+const APP_VERSION = '1.0.0';
 
 const PRESETS = {
-  desktop: { label: 'Desktop', w: 1440, h: 900 },
+  desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
+  'desktop-1440': { label: '1440 desktop', w: 1440, h: 900 },
   'laptop-15-6': { label: '15.6 display', w: 1366, h: 768 },
   'laptop-14-5': { label: '14.5 display', w: 1280, h: 760 },
   'laptop-13': { label: '13 display', w: 1180, h: 720 },
@@ -63,7 +64,8 @@ function applyUrlOverrides() {
 
 function screenSizeLabel(size) {
   return {
-    desktop: 'Desktop',
+    desktop: 'Full desktop',
+    'desktop-1440': '1440 desktop',
     'laptop-15-6': '15.6 display',
     'laptop-14-5': '14.5 display',
     'laptop-13': '13 display',
@@ -153,7 +155,7 @@ function escapeHtml(value) {
 }
 
 function renderPage(page, index) {
-  const sizes = (page.screenSizes || ['desktop', 'laptop', 'mobile']).filter(size => size !== 'tablet');
+  const sizes = normalizedScreenSizes(page.screenSizes);
   const activeSize = state.activeSizes[page.pageId] || sizes[0] || 'desktop';
   state.activeSizes[page.pageId] = activeSize;
 
@@ -202,10 +204,10 @@ function renderPage(page, index) {
           <form class="quick-edit__form" data-url-form="${escapeHtml(page.pageId)}">
             <div class="quick-edit__row">
               <label>Dev URL
-                <input type="url" name="devUrl" value="${escapeHtml(page.devUrl || '')}" placeholder="https://dev.example.com">
+                <input type="text" name="devUrl" inputmode="url" value="${escapeHtml(page.devUrl || '')}" placeholder="https://dev.example.com or /public/demo/dev-home.html">
               </label>
               <label>Live URL
-                <input type="url" name="liveUrl" value="${escapeHtml(page.liveUrl || '')}" placeholder="https://www.example.com">
+                <input type="text" name="liveUrl" inputmode="url" value="${escapeHtml(page.liveUrl || '')}" placeholder="https://www.example.com or /public/demo/live-home.html">
               </label>
             </div>
             <button type="submit">Update preview</button>
@@ -287,6 +289,27 @@ function presetFor(size) {
   return PRESETS[size] || PRESETS.desktop;
 }
 
+function normalizedScreenSizes(sizes) {
+  const defaults = ['desktop', 'desktop-1440', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+  const result = [];
+  const source = Array.isArray(sizes) && sizes.length ? sizes : defaults;
+  source.filter(size => size !== 'tablet').forEach(size => {
+    if (!result.includes(size)) result.push(size);
+    if (size === 'desktop' && !result.includes('desktop-1440')) result.push('desktop-1440');
+  });
+  defaults.forEach(size => {
+    if (!result.includes(size)) result.push(size);
+  });
+  return result;
+}
+
+function resolvedPreset(pageEl, preset) {
+  if (!preset.dynamicWidth) return preset;
+  const stage = pageEl.querySelector('.preview-stage');
+  const availableWidth = Math.max(1024, Math.floor(stage?.clientWidth || preset.w));
+  return { ...preset, w: availableWidth };
+}
+
 function ensureScaler(card) {
   const iframe = card.querySelector('iframe');
   if (!iframe) return null;
@@ -322,9 +345,9 @@ function applyLayout(pageEl) {
 
   const size = state.activeSizes[pageId] || 'desktop';
   const scaleMode = state.scaleModes[pageId] || 'fit';
-  const preset = presetFor(size);
   const stage = pageEl.querySelector('.preview-stage');
   if (!stage) return;
+  const preset = resolvedPreset(pageEl, presetFor(size));
 
   pageEl.dataset.previewSize = size;
 
@@ -548,16 +571,21 @@ function handleUrlForm(form) {
   if (!page) return;
 
   const data = new FormData(form);
-  const isHttpUrl = value => /^https?:\/\/\S+$/i.test((value || '').trim());
+  const isAllowedReviewUrl = value => {
+    const trimmed = (value || '').trim();
+    if (!trimmed) return true;
+    if (/^https?:\/\/\S+$/i.test(trimmed)) return true;
+    return /^\/(?!\/)\S*$/.test(trimmed);
+  };
   const dev = (data.get('devUrl') || '').trim();
   const live = (data.get('liveUrl') || '').trim();
 
-  if (dev !== '' && !isHttpUrl(dev)) {
-    showDemoToast('Dev URL must start with http:// or https://');
+  if (!isAllowedReviewUrl(dev)) {
+    showDemoToast('Dev URL must start with http://, https://, or a same-origin /path');
     return;
   }
-  if (live !== '' && !isHttpUrl(live)) {
-    showDemoToast('Live URL must start with http:// or https://');
+  if (!isAllowedReviewUrl(live)) {
+    showDemoToast('Live URL must start with http://, https://, or a same-origin /path');
     return;
   }
 
@@ -577,7 +605,7 @@ function renderNotesView() {
     const forPage = notes.filter(note => note.pageId === page.pageId);
     if (!forPage.length) return '';
 
-    const sizes = (page.screenSizes || ['desktop', 'mobile']).filter(size => size !== 'tablet');
+    const sizes = normalizedScreenSizes(page.screenSizes);
     const bySize = sizes.map(size => {
       const sizeNotes = forPage.filter(note => note.screenSize === size);
       if (!sizeNotes.length) return '';

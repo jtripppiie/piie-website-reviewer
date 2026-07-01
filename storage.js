@@ -35,6 +35,24 @@ async function safeWriteJson(filePath, value) {
   await fs.rename(tempPath, filePath);
 }
 
+const updateQueues = new Map();
+
+function queuedUpdate(filePath, fallbackValue, updater) {
+  const previous = updateQueues.get(filePath) || Promise.resolve();
+
+  const next = previous
+    .catch(() => {})
+    .then(async () => {
+      const value = await readJson(filePath, fallbackValue);
+      const updatedValue = await updater(value);
+      await safeWriteJson(filePath, updatedValue == null ? value : updatedValue);
+      return updatedValue == null ? value : updatedValue;
+    });
+
+  updateQueues.set(filePath, next);
+  return next;
+}
+
 async function getPackets() {
   return readJson(PACKETS_FILE, []);
 }
@@ -51,6 +69,10 @@ async function saveResponses(responses) {
   return safeWriteJson(RESPONSES_FILE, responses);
 }
 
+async function updateResponses(updater) {
+  return queuedUpdate(RESPONSES_FILE, [], updater);
+}
+
 function makeId(prefix = 'id') {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -61,5 +83,6 @@ module.exports = {
   savePackets,
   getResponses,
   saveResponses,
+  updateResponses,
   makeId
 };

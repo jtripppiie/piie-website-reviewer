@@ -8,10 +8,10 @@
       <h1>Edit Packet</h1>
 
       <section class="card admin-simple-flow">
-        <h2>Simple editing flow</h2>
-        <p>Keep this page to one job at a time.</p>
-        <p><strong>For a URL review page:</strong> set the title, set the instructions, enter one Dev URL and one Live URL, then save.</p>
-        <p>Only use screenshot capture or per-size uploads if the site preview is blocked or you need manual fallbacks.</p>
+        <p class="eyebrow">1.0 workflow</p>
+        <h2>One normal path</h2>
+        <p>Create or edit a Dev vs Live page, publish the packet, then manage notes from the review link.</p>
+        <p>Use screenshot fallbacks only when a site blocks embedding or capture is more reliable for review.</p>
       </section>
 
       <section class="card">
@@ -30,65 +30,75 @@
       </section>
 
       <section class="card">
-        <p>Status: <strong><%= packet.published ? 'Published' : 'Draft' %></strong></p>
+        <h2>Review Status</h2>
+        <p>Status: <strong><%= packet.published ? 'Open for review' : 'Draft' %></strong></p>
 
         <form method="post" action="/admin/packets/<%= packet.packetId %>/publish">
           <input type="hidden" name="key" value="<%= key %>">
           <input type="hidden" name="published" value="<%= packet.published ? 'false' : 'true' %>">
-          <button type="submit"><%= packet.published ? 'Unpublish' : 'Publish' %></button>
+          <button type="submit"><%= packet.published ? 'Close review' : 'Open for review' %></button>
         </form>
 
         <% if (packet.published) { %>
-          <p>Share link: <a href="/r/<%= packet.shareToken %>">/r/<%= packet.shareToken %></a></p>
+          <p>Review link: <a href="/r/<%= packet.shareToken %>?key=<%= key %>">/r/<%= packet.shareToken %></a></p>
         <% } else { %>
-          <p class="muted">Publish the packet when it is ready for reviewers.</p>
+          <p class="muted">Open the review when it is ready for reviewers.</p>
         <% } %>
       </section>
 
-      <h2>Add New Page</h2>
+      <h2>Add Review Work</h2>
 
-      <section class="grid">
-        <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/cover">
+      <section class="stack">
+        <form class="card admin-primary-card" method="post" action="/admin/packets/<%= packet.packetId %>/url-compare" enctype="multipart/form-data">
           <input type="hidden" name="key" value="<%= key %>">
-          <h3>Add Cover Page</h3>
-
-          <label>Title <input type="text" name="title" required></label>
-          <label>Subtitle <input type="text" name="subtitle"></label>
-          <label>Body <textarea name="body"></textarea></label>
-
-          <button type="submit">Add Cover</button>
-        </form>
-
-        <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/image-compare" enctype="multipart/form-data">
-          <input type="hidden" name="key" value="<%= key %>">
-          <h3>Add Screenshot Comparison</h3>
+          <p class="eyebrow">Primary</p>
+          <h3>Add Dev vs Live page</h3>
 
           <label>Title <input type="text" name="title" required></label>
           <label>Instructions <textarea name="instructions"></textarea></label>
-          <label>Before label <input type="text" name="beforeLabel" value="Before"></label>
-          <label>After label <input type="text" name="afterLabel" value="After"></label>
-          <label>Before image <input type="file" name="beforeImage" accept="image/*" required></label>
-          <label>After image <input type="file" name="afterImage" accept="image/*" required></label>
+          <label>Dev URL <input type="text" name="devUrl" inputmode="url" value="https://jtripppiie.github.io/piie-website-reviewer/demo-dev.html" placeholder="https://dev-example.pantheonsite.io or /public/demo/dev-home.html"></label>
+          <label>Live URL <input type="text" name="liveUrl" inputmode="url" value="https://jtripppiie.github.io/piie-website-reviewer/demo-live.html" placeholder="https://www.example.com or /public/demo/live-home.html"></label>
 
-          <button type="submit">Add Images</button>
-        </form>
-
-        <form class="card" method="post" action="/admin/packets/<%= packet.packetId %>/url-compare" enctype="multipart/form-data">
-          <input type="hidden" name="key" value="<%= key %>">
-          <h3>Add Dev vs Live Review</h3>
-
-          <label>Title <input type="text" name="title" required></label>
-          <label>Instructions <textarea name="instructions"></textarea></label>
-          <label>Dev URL <input type="url" name="devUrl" placeholder="https://dev-example.pantheonsite.io"></label>
-          <label>Live URL <input type="url" name="liveUrl" placeholder="https://www.example.com"></label>
-
-          <p class="muted">Upload screenshots if iframe previews are blocked.</p>
-
-          <label>Dev screenshot (optional) <input type="file" name="devScreenshot" accept="image/*"></label>
-          <label>Live screenshot (optional) <input type="file" name="liveScreenshot" accept="image/*"></label>
+          <details class="advanced-tools">
+            <summary>Preview fallback screenshots</summary>
+            <p class="muted">Use these if embedded previews are blocked and you already have a Dev and Live screenshot.</p>
+            <label>Dev screenshot <input type="file" name="devScreenshot" accept="image/*"></label>
+            <label>Live screenshot <input type="file" name="liveScreenshot" accept="image/*"></label>
+          </details>
 
           <button type="submit">Add Dev vs Live</button>
         </form>
+
+        <details class="card admin-secondary-tools">
+          <summary>Additional page types</summary>
+
+          <div class="grid">
+            <form class="admin-inline-tool" method="post" action="/admin/packets/<%= packet.packetId %>/cover">
+              <input type="hidden" name="key" value="<%= key %>">
+              <h3>Add Cover Page</h3>
+
+              <label>Title <input type="text" name="title" required></label>
+              <label>Subtitle <input type="text" name="subtitle"></label>
+              <label>Body <textarea name="body"></textarea></label>
+
+              <button type="submit">Add Cover</button>
+            </form>
+
+            <form class="admin-inline-tool" method="post" action="/admin/packets/<%= packet.packetId %>/image-compare" enctype="multipart/form-data">
+              <input type="hidden" name="key" value="<%= key %>">
+              <h3>Add Image Comparison</h3>
+
+              <label>Title <input type="text" name="title" required></label>
+              <label>Instructions <textarea name="instructions"></textarea></label>
+              <label>Before label <input type="text" name="beforeLabel" value="Before"></label>
+              <label>After label <input type="text" name="afterLabel" value="After"></label>
+              <label>Before image <input type="file" name="beforeImage" accept="image/*" required></label>
+              <label>After image <input type="file" name="afterImage" accept="image/*" required></label>
+
+              <button type="submit">Add Images</button>
+            </form>
+          </div>
+        </details>
       </section>
 
       <h2>Edit Existing Pages</h2>
@@ -119,7 +129,7 @@
               <% } %>
 
               <% if (page.type === 'imageCompare') { %>
-                <% const presetList = [['desktop','Desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
+                <% const presetList = [['desktop','Full desktop'],['desktop-1440','1440 desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
                 <p class="muted">This page is one image comparison: one Before image and one After image.</p>
                 <label>
                   Instructions
@@ -160,7 +170,7 @@
 
                 <details class="advanced-tools">
                   <summary>Optional per-size image uploads</summary>
-                  <p class="muted">Upload separate Before and After images for Desktop, 15.6, 14.5, 13, and Mobile only when you need size-specific assets.</p>
+                  <p class="muted">Upload separate Before and After images for Full desktop, 1440, laptop sizes, and Mobile only when you need size-specific assets.</p>
                   <form method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/upload-shots" enctype="multipart/form-data">
                     <input type="hidden" name="key" value="<%= key %>">
                     <% presetList.forEach(([sizeKey, sizeLabel]) => { %>
@@ -196,17 +206,17 @@
 
                 <label>
                   Dev URL
-                  <input type="url" name="devUrl" value="<%= page.devUrl || '' %>">
+                  <input type="text" name="devUrl" inputmode="url" value="<%= page.devUrl || '' %>" placeholder="https://dev-example.pantheonsite.io or /public/demo/dev-home.html">
                 </label>
 
                 <label>
                   Live URL
-                  <input type="url" name="liveUrl" value="<%= page.liveUrl || '' %>">
+                  <input type="text" name="liveUrl" inputmode="url" value="<%= page.liveUrl || '' %>" placeholder="https://www.example.com or /public/demo/live-home.html">
                 </label>
 
                 <details class="advanced-tools">
-                  <summary>Optional basic screenshot replacements</summary>
-                  <p class="muted">Use these only if you want one manual Dev screenshot and one manual Live screenshot for the page.</p>
+                  <summary>Preview fallback</summary>
+                  <p class="muted">Use this only when iframe previews are blocked or you need a static visual reference.</p>
 
                   <p class="muted">Current Dev screenshot: <%= page.devScreenshotPath || 'None' %></p>
                   <label>
@@ -237,9 +247,9 @@
 
             <% if (page.type === 'urlCompare') { %>
               <details class="capture-block advanced-tools">
-                <summary>Advanced screenshot tools</summary>
-                <h4>Auto screenshots</h4>
-                <p class="muted">Capture full page screenshots of the Dev and Live URLs at every preset (Desktop, 15.6, 14.5, 13, Mobile). Save the URLs above first. Recapture any time after the site updates.</p>
+                <summary>Screenshot fallbacks by screen size</summary>
+                <h4>Capture from URLs</h4>
+                <p class="muted">Capture full page screenshots at each review size. Save the URLs above first. Recapture when the site updates.</p>
 
                 <form method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/capture">
                   <input type="hidden" name="key" value="<%= key %>">
@@ -252,7 +262,7 @@
                   <p class="muted">Last captured: <%= page.capturedAt %></p>
                 <% } %>
 
-                <% const presetList = [['desktop','Desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
+                <% const presetList = [['desktop','Full desktop'],['desktop-1440','1440 desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
 
                 <% if (page.devShots || page.liveShots) { %>
                   <div class="capture-grid">
@@ -276,8 +286,8 @@
                   </div>
                 <% } %>
 
-                <h4>Upload screenshots by screen size</h4>
-                <p class="muted">When you cannot capture the live site, upload a screenshot for each size by hand. These fill the same per size view reviewers see.</p>
+                <h4>Manual upload by screen size</h4>
+                <p class="muted">Use manual uploads only when capture cannot reach the site.</p>
                 <form method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/upload-shots" enctype="multipart/form-data">
                   <input type="hidden" name="key" value="<%= key %>">
                   <% presetList.forEach(([sizeKey, sizeLabel]) => { %>

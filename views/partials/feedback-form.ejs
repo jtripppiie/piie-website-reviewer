@@ -18,8 +18,8 @@
       <select name="status">
         <option value="approved">Approved</option>
         <option value="approved-after-these-changes">Approved after these changes</option>
-        <option value="needs-design-changes">Needs design changes</option>
-        <option value="needs-mobile-review">Needs mobile review</option>
+        <option value="needs-changes">Needs changes</option>
+        <option value="blocked-cannot-review">Blocked</option>
       </select>
     </label>
   </div>
@@ -29,7 +29,11 @@
     <textarea name="comment"></textarea>
   </label>
 
+  <p class="dot-location" data-dot-location hidden></p>
+
   <div class="feedback-actions">
+    <button type="button" class="secondary" data-start-dot>Mark a spot</button>
+    <button type="button" class="secondary" data-clear-dot hidden>Clear spot</button>
     <button type="submit">Save note</button>
   </div>
 </form>

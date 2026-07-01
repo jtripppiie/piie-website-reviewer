@@ -12,6 +12,7 @@ const {
   savePackets,
   getResponses,
   saveResponses,
+  updateResponses,
   makeId
 } = require('./storage');
 
@@ -127,7 +128,41 @@ function uploadPath(file) {
   return file ? `/uploads/${file.filename}` : '';
 }
 
-const DEFAULT_SCREEN_SIZES = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+const PUBLIC_DEMO_BASE_URL = (process.env.PUBLIC_DEMO_BASE_URL || 'https://jtripppiie.github.io/piie-website-reviewer').replace(/\/$/, '');
+const DEFAULT_DEV_URL = `${PUBLIC_DEMO_BASE_URL}/demo-dev.html`;
+const DEFAULT_LIVE_URL = `${PUBLIC_DEMO_BASE_URL}/demo-live.html`;
+const DEFAULT_SCREEN_SIZES = ['desktop', 'desktop-1440', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+
+function isAllowedReviewUrl(value) {
+  const trimmed = (value || '').trim();
+  if (!trimmed) return true;
+  if (/^https?:\/\/\S+$/i.test(trimmed)) return true;
+  return /^\/(?!\/)\S*$/.test(trimmed);
+}
+
+function resolveReviewUrl(req, value) {
+  const trimmed = (value || '').trim();
+  if (!trimmed || /^https?:\/\//i.test(trimmed)) return trimmed;
+  return new URL(trimmed, `${req.protocol}://${req.get('host')}`).toString();
+}
+
+function normalizedScreenSizes(sizes = DEFAULT_SCREEN_SIZES) {
+  const source = Array.isArray(sizes) && sizes.length ? sizes : DEFAULT_SCREEN_SIZES;
+  const normalized = [];
+
+  source.filter(size => size !== 'tablet').forEach(size => {
+    if (!normalized.includes(size)) normalized.push(size);
+    if (size === 'desktop' && !normalized.includes('desktop-1440')) {
+      normalized.push('desktop-1440');
+    }
+  });
+
+  DEFAULT_SCREEN_SIZES.forEach(size => {
+    if (!normalized.includes(size)) normalized.push(size);
+  });
+
+  return normalized;
+}
 
 function makeDemoPacket(titleOverride = '') {
   const packetId = makeId('packet');
@@ -175,8 +210,8 @@ function makeDemoPacket(titleOverride = '') {
         type: 'urlCompare',
         title: 'Homepage review',
         instructions: 'Compare the hero, spacing, and call-to-action treatment between dev and live.',
-        devUrl: '/public/demo/dev-home.html',
-        liveUrl: '/public/demo/live-home.html',
+        devUrl: DEFAULT_DEV_URL,
+        liveUrl: DEFAULT_LIVE_URL,
         screenSizes: DEFAULT_SCREEN_SIZES,
         order: 2
       }
@@ -320,15 +355,37 @@ app.post('/admin/packets', async (req, res) => {
   if (!isAdmin(req)) return res.status(403).send('Forbidden');
 
   const packets = await getPackets();
+  const now = new Date().toISOString();
+  const packetId = makeId('packet');
+  const title = req.body.title || 'Untitled Review Packet';
 
   const packet = {
-    packetId: makeId('packet'),
+    packetId,
     shareToken: makeId('share'),
-    title: req.body.title || 'Untitled Review Packet',
+    title,
     published: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    pages: []
+    createdAt: now,
+    updatedAt: now,
+    pages: [
+      {
+        pageId: makeId('page'),
+        type: 'cover',
+        title,
+        subtitle: 'Website review',
+        body: 'Review the Dev and Live pages, leave notes by screen size, then export or start a new round when ready.',
+        order: 0
+      },
+      {
+        pageId: makeId('page'),
+        type: 'urlCompare',
+        title: req.body.pageTitle || 'Dev vs Live review',
+        instructions: req.body.instructions || '',
+        devUrl: (req.body.devUrl || DEFAULT_DEV_URL).trim(),
+        liveUrl: (req.body.liveUrl || DEFAULT_LIVE_URL).trim(),
+        screenSizes: DEFAULT_SCREEN_SIZES,
+        order: 1
+      }
+    ]
   };
 
   packets.push(packet);
@@ -436,9 +493,9 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
   }
 
   if (page.type === 'urlCompare') {
-    page.devUrl = req.body.devUrl || '';
-    page.liveUrl = req.body.liveUrl || '';
-    page.screenSizes = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+    page.devUrl = (req.body.devUrl || '').trim();
+    page.liveUrl = (req.body.liveUrl || '').trim();
+    page.screenSizes = DEFAULT_SCREEN_SIZES;
 
     const devScreenshot = req.files?.devScreenshot?.[0];
     const liveScreenshot = req.files?.liveScreenshot?.[0];
@@ -478,7 +535,7 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
 
 
 app.post('/admin/packets/:packetId/pages/:pageId/upload-shots', upload.fields(
-  ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'].flatMap(size => [
+  DEFAULT_SCREEN_SIZES.flatMap(size => [
     { name: `devShot_${size}`, maxCount: 1 },
     { name: `liveShot_${size}`, maxCount: 1 },
     { name: `beforeShot_${size}`, maxCount: 1 },
@@ -494,7 +551,7 @@ app.post('/admin/packets/:packetId/pages/:pageId/upload-shots', upload.fields(
   const page = packet.pages.find(p => p.pageId === req.params.pageId);
   if (!page) return res.status(404).send('Page not found');
 
-  const sizes = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+  const sizes = DEFAULT_SCREEN_SIZES;
   if (page.type === 'urlCompare') {
     page.devShots = page.devShots || {};
     page.liveShots = page.liveShots || {};
@@ -585,12 +642,12 @@ app.post('/admin/packets/:packetId/pages/:pageId/capture', async (req, res) => {
 
   try {
     if (page.devUrl) {
-      page.devShots = await captureUrlAllPresets(page.devUrl, 'dev');
+      page.devShots = await captureUrlAllPresets(resolveReviewUrl(req, page.devUrl), 'dev');
       page.devScreenshotPath = page.devShots['laptop-15-6'] || page.devShots.desktop || '';
     }
 
     if (page.liveUrl) {
-      page.liveShots = await captureUrlAllPresets(page.liveUrl, 'live');
+      page.liveShots = await captureUrlAllPresets(resolveReviewUrl(req, page.liveUrl), 'live');
       page.liveScreenshotPath = page.liveShots['laptop-15-6'] || page.liveShots.desktop || '';
     }
 
@@ -686,11 +743,11 @@ app.post('/admin/packets/:packetId/url-compare', upload.fields([
     type: 'urlCompare',
     title: req.body.title || 'Dev vs Live',
     instructions: req.body.instructions || '',
-    devUrl: req.body.devUrl || '',
-    liveUrl: req.body.liveUrl || '',
+    devUrl: (req.body.devUrl || DEFAULT_DEV_URL).trim(),
+    liveUrl: (req.body.liveUrl || DEFAULT_LIVE_URL).trim(),
     devScreenshotPath: uploadPath(devScreenshot),
     liveScreenshotPath: uploadPath(liveScreenshot),
-    screenSizes: ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'],
+    screenSizes: DEFAULT_SCREEN_SIZES,
     order: packet.pages.length
   });
 
@@ -879,7 +936,8 @@ app.get('/r/:shareToken', requireReviewer, async (req, res) => {
 
 function humanScreenSize(size) {
   const labels = {
-    desktop: 'Desktop',
+    desktop: 'Full desktop',
+    'desktop-1440': '1440 desktop',
     'laptop-15-6': '15.6 display',
     'laptop-14-5': '14.5 display',
     'laptop-13': '13 display',
@@ -889,6 +947,18 @@ function humanScreenSize(size) {
 }
 
 function humanStatus(status) {
+  const labels = {
+    approved: 'Approved',
+    'approved-after-these-changes': 'Approved after these changes',
+    'approved-minor-changes': 'Approved after these changes',
+    'needs-changes': 'Needs changes',
+    'needs-design-changes': 'Needs design changes',
+    'needs-content-changes': 'Needs content changes',
+    'needs-mobile-review': 'Needs mobile review',
+    'blocked-cannot-review': 'Blocked / cannot review',
+    'not-approved': 'Not approved'
+  };
+  if (labels[status]) return labels[status];
   if (!status) return '';
   return status.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
 }
@@ -907,6 +977,12 @@ function filterNotes(list, query) {
     if (status && (r.status || '') !== status) return false;
     return true;
   });
+}
+
+function reviewRedirect(packet, req, pageId = '') {
+  const hash = pageId ? `#${pageId}` : '';
+  const keyPart = adminKey(req) ? `?key=${encodeURIComponent(adminKey(req))}` : '';
+  return `/r/${packet.shareToken}${keyPart}${hash}`;
 }
 
 app.get('/r/:shareToken/notes', requireReviewer, async (req, res) => {
@@ -984,36 +1060,93 @@ app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
     return res.status(400).send('Review page not found.');
   }
 
-  const allowedSizes = Array.isArray(page.screenSizes) && page.screenSizes.length
-    ? page.screenSizes.filter(size => size !== 'tablet')
-    : DEFAULT_SCREEN_SIZES;
+  const allowedSizes = normalizedScreenSizes(page.screenSizes);
   const screenSize = req.body.screenSize || '';
 
   if (!allowedSizes.includes(screenSize)) {
     return res.status(400).send('Screen size not valid for this page.');
   }
 
-  const responses = await getResponses();
+  await updateResponses(responses => {
+    responses.push({
+      responseId: makeId('response'),
+      packetId: packet.packetId,
+      pageId: page.pageId,
+      screenSize,
+      reviewerName: req.body.reviewerName || req.body.initials || '',
+      initials: req.body.initials || req.body.reviewerName || '',
+      status: req.body.status || 'needs-review',
+      comment: req.body.comment || '',
+      dotX: req.body.dotX || '',
+      dotY: req.body.dotY || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
 
-  responses.push({
-    responseId: makeId('response'),
-    packetId: packet.packetId,
-    pageId: page.pageId,
-    screenSize,
-    reviewerName: req.body.reviewerName || req.body.initials || '',
-    initials: req.body.initials || req.body.reviewerName || '',
-    status: req.body.status || 'needs-review',
-    comment: req.body.comment || '',
-    dotX: req.body.dotX || '',
-    dotY: req.body.dotY || '',
-    createdAt: new Date().toISOString()
+    return responses;
   });
 
-  await saveResponses(responses);
+  res.redirect(reviewRedirect(packet, req, page.pageId));
+});
 
-  const hash = page.pageId ? `#${page.pageId}` : '';
-  const keyPart = adminKey(req) ? `?key=${encodeURIComponent(adminKey(req))}` : '';
-  res.redirect(`/r/${packet.shareToken}${keyPart}${hash}`);
+app.post('/r/:shareToken/feedback/:responseId/update', requireReviewer, async (req, res) => {
+  const packets = await getPackets();
+  const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
+
+  if (!packet) return res.status(404).send('Review packet not found or not published.');
+
+  let pageId = '';
+  let found = false;
+
+  await updateResponses(responses => {
+    const response = responses.find(r => r.responseId === req.params.responseId && r.packetId === packet.packetId);
+    if (!response) return responses;
+
+    const page = packet.pages.find(p => p.pageId === response.pageId);
+    if (!page || page.type === 'cover') return responses;
+
+    pageId = page.pageId;
+    found = true;
+    response.reviewerName = req.body.reviewerName || '';
+    response.initials = req.body.reviewerName || '';
+    response.status = req.body.status || 'needs-review';
+    response.comment = req.body.comment || '';
+
+    if (req.body.removeDot === 'true') {
+      response.dotX = '';
+      response.dotY = '';
+    }
+
+    response.updatedAt = new Date().toISOString();
+    return responses;
+  });
+
+  if (!found) return res.status(404).send('Review note not found.');
+
+  res.redirect(reviewRedirect(packet, req, pageId));
+});
+
+app.post('/r/:shareToken/feedback/:responseId/delete', requireReviewer, async (req, res) => {
+  const packets = await getPackets();
+  const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
+
+  if (!packet) return res.status(404).send('Review packet not found or not published.');
+
+  let pageId = '';
+  let found = false;
+
+  await updateResponses(responses => {
+    const response = responses.find(r => r.responseId === req.params.responseId && r.packetId === packet.packetId);
+    if (!response) return responses;
+
+    pageId = response.pageId || '';
+    found = true;
+    return responses.filter(r => r.responseId !== req.params.responseId);
+  });
+
+  if (!found) return res.status(404).send('Review note not found.');
+
+  res.redirect(reviewRedirect(packet, req, pageId));
 });
 
 app.post('/r/:shareToken/clear-notes', async (req, res) => {
@@ -1030,16 +1163,12 @@ app.post('/r/:shareToken/clear-notes', async (req, res) => {
   const screenSize = req.body.screenSize || '';
   const hasScreenFilter = 'screenSize' in req.body;
 
-  const responses = await getResponses();
-
-  const kept = responses.filter(response => {
+  await updateResponses(responses => responses.filter(response => {
     if (response.packetId !== packet.packetId) return true;
     if (response.pageId !== pageId) return true;
     if (hasScreenFilter && (response.screenSize || '') !== screenSize) return true;
     return false;
-  });
-
-  await saveResponses(kept);
+  }));
 
   const hash = pageId ? `#${pageId}` : '';
   const keyPart = `?key=${encodeURIComponent(adminKey(req))}`;
@@ -1065,7 +1194,8 @@ app.post('/r/:shareToken/quick-unlock', rateLimitQuickUpdate, requireReviewer, (
 
 // Quick edit from the review page itself. Reviewers (no admin key needed) can
 // set Dev/Live URLs and drop in screenshots or before/after images. URLs are
-// limited to http(s) so a javascript: URL cannot be stored and run later.
+// limited to http(s) or root-relative same-origin paths, so a javascript: URL
+// cannot be stored and run later.
 app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireReviewer, upload.fields([
   { name: 'beforeImage', maxCount: 1 },
   { name: 'afterImage', maxCount: 1 },
@@ -1086,25 +1216,25 @@ app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireReviewer, u
     return res.redirect(`/r/${req.params.shareToken}?quickEditError=1${anchor}`);
   }
 
-  const isHttpUrl = value => /^https?:\/\/\S+$/i.test((value || '').trim());
-
   if (page.type === 'urlCompare') {
     if ('devUrl' in req.body) {
       const value = (req.body.devUrl || '').trim();
-      if (value === '' || isHttpUrl(value)) page.devUrl = value;
+      if (isAllowedReviewUrl(value)) page.devUrl = value;
     }
     if ('liveUrl' in req.body) {
       const value = (req.body.liveUrl || '').trim();
-      if (value === '' || isHttpUrl(value)) page.liveUrl = value;
+      if (isAllowedReviewUrl(value)) page.liveUrl = value;
     }
 
     const devScreenshot = req.files?.devScreenshot?.[0];
     const liveScreenshot = req.files?.liveScreenshot?.[0];
     if (devScreenshot) {
+      removeUploadFile(page.devScreenshotPath);
       page.devScreenshotPath = uploadPath(devScreenshot);
       delete page.devShots;
     }
     if (liveScreenshot) {
+      removeUploadFile(page.liveScreenshotPath);
       page.liveScreenshotPath = uploadPath(liveScreenshot);
       delete page.liveShots;
     }
@@ -1113,8 +1243,14 @@ app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireReviewer, u
   if (page.type === 'imageCompare') {
     const before = req.files?.beforeImage?.[0];
     const after = req.files?.afterImage?.[0];
-    if (before) page.beforeImagePath = uploadPath(before);
-    if (after) page.afterImagePath = uploadPath(after);
+    if (before) {
+      removeUploadFile(page.beforeImagePath);
+      page.beforeImagePath = uploadPath(before);
+    }
+    if (after) {
+      removeUploadFile(page.afterImagePath);
+      page.afterImagePath = uploadPath(after);
+    }
   }
 
   page.updatedAt = new Date().toISOString();
@@ -1142,17 +1278,33 @@ app.get('/admin/packets/:packetId/results', async (req, res) => {
   });
 });
 
-app.post('/admin/packets/:packetId/clear-results', async (req, res) => {
-  // Admin only. Clears every review note for this packet.
+async function deletePacketResponses(packetId) {
+  await updateResponses(responses => responses.filter(response => response.packetId !== packetId));
+}
+
+app.post('/admin/packets/:packetId/start-round', async (req, res) => {
+  // Admin only. Starts a clean review round by deleting current notes.
   if (!isAdmin(req)) return res.status(403).send('Forbidden');
 
   const packets = await getPackets();
   const packet = packets.find(p => p.packetId === req.params.packetId);
   if (!packet) return res.status(404).send('Packet not found');
 
-  const responses = await getResponses();
-  const kept = responses.filter(response => response.packetId !== packet.packetId);
-  await saveResponses(kept);
+  await deletePacketResponses(packet.packetId);
+
+  const next = req.body.next || `/admin?key=${encodeURIComponent(adminKey(req))}`;
+  res.redirect(next);
+});
+
+app.post('/admin/packets/:packetId/clear-results', async (req, res) => {
+  // Backward-compatible alias for the old button/action name.
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const packet = packets.find(p => p.packetId === req.params.packetId);
+  if (!packet) return res.status(404).send('Packet not found');
+
+  await deletePacketResponses(packet.packetId);
 
   res.redirect(`/admin?key=${encodeURIComponent(adminKey(req))}`);
 });
@@ -1169,9 +1321,7 @@ app.post('/admin/packets/:packetId/delete', async (req, res) => {
   const keptPackets = packets.filter(p => p.packetId !== packet.packetId);
   await savePackets(keptPackets);
 
-  const responses = await getResponses();
-  const keptResponses = responses.filter(response => response.packetId !== packet.packetId);
-  await saveResponses(keptResponses);
+  await deletePacketResponses(packet.packetId);
 
   res.redirect(`/admin?key=${encodeURIComponent(adminKey(req))}`);
 });
@@ -1215,7 +1365,8 @@ app.get('/admin/packets/:packetId/export.md', async (req, res) => {
   };
 
   const screenLabels = {
-    desktop: 'Desktop',
+    desktop: 'Full desktop',
+    'desktop-1440': '1440 desktop',
     'laptop-15-6': '15.6 display',
     'laptop-14-5': '14.5 display',
     'laptop-13': '13 display',

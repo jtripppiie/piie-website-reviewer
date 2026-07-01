@@ -54,6 +54,33 @@ a {
   align-items: start;
 }
 
+.admin-url-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.admin-primary-card h2,
+.admin-primary-card h3 {
+  margin-top: 0;
+}
+
+.admin-secondary-tools summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.admin-secondary-tools[open] summary {
+  margin-bottom: 12px;
+}
+
+.admin-inline-tool {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  background: #fff;
+}
+
 .stack {
   display: grid;
   gap: 16px;
@@ -367,6 +394,40 @@ button.secondary {
   background: #111827;
 }
 
+.comment-popover {
+  position: fixed;
+  z-index: 10001;
+  width: min(260px, calc(100vw - 24px));
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .22);
+  font-size: 13px;
+}
+
+.comment-popover strong,
+.comment-popover span {
+  display: block;
+}
+
+.comment-popover span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.comment-popover p {
+  margin: 8px 0 10px;
+  white-space: pre-wrap;
+}
+
+.comment-popover button {
+  padding: 6px 9px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
 .feedback {
   background: #fff;
   border: 1px solid var(--border);
@@ -385,6 +446,7 @@ button.secondary {
   color: var(--blue);
   font-weight: 700;
   margin-bottom: 0;
+  font-size: 13px;
 }
 
 .screen-tabs {
@@ -445,6 +507,10 @@ button.secondary {
 
 @media (max-width: 900px) {
   .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-url-grid {
     grid-template-columns: 1fr;
   }
 
@@ -545,6 +611,7 @@ button.secondary {
 .review-page[data-preview-size] .url-note,
 .review-page[data-preview-size] .screen-tabs,
 .review-page[data-preview-size] .viewport-note,
+.review-page[data-preview-size] .webpage-preview-controls,
 .review-page[data-preview-size] .preview-scale-controls,
 .review-page[data-preview-size] .preview-status,
 .review-page[data-preview-size] .empty-preview,
@@ -558,6 +625,10 @@ button.secondary {
 }
 
 .review-page[data-preview-size="desktop"] .review-canvas {
+  --preview-width: 1440px;
+}
+
+.review-page[data-preview-size="desktop-1440"] .review-canvas {
   --preview-width: 1440px;
 }
 
@@ -590,6 +661,14 @@ button.secondary {
   max-width: min(100%, var(--preview-width));
 }
 
+.preview-scale-controls,
+.preview-status,
+.webpage-preview-controls {
+  grid-column: 1 / -1;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .review-page[data-preview-size="tablet"] .wide-compare,
 .review-page[data-preview-size="mobile"] .wide-compare {
   height: min(76vh, 900px);
@@ -601,12 +680,40 @@ button.secondary {
 }
 
 /* Dev / Live embedded webpage preview */
+.webpage-preview-controls {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin: -4px 0 8px;
+}
+
+.webpage-preview-controls button {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.webpage-preview-controls button.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
 .webpage-preview-stage {
+  --reveal: 50;
+  --webpage-height: 720px;
   width: 100%;
   min-height: 640px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+  position: relative;
+  overflow: visible;
 }
 
 .webpage-frame-card {
@@ -615,6 +722,79 @@ button.secondary {
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
+}
+
+.webpage-preview-stage.is-slider {
+  display: block;
+  height: var(--webpage-height);
+  min-height: var(--webpage-height);
+  overflow: hidden;
+  background: #eef1f4;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.webpage-preview-stage.is-slider .webpage-frame-card {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.webpage-preview-stage.is-slider .webpage-frame-card--live {
+  z-index: 1;
+}
+
+.webpage-preview-stage.is-slider .webpage-frame-card--dev {
+  z-index: 2;
+  clip-path: inset(0 calc(100% - (var(--reveal) * 1%)) 0 0);
+}
+
+.webpage-preview-stage.is-slider iframe,
+.webpage-preview-stage.is-slider .webpage-frame-empty {
+  height: 100%;
+  pointer-events: none;
+}
+
+.webpage-preview-stage.is-annotating iframe {
+  pointer-events: none;
+}
+
+.webpage-preview-stage.is-slider .webpage-frame-card__header {
+  display: none;
+}
+
+.webpage-slider-only {
+  display: none;
+}
+
+.webpage-preview-stage.is-slider .webpage-slider-only {
+  display: grid;
+}
+
+.webpage-preview-stage.is-slider .divider {
+  display: block;
+}
+
+.webpage-preview-stage.is-slider .handle {
+  display: block;
+}
+
+.webpage-mark-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  cursor: crosshair;
+  background: rgba(64, 124, 167, .08);
+}
+
+.webpage-preview-stage.is-placing-dot,
+.webpage-preview-stage.is-annotating {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
 }
 
 .webpage-frame-card__header {
@@ -647,16 +827,34 @@ button.secondary {
   max-width: min(100%, 1440px);
 }
 
+.review-page[data-preview-size="desktop-1440"] .webpage-preview-stage {
+  max-width: min(100%, 1440px);
+}
+
 .review-page[data-preview-size="laptop"] .webpage-preview-stage {
   max-width: min(100%, 1280px);
 }
 
+.review-page[data-preview-size="laptop-15-6"] .webpage-preview-stage {
+  max-width: min(100%, 1366px);
+}
+
+.review-page[data-preview-size="laptop-14-5"] .webpage-preview-stage {
+  max-width: min(100%, 1280px);
+}
+
+.review-page[data-preview-size="laptop-13"] .webpage-preview-stage {
+  max-width: min(100%, 1180px);
+}
+
 .review-page[data-preview-size="tablet"] .webpage-preview-stage {
+  --webpage-height: 900px;
   max-width: min(100%, 768px);
   grid-template-columns: 1fr;
 }
 
 .review-page[data-preview-size="mobile"] .webpage-preview-stage {
+  --webpage-height: 844px;
   max-width: min(100%, 390px);
   grid-template-columns: 1fr;
 }
@@ -816,7 +1014,8 @@ body.debug-layout-on .empty-preview {
 /* Clean review layout
    Base goal:
    - No top review header
-   - Top area is 75/25: page info left, review notes right
+   - Preview remains the primary full-width desktop surface
+   - Notes float above the preview instead of taking layout width
    - Screen tabs below top area
    - Preview full width below tabs
    - Desktop/laptop: Dev on top, Live below
@@ -845,7 +1044,7 @@ body.debug-layout-on .empty-preview {
 /* Main page layout */
 .review-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto auto minmax(0, 1fr);
   gap: 8px 12px;
   min-height: calc(100vh - 24px);
@@ -857,9 +1056,9 @@ body.debug-layout-on .empty-preview {
   display: contents;
 }
 
-/* 75% left: title/instructions */
+/* Full-width page info. Notes float over the right edge when expanded. */
 .page-heading {
-  grid-column: 1;
+  grid-column: 1 / -1;
   grid-row: 1;
   padding: 8px 10px;
   border: 1px solid var(--border);
@@ -877,9 +1076,9 @@ body.debug-layout-on .empty-preview {
   font-size: 13px;
 }
 
-/* 75% left: URL note/buttons */
+/* Full-width URL note/buttons. */
 .url-note {
-  grid-column: 1;
+  grid-column: 1 / -1;
   grid-row: 2;
   padding: 8px 10px;
   border-radius: 10px;
@@ -896,18 +1095,20 @@ body.debug-layout-on .empty-preview {
   gap: 8px;
 }
 
-/* 25% right: notes panel */
+/* Floating notes panel. It overlays the preview instead of shrinking it. */
 .feedback-panel {
-  grid-column: 2;
+  grid-column: 1 / -1;
   grid-row: 1 / -1;
   position: sticky;
   top: 6px;
   z-index: 18;
-  width: 100%;
-  max-height: 36vh;
+  justify-self: end;
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
   overflow: auto;
   padding: 8px;
   border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, .18);
 }
 
 .feedback-panel h3 {
@@ -938,18 +1139,26 @@ body.debug-layout-on .empty-preview {
 .empty-preview {
   grid-column: 1 / -1;
   grid-row: 4;
+  min-width: 0;
 }
 
 /* URL preview base */
 .webpage-preview-stage {
   display: grid;
   width: 100%;
+  max-width: 100%;
   gap: 16px;
   height: auto;
 }
 
 /* Desktop and laptop: Dev top, Live bottom */
-.review-page[data-preview-size="desktop"] .webpage-preview-stage,
+.review-page[data-preview-size="desktop"] .webpage-preview-stage {
+  grid-template-columns: 1fr;
+  max-width: 100%;
+  margin: 0;
+}
+
+.review-page[data-preview-size="desktop-1440"] .webpage-preview-stage,
 .review-page[data-preview-size="laptop"] .webpage-preview-stage {
   grid-template-columns: 1fr;
   max-width: 100%;
@@ -957,6 +1166,7 @@ body.debug-layout-on .empty-preview {
 }
 
 .review-page[data-preview-size="desktop"] .webpage-frame-card iframe,
+.review-page[data-preview-size="desktop-1440"] .webpage-frame-card iframe,
 .review-page[data-preview-size="laptop"] .webpage-frame-card iframe {
   width: 100%;
   height: 78vh;
@@ -1157,6 +1367,38 @@ body.debug-layout-on .empty-preview {
   font-size: 12px;
 }
 
+.note-editor {
+  margin-top: 10px;
+  border-top: 1px solid rgba(15, 23, 42, .08);
+  padding-top: 8px;
+}
+
+.note-editor summary {
+  cursor: pointer;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.note-editor form {
+  margin-top: 10px;
+}
+
+.note-editor label {
+  font-size: 12px;
+}
+
+.note-editor textarea {
+  min-height: 82px;
+}
+
+.note-editor__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
 .dot-location {
   margin: 0;
   color: var(--blue);
@@ -1209,6 +1451,8 @@ body.debug-layout-on .empty-preview {
 }
 
 .feedback-panel.is-collapsed {
+  width: auto;
+  min-width: 0;
   max-height: none;
   overflow: visible;
 }
@@ -1301,7 +1545,9 @@ body.debug-layout-on .empty-preview {
 }
 
 .webpage-preview-stage {
-  grid-column: 1 / -1;
+  grid-column: 1;
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Admin-only edit control on each review page section. */
@@ -1360,6 +1606,7 @@ body.debug-layout-on .empty-preview {
 /* Auto screenshot display on the review page. */
 .shots-stage {
   grid-column: 1 / -1;
+  min-width: 0;
 }
 
 .shots-size {
@@ -1543,6 +1790,7 @@ body.quick-edit-on .quick-edit {
 }
 
 .quick-edit__form input[type="url"],
+.quick-edit__form input[type="text"],
 .quick-edit__form input[type="file"] {
   font: inherit;
   font-size: 13px;
@@ -1699,4 +1947,3 @@ body.quick-edit-on .quick-edit {
   font-size: 12px;
   margin: 6px 0 0;
 }
-

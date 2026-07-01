@@ -5,12 +5,13 @@
     <header class="review-topbar">
       <h1><%= packet.title %></h1>
       <div class="review-nav">
-        <a class="button secondary" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>">View all notes</a>
+        <a class="button secondary" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>"><%= isAdminView ? 'Manage notes' : 'View all notes' %></a>
         <% if (isAdminView) { %>
           <a class="button secondary" href="/admin?key=<%= adminKeyValue %>">Back to admin</a>
-          <form method="post" action="/admin/packets/<%= packet.packetId %>/clear-results" onsubmit="return confirm('Clear all review results for this packet? This cannot be undone.');">
+          <form method="post" action="/admin/packets/<%= packet.packetId %>/start-round" onsubmit="return confirm('Start a new review round by deleting all notes for this packet? This cannot be undone.');">
             <input type="hidden" name="key" value="<%= adminKeyValue %>">
-            <button type="submit" class="button danger">Clear review results</button>
+            <input type="hidden" name="next" value="/r/<%= packet.shareToken %>?key=<%= adminKeyValue %>">
+            <button type="submit" class="button danger">Start new round</button>
           </form>
         <% } %>
       </div>
@@ -19,7 +20,8 @@
       <%
         function screenSizeLabel(size) {
           const labels = {
-            desktop: 'Desktop',
+            desktop: 'Full desktop',
+            'desktop-1440': '1440 desktop',
             'laptop-15-6': '15.6 display',
             'laptop-14-5': '14.5 display',
             'laptop-13': '13 display',
@@ -29,7 +31,19 @@
           return labels[size] || size;
         }
 
-        const defaultScreenSizes = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+        const defaultScreenSizes = ['desktop', 'desktop-1440', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+        function normalizedScreenSizes(sizes) {
+          const result = [];
+          const source = Array.isArray(sizes) && sizes.length ? sizes : defaultScreenSizes;
+          source.filter(size => size !== 'tablet').forEach(size => {
+            if (!result.includes(size)) result.push(size);
+            if (size === 'desktop' && !result.includes('desktop-1440')) result.push('desktop-1440');
+          });
+          defaultScreenSizes.forEach(size => {
+            if (!result.includes(size)) result.push(size);
+          });
+          return result;
+        }
         const preferredUrlPages = packet.pages.filter(page =>
           page.type === 'urlCompare' &&
           (page.devUrl || page.liveUrl || page.devShots || page.liveShots || page.devScreenshotPath || page.liveScreenshotPath)
@@ -38,8 +52,6 @@
         const visiblePageCount = renderedPages.length;
       %>
       <% renderedPages.forEach((page, index) => { %>
-        <% const pageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
-
         <% if (page.type === 'cover') { %>
           <section class="review-page cover-slide" id="<%= page.pageId %>" data-page-title="<%= page.title %>">
             <% if (isAdminView) { %>
@@ -103,6 +115,7 @@
                   <% defaultScreenSizes.forEach((size, sizeIndex) => { %>
                     <% const beforeImage = (page.beforeShots && page.beforeShots[size]) || page.beforeImagePath; %>
                     <% const afterImage = (page.afterShots && page.afterShots[size]) || page.afterImagePath; %>
+                    <% const sizeDots = responses.filter(response => response.pageId === page.pageId && response.screenSize === size && response.dotX && response.dotY); %>
                     <div class="shots-size <%= sizeIndex === 0 ? 'active' : '' %>" data-shots-size="<%= size %>">
                       <% if (beforeImage && afterImage) { %>
                         <% if (size === 'mobile') { %>
@@ -129,12 +142,16 @@
                             <div class="divider"></div>
                             <button class="handle" type="button" aria-label="Drag comparison handle"></button>
 
-                            <% pageDots.forEach((dot, dotIndex) => { %>
+                            <% sizeDots.forEach((dot, dotIndex) => { %>
                               <button
                                 class="comment-dot"
                                 type="button"
                                 style="left: <%= dot.dotX %>%; top: <%= dot.dotY %>%"
-                                title="<%= (dot.reviewerName || dot.initials || 'Reviewer') + ': ' + dot.status + (dot.comment ? ' - ' + dot.comment : '') %>">
+                                title="<%= (dot.reviewerName || dot.initials || 'Reviewer') + ': ' + dot.status + (dot.comment ? ' - ' + dot.comment : '') %>"
+                                data-reviewer="<%= dot.reviewerName || dot.initials || 'Reviewer' %>"
+                                data-status="<%= dot.status || 'Review note' %>"
+                                data-screen="<%= screenSizeLabel(dot.screenSize) %>"
+                                data-comment="<%= dot.comment || '' %>">
                                 <%= dotIndex + 1 %>
                               </button>
                             <% }) %>
@@ -166,11 +183,11 @@
                     <%- include('partials/public-notes', { responses, page, screenSize: size }) %>
                     <%- include('partials/feedback-form', { packet, page, screenSize: size }) %>
                     <% if (isAdminView) { %>
-                      <form class="clear-notes-form" method="post" action="/r/<%= packet.shareToken %>/clear-notes?key=<%= adminKeyValue %>" onsubmit="return confirm('Clear review notes for this page and screen size? This cannot be undone.');">
+                      <form class="clear-notes-form" method="post" action="/r/<%= packet.shareToken %>/clear-notes?key=<%= adminKeyValue %>" onsubmit="return confirm('Delete notes for this page and screen size? This cannot be undone.');">
                         <input type="hidden" name="key" value="<%= adminKeyValue %>">
                         <input type="hidden" name="pageId" value="<%= page.pageId %>">
                         <input type="hidden" name="screenSize" value="<%= size %>">
-                        <button type="submit">Clear notes for <%= screenSizeLabel(size) %> (admin only)</button>
+                        <button type="submit">Delete notes for <%= screenSizeLabel(size) %> (admin only)</button>
                       </form>
                     <% } %>
                   </div>
@@ -203,10 +220,10 @@
                       <input type="hidden" name="key" value="<%= adminKeyValue %>">
                       <div class="quick-edit__row">
                         <label>Dev URL
-                          <input type="url" name="devUrl" value="<%= page.devUrl || '' %>" placeholder="https://dev.example.com">
+                          <input type="text" name="devUrl" inputmode="url" value="<%= page.devUrl || '' %>" placeholder="https://dev.example.com or /public/demo/dev-home.html">
                         </label>
                         <label>Live URL
-                          <input type="url" name="liveUrl" value="<%= page.liveUrl || '' %>" placeholder="https://www.example.com">
+                          <input type="text" name="liveUrl" inputmode="url" value="<%= page.liveUrl || '' %>" placeholder="https://www.example.com or /public/demo/live-home.html">
                         </label>
                       </div>
                       <div class="quick-edit__row">
@@ -236,7 +253,7 @@
                 </div>
 
                 <div class="screen-tabs" data-url-tabs>
-                  <% page.screenSizes.filter(size => size !== "tablet").forEach((size, sizeIndex) => { %>
+                  <% normalizedScreenSizes(page.screenSizes).forEach((size, sizeIndex) => { %>
                     <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= screenSizeLabel(size) %></button>
                   <% }) %>
                 </div>
@@ -246,8 +263,15 @@
                 </p>
 
                 <% if (page.devUrl || page.liveUrl) { %>
-                  <div class="webpage-preview-stage" data-webpage-preview>
-                    <div class="webpage-frame-card">
+                  <% const webpageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
+                  <div class="webpage-preview-controls" data-webpage-modes>
+                    <button type="button" class="active" data-webpage-mode="interact">Interact</button>
+                    <button type="button" data-webpage-mode="compare">Compare</button>
+                    <button type="button" data-webpage-mode="annotate">Annotate</button>
+                  </div>
+
+                  <div class="webpage-preview-stage" data-webpage-preview data-webpage-compare>
+                    <div class="webpage-frame-card webpage-frame-card--dev">
                       <div class="webpage-frame-card__header">
                         <strong>Dev preview</strong>
                         <% if (page.devUrl) { %>
@@ -262,7 +286,7 @@
                       <% } %>
                     </div>
 
-                    <div class="webpage-frame-card">
+                    <div class="webpage-frame-card webpage-frame-card--live">
                       <div class="webpage-frame-card__header">
                         <strong>Live preview</strong>
                         <% if (page.liveUrl) { %>
@@ -276,14 +300,35 @@
                         <div class="webpage-frame-empty">No Live URL entered.</div>
                       <% } %>
                     </div>
+
+                    <span class="badge before-label webpage-slider-only">Dev</span>
+                    <span class="badge after-label webpage-slider-only">Live</span>
+                    <div class="divider webpage-slider-only"></div>
+                    <button class="handle webpage-slider-only" type="button" aria-label="Drag website comparison handle"></button>
+
+                    <% webpageDots.forEach((dot, dotIndex) => { %>
+                      <button
+                        class="comment-dot"
+                        type="button"
+                        style="left: <%= dot.dotX %>%; top: <%= dot.dotY %>%"
+                        title="<%= (dot.reviewerName || dot.initials || 'Reviewer') + ': ' + dot.status + (dot.comment ? ' - ' + dot.comment : '') %>"
+                        data-reviewer="<%= dot.reviewerName || dot.initials || 'Reviewer' %>"
+                        data-status="<%= dot.status || 'Review note' %>"
+                        data-screen="<%= screenSizeLabel(dot.screenSize) %>"
+                        data-dot-screen="<%= dot.screenSize || '' %>"
+                        data-comment="<%= dot.comment || '' %>">
+                        <%= dotIndex + 1 %>
+                      </button>
+                    <% }) %>
                   </div>
 
                   <p class="muted">If a preview is blank, the site won't load in a frame. Use the Open Dev / Open Live links, or clear the URLs if you want to review uploaded screenshots instead.</p>
                 <% } else if (page.devShots || page.liveShots) { %>
                   <%
-                    const shotSizes = page.screenSizes.filter(size => size !== "tablet");
+                    const shotSizes = normalizedScreenSizes(page.screenSizes);
                     const cssDims = {
-                      desktop: '1440 x 900',
+                      desktop: 'available width x 900',
+                      'desktop-1440': '1440 x 900',
                       'laptop-15-6': '1366 x 768',
                       'laptop-14-5': '1280 x 760',
                       'laptop-13': '1180 x 720',
@@ -318,6 +363,7 @@
                     <% }) %>
                   </div>
                 <% } else if (page.devScreenshotPath && page.liveScreenshotPath) { %>
+                  <% const pageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
                   <div class="compare wide-compare" data-compare data-annotatable>
                     <img class="before" src="<%= page.liveScreenshotPath %>" alt="Live screenshot">
                     <img class="after" src="<%= page.devScreenshotPath %>" alt="Dev screenshot">
@@ -331,7 +377,11 @@
                         class="comment-dot"
                         type="button"
                         style="left: <%= dot.dotX %>%; top: <%= dot.dotY %>%"
-                        title="<%= (dot.reviewerName || dot.initials || 'Reviewer') + ': ' + dot.status + (dot.comment ? ' - ' + dot.comment : '') %>">
+                        title="<%= (dot.reviewerName || dot.initials || 'Reviewer') + ': ' + dot.status + (dot.comment ? ' - ' + dot.comment : '') %>"
+                        data-reviewer="<%= dot.reviewerName || dot.initials || 'Reviewer' %>"
+                        data-status="<%= dot.status || 'Review note' %>"
+                        data-screen="<%= screenSizeLabel(dot.screenSize) %>"
+                        data-comment="<%= dot.comment || '' %>">
                         <%= dotIndex + 1 %>
                       </button>
                     <% }) %>
@@ -368,17 +418,17 @@
                 </div>
                 <p class="muted">Pick a screen size, then leave your notes for it.</p>
 
-                <% page.screenSizes.filter(size => size !== "tablet").forEach((size, sizeIndex) => { %>
+                <% normalizedScreenSizes(page.screenSizes).forEach((size, sizeIndex) => { %>
                   <div class="screen-feedback <%= sizeIndex === 0 ? 'active' : '' %>" data-feedback-size="<%= size %>">
                     <h4><%= screenSizeLabel(size) %></h4>
                     <%- include('partials/public-notes', { responses, page, screenSize: size }) %>
                     <%- include('partials/feedback-form', { packet, page, screenSize: size }) %>
                     <% if (isAdminView) { %>
-                      <form class="clear-notes-form" method="post" action="/r/<%= packet.shareToken %>/clear-notes?key=<%= adminKeyValue %>" onsubmit="return confirm('Clear review notes for this page and screen size? This cannot be undone.');">
+                      <form class="clear-notes-form" method="post" action="/r/<%= packet.shareToken %>/clear-notes?key=<%= adminKeyValue %>" onsubmit="return confirm('Delete notes for this page and screen size? This cannot be undone.');">
                         <input type="hidden" name="key" value="<%= adminKeyValue %>">
                         <input type="hidden" name="pageId" value="<%= page.pageId %>">
                         <input type="hidden" name="screenSize" value="<%= size %>">
-                        <button type="submit">Clear notes for <%= screenSizeLabel(size) %> (admin only)</button>
+                        <button type="submit">Delete notes for <%= screenSizeLabel(size) %> (admin only)</button>
                       </form>
                     <% } %>
                   </div>

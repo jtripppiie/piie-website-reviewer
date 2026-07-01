@@ -20,10 +20,17 @@
             %>
             <a class="button primary" href="/r/<%= packet.shareToken %>/notes/download<%= dlQuery %>">Download notes</a>
           <% } %>
+          <% if (isAdminView) { %>
+            <form method="post" action="/admin/packets/<%= packet.packetId %>/start-round" onsubmit="return confirm('Start a new review round by deleting all notes for this packet? This cannot be undone.');">
+              <input type="hidden" name="key" value="<%= adminKeyValue %>">
+              <input type="hidden" name="next" value="/r/<%= packet.shareToken %>/notes?key=<%= adminKeyValue %>">
+              <button type="submit" class="button danger">Start new round</button>
+            </form>
+          <% } %>
         </div>
       </header>
 
-      <% const statusOptions = ['approved','approved-after-these-changes','needs-design-changes','needs-content-changes','needs-mobile-review','blocked-cannot-review','not-approved']; %>
+      <% const statusOptions = ['approved','approved-after-these-changes','needs-changes','blocked-cannot-review']; %>
       <form class="notes-filter" method="get" action="/r/<%= packet.shareToken %>/notes">
         <% if (adminKeyValue) { %><input type="hidden" name="key" value="<%= adminKeyValue %>"><% } %>
         <label>Page
@@ -73,6 +80,52 @@
                       <% if (note.dotX && note.dotY) { %>Marked a spot &middot; <% } %>
                       <%= note.createdAt ? new Date(note.createdAt).toLocaleString() : '' %>
                     </p>
+
+                    <details class="note-editor">
+                      <summary>Edit note</summary>
+
+                      <form method="post" action="/r/<%= packet.shareToken %>/feedback/<%= note.responseId %>/update">
+                        <% if (adminKeyValue) { %>
+                          <input type="hidden" name="key" value="<%= adminKeyValue %>">
+                        <% } %>
+
+                        <label>
+                          Reviewer name or initials
+                          <input type="text" name="reviewerName" maxlength="60" value="<%= note.reviewerName || note.initials || '' %>" required>
+                        </label>
+
+                        <label>
+                          Status
+                          <select name="status">
+                            <% statusOptions.forEach(status => { %>
+                              <option value="<%= status %>" <%= note.status === status ? 'selected' : '' %>><%= humanStatus(status) %></option>
+                            <% }) %>
+                          </select>
+                        </label>
+
+                        <label>
+                          Comment
+                          <textarea name="comment"><%= note.comment || '' %></textarea>
+                        </label>
+
+                        <% if (note.dotX && note.dotY) { %>
+                          <label class="remove-toggle">
+                            <input type="checkbox" name="removeDot" value="true"> Remove pinned spot
+                          </label>
+                        <% } %>
+
+                        <div class="note-editor__actions">
+                          <button type="submit">Save changes</button>
+                        </div>
+                      </form>
+
+                      <form method="post" action="/r/<%= packet.shareToken %>/feedback/<%= note.responseId %>/delete" onsubmit="return confirm('Delete this review note? This cannot be undone.');">
+                        <% if (adminKeyValue) { %>
+                          <input type="hidden" name="key" value="<%= adminKeyValue %>">
+                        <% } %>
+                        <button type="submit" class="button danger">Delete note</button>
+                      </form>
+                    </details>
                   </li>
                 <% }) %>
               </ol>

@@ -209,7 +209,8 @@ body.quick-edit-on .quick-edit {
   color: #334155;
 }
 
-.quick-edit__form input[type="url"] {
+.quick-edit__form input[type="url"],
+.quick-edit__form input[type="text"] {
   font: inherit;
   font-size: 13px;
   font-weight: 400;

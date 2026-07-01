@@ -13,7 +13,8 @@
 
 (function () {
   const PRESETS = {
-    desktop: { label: 'Desktop', w: 1440, h: 900 },
+    desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
+    'desktop-1440': { label: '1440 desktop', w: 1440, h: 900 },
     'laptop-15-6': { label: '15.6 display', w: 1366, h: 768 },
     'laptop-14-5': { label: '14.5 display', w: 1280, h: 760 },
     'laptop-13': { label: '13 display', w: 1180, h: 720 },
@@ -25,6 +26,16 @@
 
   function presetFor(size) {
     return PRESETS[size] || PRESETS.desktop;
+  }
+
+  function resolvedPreset(stage, preset) {
+    if (!preset.dynamicWidth) return preset;
+
+    const availableWidth = Math.max(1024, Math.floor(stage.clientWidth || preset.w));
+    return {
+      ...preset,
+      w: availableWidth
+    };
   }
 
   function slideState(slide) {
@@ -127,38 +138,39 @@
 
   function applyLayout(slide) {
     const state = slideState(slide);
-    const preset = presetFor(state.size);
     const stage = slide.querySelector('.webpage-preview-stage');
     if (!stage) return;
+    const preset = resolvedPreset(stage, presetFor(state.size));
 
     slide.dataset.previewSize = state.size;
 
     const scale = computeScale(slide, preset);
-    const isDesktop = state.size === 'desktop';
+    const isFullDesktop = state.size === 'desktop';
+    const isStackedDesktop = state.size === 'desktop' || state.size === 'desktop-1440';
 
     const scaledWidth = Math.round(preset.w * scale);
     const canFitTwoCards = cardsFitSideBySide(stage, scaledWidth);
 
     stage.style.setProperty('display', 'flex', 'important');
-    stage.style.setProperty('flex-direction', isDesktop ? 'column' : (canFitTwoCards ? 'row' : 'column'), 'important');
-    stage.style.setProperty('flex-wrap', isDesktop ? 'nowrap' : (canFitTwoCards ? 'wrap' : 'nowrap'), 'important');
+    stage.style.setProperty('flex-direction', isStackedDesktop ? 'column' : (canFitTwoCards ? 'row' : 'column'), 'important');
+    stage.style.setProperty('flex-wrap', isStackedDesktop ? 'nowrap' : (canFitTwoCards ? 'wrap' : 'nowrap'), 'important');
     stage.style.setProperty('gap', `${STAGE_GAP}px`, 'important');
-    stage.style.setProperty('align-items', isDesktop ? 'stretch' : (canFitTwoCards ? 'flex-start' : 'center'), 'important');
+    stage.style.setProperty('align-items', isStackedDesktop ? (isFullDesktop ? 'stretch' : 'center') : (canFitTwoCards ? 'flex-start' : 'center'), 'important');
     stage.style.setProperty('justify-content', 'center', 'important');
     stage.style.setProperty('width', '100%', 'important');
     stage.style.setProperty('min-width', '0', 'important');
-    stage.style.setProperty('max-width', 'none', 'important');
-    stage.style.setProperty('overflow-x', isDesktop ? 'hidden' : (canFitTwoCards ? 'auto' : 'hidden'), 'important');
+    stage.style.setProperty('max-width', '100%', 'important');
+    stage.style.setProperty('overflow-x', isFullDesktop ? 'hidden' : (canFitTwoCards ? 'auto' : 'hidden'), 'important');
 
     const cards = stage.querySelectorAll('.webpage-frame-card');
     cards.forEach(card => {
       const scaler = ensureScaler(card);
       card.style.setProperty('min-width', '0', 'important');
-      card.style.setProperty('width', isDesktop ? '100%' : 'auto', 'important');
-      card.style.setProperty('max-width', isDesktop ? '100%' : (canFitTwoCards ? 'none' : '100%'), 'important');
-      card.style.setProperty('flex', isDesktop ? '1 1 100%' : '0 0 auto', 'important');
-      card.style.setProperty('overflow', isDesktop ? 'hidden' : (canFitTwoCards ? 'hidden' : 'auto'), 'important');
-      card.style.setProperty('align-self', isDesktop ? 'stretch' : (canFitTwoCards ? 'auto' : 'center'), 'important');
+      card.style.setProperty('width', isFullDesktop ? '100%' : 'auto', 'important');
+      card.style.setProperty('max-width', isFullDesktop ? '100%' : (canFitTwoCards ? 'none' : '100%'), 'important');
+      card.style.setProperty('flex', isFullDesktop ? '1 1 100%' : '0 0 auto', 'important');
+      card.style.setProperty('overflow', isFullDesktop ? 'hidden' : (canFitTwoCards ? 'hidden' : 'auto'), 'important');
+      card.style.setProperty('align-self', isStackedDesktop ? (isFullDesktop ? 'stretch' : 'center') : (canFitTwoCards ? 'auto' : 'center'), 'important');
 
       if (!scaler) return;
 

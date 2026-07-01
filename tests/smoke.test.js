@@ -61,16 +61,23 @@ test('demo packet.json is valid and well formed', () => {
   }
 });
 
-test('quick-update URL contract accepts http(s) and rejects junk', () => {
+test('quick-update URL contract accepts http(s), same-origin paths, and rejects junk', () => {
   // Mirrors the validation used by the /r/:shareToken/quick-update route.
-  const isHttpUrl = value => /^https?:\/\/\S+$/i.test(value);
+  const isAllowedReviewUrl = value => {
+    const trimmed = (value || '').trim();
+    if (!trimmed) return true;
+    if (/^https?:\/\/\S+$/i.test(trimmed)) return true;
+    return /^\/(?!\/)\S*$/.test(trimmed);
+  };
 
-  assert.ok(isHttpUrl('https://example.com'));
-  assert.ok(isHttpUrl('http://localhost:3000/page'));
-  assert.ok(!isHttpUrl('ftp://example.com'));
-  assert.ok(!isHttpUrl('javascript:alert(1)'));
-  assert.ok(!isHttpUrl('example.com'));
-  assert.ok(!isHttpUrl(''));
+  assert.ok(isAllowedReviewUrl('https://example.com'));
+  assert.ok(isAllowedReviewUrl('http://localhost:3000/page'));
+  assert.ok(isAllowedReviewUrl('/public/demo/dev-home.html'));
+  assert.ok(isAllowedReviewUrl(''));
+  assert.ok(!isAllowedReviewUrl('//example.com'));
+  assert.ok(!isAllowedReviewUrl('ftp://example.com'));
+  assert.ok(!isAllowedReviewUrl('javascript:alert(1)'));
+  assert.ok(!isAllowedReviewUrl('example.com'));
 });
 
 test('server exposes the notes and per-size upload routes', () => {

@@ -11,7 +11,7 @@
       "instructions": "Each preview shows the live page when a site allows embedding, or a saved screenshot when it does not. Same section, either way. These same-origin demo files embed reliably on GitHub Pages.",
       "devUrl": "demo-dev.html",
       "liveUrl": "demo-live.html",
-      "screenSizes": ["desktop", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
+      "screenSizes": ["desktop", "desktop-1440", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
     }
   ],
   "seedNotes": [

@@ -10,6 +10,7 @@
       'approved': 'Approved',
       'approved-minor-changes': 'Approved after these changes',
       'approved-after-these-changes': 'Approved after these changes',
+      'needs-changes': 'Needs changes',
       'needs-design-changes': 'Needs design changes',
       'needs-content-changes': 'Needs content changes',
       'needs-mobile-review': 'Needs mobile review',
@@ -36,7 +37,8 @@
 
   function screenSizeLabel(size) {
     const labels = {
-      desktop: 'Desktop',
+      desktop: 'Full desktop',
+      'desktop-1440': '1440 desktop',
       'laptop-15-6': '15.6 display',
       'laptop-14-5': '14.5 display',
       'laptop-13': '13 display',
@@ -45,6 +47,13 @@
 
     return labels[size] || size || 'Not specified';
   }
+
+  const editableStatuses = [
+    'approved',
+    'approved-after-these-changes',
+    'needs-changes',
+    'blocked-cannot-review'
+  ];
 %>
 
 <section class="public-notes" aria-label="Visible review notes">
@@ -68,6 +77,52 @@
             <% } else { %>
               <p class="muted">No comment added.</p>
             <% } %>
+
+            <details class="note-editor">
+              <summary>Edit note</summary>
+
+              <form method="post" action="/r/<%= packet.shareToken %>/feedback/<%= note.responseId %>/update">
+                <% if (typeof adminKeyValue !== 'undefined' && adminKeyValue) { %>
+                  <input type="hidden" name="key" value="<%= adminKeyValue %>">
+                <% } %>
+
+                <label>
+                  Reviewer name or initials
+                  <input type="text" name="reviewerName" maxlength="60" value="<%= note.reviewerName || note.initials || '' %>" required>
+                </label>
+
+                <label>
+                  Status
+                  <select name="status">
+                    <% editableStatuses.forEach(status => { %>
+                      <option value="<%= status %>" <%= note.status === status ? 'selected' : '' %>><%= statusLabel(status) %></option>
+                    <% }) %>
+                  </select>
+                </label>
+
+                <label>
+                  Comment
+                  <textarea name="comment"><%= note.comment || '' %></textarea>
+                </label>
+
+                <% if (note.dotX && note.dotY) { %>
+                  <label class="remove-toggle">
+                    <input type="checkbox" name="removeDot" value="true"> Remove pinned spot
+                  </label>
+                <% } %>
+
+                <div class="note-editor__actions">
+                  <button type="submit">Save changes</button>
+                </div>
+              </form>
+
+              <form method="post" action="/r/<%= packet.shareToken %>/feedback/<%= note.responseId %>/delete" onsubmit="return confirm('Delete this review note? This cannot be undone.');">
+                <% if (typeof adminKeyValue !== 'undefined' && adminKeyValue) { %>
+                  <input type="hidden" name="key" value="<%= adminKeyValue %>">
+                <% } %>
+                <button type="submit" class="button danger">Delete note</button>
+              </form>
+            </details>
           </div>
         </li>
       <% }) %>

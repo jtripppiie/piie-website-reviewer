@@ -5,7 +5,8 @@ const UPLOADS_DIR = path.join(__dirname, 'data', 'uploads');
 
 // Honest viewport presets. These match the review page presets.
 const CAPTURE_PRESETS = [
-  { size: 'desktop', label: 'Desktop', width: 1440, height: 900, mobile: false },
+  { size: 'desktop', label: 'Full desktop fallback', width: 1440, height: 900, mobile: false },
+  { size: 'desktop-1440', label: '1440 desktop', width: 1440, height: 900, mobile: false },
   { size: 'laptop-15-6', label: '15.6 display', width: 1366, height: 768, mobile: false },
   { size: 'laptop-14-5', label: '14.5 display', width: 1280, height: 760, mobile: false },
   { size: 'laptop-13', label: '13 display', width: 1180, height: 720, mobile: false },
@@ -14,6 +15,27 @@ const CAPTURE_PRESETS = [
 
 function makeShotName(prefix) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+async function gotoWithFallback(page, url) {
+  const attempts = [
+    { waitUntil: 'networkidle2', timeout: 45000 },
+    { waitUntil: 'load', timeout: 30000 },
+    { waitUntil: 'domcontentloaded', timeout: 20000 }
+  ];
+  let lastError;
+
+  for (const options of attempts) {
+    try {
+      await page.goto(url, options);
+      await new Promise(resolve => setTimeout(resolve, 750));
+      return;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError;
 }
 
 /**
@@ -45,7 +67,7 @@ async function captureUrlAllPresets(url, prefix) {
           deviceScaleFactor: 1
         });
 
-        await page.goto(url, { waitUntil: 'networkidle2', timeout: 45000 });
+        await gotoWithFallback(page, url);
 
         const fileName = `${baseName}_${preset.size}.png`;
         const filePath = path.join(UPLOADS_DIR, fileName);

@@ -5,29 +5,55 @@
     <main class="shell">
       <h1>Design Review Packets</h1>
 
-      <form class="card" method="post" action="/admin/packets">
+      <form class="card admin-primary-card" method="post" action="/admin/packets">
         <input type="hidden" name="key" value="<%= key %>">
+        <p class="eyebrow">New review</p>
+        <h2>Start with Dev vs Live</h2>
 
         <label>
-          New packet title
+          Packet title
           <input type="text" name="title" placeholder="Example: Key Takeaways Design Review" required>
         </label>
 
-        <button type="submit">Create Packet</button>
-      </form>
-
-      <form class="card" method="post" action="/admin/packets/demo">
-        <input type="hidden" name="key" value="<%= key %>">
-
         <label>
-          Test packet title
-          <input type="text" name="title" placeholder="Example: Demo Review Packet">
+          Page title
+          <input type="text" name="pageTitle" placeholder="Example: Homepage review" value="Dev vs Live review">
         </label>
 
-        <p class="muted">Creates a published packet with a cover page, generic photo comparison, two local demo web pages, and seeded notes so you can test review, notes, filters, and clear actions immediately.</p>
+        <label>
+          Instructions
+          <textarea name="instructions" placeholder="Example: Check hero spacing, navigation behavior, and mobile layout."></textarea>
+        </label>
 
-        <button type="submit">Create Test Packet</button>
+        <div class="admin-url-grid">
+          <label>
+            Dev URL
+            <input type="text" name="devUrl" inputmode="url" value="https://jtripppiie.github.io/piie-website-reviewer/demo-dev.html" placeholder="https://dev.example.com or /public/demo/dev-home.html">
+          </label>
+          <label>
+            Live URL
+            <input type="text" name="liveUrl" inputmode="url" value="https://jtripppiie.github.io/piie-website-reviewer/demo-live.html" placeholder="https://www.example.com or /public/demo/live-home.html">
+          </label>
+        </div>
+
+        <button type="submit">Create review packet</button>
       </form>
+
+      <details class="card admin-secondary-tools">
+        <summary>Testing and fallbacks</summary>
+        <form method="post" action="/admin/packets/demo">
+          <input type="hidden" name="key" value="<%= key %>">
+
+          <label>
+            Test packet title
+            <input type="text" name="title" placeholder="Example: Demo Review Packet">
+          </label>
+
+          <p class="muted">Creates a published packet with local same-origin demo pages, screenshot examples, and seeded notes for dry runs.</p>
+
+          <button type="submit">Create test packet</button>
+        </form>
+      </details>
 
       <section class="stack">
         <% packets.forEach(packet => { %>
@@ -38,13 +64,13 @@
 
             <div class="actions">
               <a class="button" href="/admin/packets/<%= packet.packetId %>/edit?key=<%= key %>">Edit</a>
-              <a class="button" href="/admin/packets/<%= packet.packetId %>/results?key=<%= key %>">Results</a>
+              <a class="button" href="/r/<%= packet.shareToken %>/notes?key=<%= key %>">Manage notes</a>
               <% if (packet.published) { %>
                 <a class="button" href="/r/<%= packet.shareToken %>?key=<%= key %>">Review Link</a>
               <% } %>
-              <form method="post" action="/admin/packets/<%= packet.packetId %>/clear-results" onsubmit="return confirm('Clear all review results for this packet? This cannot be undone.');">
+              <form method="post" action="/admin/packets/<%= packet.packetId %>/start-round" onsubmit="return confirm('Start a new review round by deleting all notes for this packet? This cannot be undone.');">
                 <input type="hidden" name="key" value="<%= key %>">
-                <button type="submit" class="button danger">Clear review results</button>
+                <button type="submit" class="button danger">Start new round</button>
               </form>
               <form method="post" action="/admin/packets/<%= packet.packetId %>/delete" onsubmit="return confirm('Delete this project and all of its review data? This cannot be undone.');">
                 <input type="hidden" name="key" value="<%= key %>">
