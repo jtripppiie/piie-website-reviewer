@@ -688,6 +688,16 @@ button.secondary {
   margin: -4px 0 8px;
 }
 
+.screen-tabs .webpage-preview-controls {
+  width: auto;
+  display: inline-flex;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  margin: 0 0 0 6px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(150, 164, 181, .48);
+}
+
 .webpage-preview-controls button {
   background: #fff;
   color: var(--ink);

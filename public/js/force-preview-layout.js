@@ -147,9 +147,15 @@
     const scale = computeScale(slide, preset);
     const isFullDesktop = state.size === 'desktop';
     const isStackedDesktop = state.size === 'desktop' || state.size === 'desktop-1440';
+    const isSlider = stage.classList.contains('is-slider');
 
     const scaledWidth = Math.round(preset.w * scale);
     const canFitTwoCards = cardsFitSideBySide(stage, scaledWidth);
+    const cardCount = stage.querySelectorAll('.webpage-frame-card').length || 1;
+    const visibleCardCount = isSlider ? 1 : (canFitTwoCards ? cardCount : 1);
+    const stageMaxWidth = isFullDesktop
+      ? '100%'
+      : `${scaledWidth * visibleCardCount + STAGE_GAP * (visibleCardCount - 1) + visibleCardCount * 2}px`;
 
     stage.style.setProperty('display', 'flex', 'important');
     stage.style.setProperty('flex-direction', isStackedDesktop ? 'column' : (canFitTwoCards ? 'row' : 'column'), 'important');
@@ -159,7 +165,9 @@
     stage.style.setProperty('justify-content', 'center', 'important');
     stage.style.setProperty('width', '100%', 'important');
     stage.style.setProperty('min-width', '0', 'important');
-    stage.style.setProperty('max-width', '100%', 'important');
+    stage.style.setProperty('max-width', stageMaxWidth, 'important');
+    stage.style.setProperty('margin-left', isFullDesktop ? '0' : 'auto', 'important');
+    stage.style.setProperty('margin-right', isFullDesktop ? '0' : 'auto', 'important');
     stage.style.setProperty('overflow-x', isFullDesktop ? 'hidden' : (canFitTwoCards ? 'auto' : 'hidden'), 'important');
 
     const cards = stage.querySelectorAll('.webpage-frame-card');

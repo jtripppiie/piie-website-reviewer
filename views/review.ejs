@@ -256,6 +256,13 @@
                   <% normalizedScreenSizes(page.screenSizes).forEach((size, sizeIndex) => { %>
                     <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= screenSizeLabel(size) %></button>
                   <% }) %>
+                  <% if (page.devUrl || page.liveUrl) { %>
+                    <div class="webpage-preview-controls" data-webpage-modes>
+                      <button type="button" class="active" data-webpage-mode="interact">Interact</button>
+                      <button type="button" data-webpage-mode="compare">Compare</button>
+                      <button type="button" data-webpage-mode="annotate">Annotate</button>
+                    </div>
+                  <% } %>
                 </div>
 
                 <p class="viewport-note">
@@ -264,12 +271,6 @@
 
                 <% if (page.devUrl || page.liveUrl) { %>
                   <% const webpageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
-                  <div class="webpage-preview-controls" data-webpage-modes>
-                    <button type="button" class="active" data-webpage-mode="interact">Interact</button>
-                    <button type="button" data-webpage-mode="compare">Compare</button>
-                    <button type="button" data-webpage-mode="annotate">Annotate</button>
-                  </div>
-
                   <div class="webpage-preview-stage" data-webpage-preview data-webpage-compare>
                     <div class="webpage-frame-card webpage-frame-card--dev">
                       <div class="webpage-frame-card__header">
