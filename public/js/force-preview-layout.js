@@ -270,12 +270,12 @@
       });
 
       const activeButton =
-        tabGroup.querySelector('button.active:not([data-size="tablet"])') ||
+        tabGroup.querySelector('button.active[data-size]:not([data-size="tablet"])') ||
         tabGroup.querySelector('button[data-size="desktop"]') ||
         tabGroup.querySelector('button[data-size]:not([data-size="tablet"])');
 
       if (activeButton) {
-        tabGroup.querySelectorAll('button').forEach(button => {
+        tabGroup.querySelectorAll('button[data-size]').forEach(button => {
           button.classList.toggle('active', button === activeButton);
         });
         slideState(slide).size = activeButton.dataset.size;
@@ -288,7 +288,7 @@
         const button = event.target.closest('button[data-size]');
         if (!button || button.dataset.size === 'tablet') return;
 
-        tabGroup.querySelectorAll('button').forEach(tab => {
+        tabGroup.querySelectorAll('button[data-size]').forEach(tab => {
           tab.classList.toggle('active', tab === button);
         });
 

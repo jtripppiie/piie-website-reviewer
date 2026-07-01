@@ -192,7 +192,7 @@ document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {
 
     const size = button.dataset.size;
 
-    tabGroup.querySelectorAll('button').forEach(btn => {
+    tabGroup.querySelectorAll('button[data-size]').forEach(btn => {
       btn.classList.toggle('active', btn === button);
     });
 

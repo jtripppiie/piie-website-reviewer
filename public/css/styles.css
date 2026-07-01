@@ -698,6 +698,11 @@ button.secondary {
   border-left: 1px solid rgba(150, 164, 181, .48);
 }
 
+.screen-tabs button[data-webpage-mode="interact"] {
+  margin-left: 6px;
+  box-shadow: -13px 0 0 -12px rgba(150, 164, 181, .72);
+}
+
 .webpage-preview-controls button {
   background: #fff;
   color: var(--ink);

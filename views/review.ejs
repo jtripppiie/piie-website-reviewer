@@ -252,16 +252,14 @@
                   </div>
                 </div>
 
-                <div class="screen-tabs" data-url-tabs>
+                <div class="screen-tabs" data-url-tabs <%= (page.devUrl || page.liveUrl) ? 'data-webpage-modes' : '' %>>
                   <% normalizedScreenSizes(page.screenSizes).forEach((size, sizeIndex) => { %>
                     <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= screenSizeLabel(size) %></button>
                   <% }) %>
                   <% if (page.devUrl || page.liveUrl) { %>
-                    <div class="webpage-preview-controls" data-webpage-modes>
-                      <button type="button" class="active" data-webpage-mode="interact">Interact</button>
-                      <button type="button" data-webpage-mode="compare">Compare</button>
-                      <button type="button" data-webpage-mode="annotate">Annotate</button>
-                    </div>
+                    <button type="button" class="active" data-webpage-mode="interact">Interact</button>
+                    <button type="button" data-webpage-mode="compare">Compare</button>
+                    <button type="button" data-webpage-mode="annotate">Annotate</button>
                   <% } %>
                 </div>
 
