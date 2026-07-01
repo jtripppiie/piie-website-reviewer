@@ -135,16 +135,314 @@ function removeWebpageMarkLayer(stage) {
   stage.querySelector('.webpage-mark-layer')?.remove();
 }
 
+function resetWebpageDiffButton(modeGroup) {
+  const diffButton = modeGroup?.querySelector('[data-webpage-diff]');
+  if (!diffButton) return;
+
+  diffButton.classList.remove('active');
+  diffButton.textContent = 'Find differences';
+  diffButton.disabled = false;
+}
+
+function clearWebpageDiff(stage, modeGroup = null) {
+  stage?.querySelector('.webpage-diff-layer')?.remove();
+  stage?.classList.remove('is-diffing');
+  if (modeGroup) resetWebpageDiffButton(modeGroup);
+}
+
+function canInspectFrame(iframe) {
+  try {
+    return Boolean(iframe?.contentWindow?.document?.body);
+  } catch (error) {
+    return false;
+  }
+}
+
+function waitForInspectableFrame(iframe) {
+  return new Promise((resolve, reject) => {
+    if (!iframe) {
+      reject(new Error('Missing preview frame.'));
+      return;
+    }
+
+    if (!canInspectFrame(iframe)) {
+      reject(new Error('This preview cannot be inspected from the review page.'));
+      return;
+    }
+
+    const doc = iframe.contentWindow.document;
+    if (doc.readyState === 'complete' || doc.readyState === 'interactive') {
+      resolve(doc);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      iframe.removeEventListener('load', onLoad);
+      reject(new Error('The preview is still loading.'));
+    }, 3000);
+
+    function onLoad() {
+      clearTimeout(timer);
+      iframe.removeEventListener('load', onLoad);
+      if (canInspectFrame(iframe)) resolve(iframe.contentWindow.document);
+      else reject(new Error('This preview cannot be inspected from the review page.'));
+    }
+
+    iframe.addEventListener('load', onLoad);
+  });
+}
+
+function elementPath(element) {
+  const parts = [];
+  let current = element;
+
+  while (current && current.nodeType === 1 && current.tagName.toLowerCase() !== 'body') {
+    const tag = current.tagName.toLowerCase();
+    const siblings = Array.from(current.parentElement?.children || []).filter(child => {
+      return child.tagName.toLowerCase() === tag;
+    });
+    const index = siblings.indexOf(current) + 1;
+    parts.unshift(`${tag}:nth-of-type(${index})`);
+    current = current.parentElement;
+  }
+
+  return parts.join('>');
+}
+
+function normalizedElementText(element) {
+  return String(element.innerText || element.textContent || '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function elementSignature(element, win) {
+  const style = win.getComputedStyle(element);
+  const tag = element.tagName.toLowerCase();
+  const text = normalizedElementText(element);
+  const media = element.currentSrc || element.src || element.getAttribute('href') || element.getAttribute('aria-label') || '';
+
+  return [
+    tag,
+    text,
+    media,
+    style.backgroundImage,
+    style.backgroundColor,
+    style.color,
+    style.fontSize,
+    style.fontWeight,
+    style.textAlign
+  ].join('|');
+}
+
+function collectComparableElements(iframe, stage) {
+  const win = iframe.contentWindow;
+  const doc = win.document;
+  const stageRect = stage.getBoundingClientRect();
+  const iframeRect = iframe.getBoundingClientRect();
+  const scaleX = iframeRect.width / Math.max(1, win.innerWidth || iframe.clientWidth || iframeRect.width);
+  const scaleY = iframeRect.height / Math.max(1, win.innerHeight || iframe.clientHeight || iframeRect.height);
+  const selectors = [
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'p', 'a', 'button', 'li', 'dt', 'dd',
+    'label', 'strong', 'span', 'small',
+    'img', 'picture', 'input', 'textarea', 'select'
+  ].join(',');
+  const elements = new Map();
+
+  Array.from(doc.body.querySelectorAll(selectors)).forEach(element => {
+    const style = win.getComputedStyle(element);
+    if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return;
+
+    const rect = element.getBoundingClientRect();
+    const visibleLeft = Math.max(0, rect.left);
+    const visibleTop = Math.max(0, rect.top);
+    const visibleRight = Math.min(win.innerWidth, rect.right);
+    const visibleBottom = Math.min(win.innerHeight, rect.bottom);
+    const width = visibleRight - visibleLeft;
+    const height = visibleBottom - visibleTop;
+    if (width < 8 || height < 8) return;
+    if (rect.bottom < 0 || rect.right < 0 || rect.top > win.innerHeight || rect.left > win.innerWidth) return;
+
+    const text = normalizedElementText(element);
+    const media = element.currentSrc || element.src || element.getAttribute('href') || element.getAttribute('aria-label') || '';
+    if (!text && !media) return;
+
+    const key = elementPath(element);
+    if (!key) return;
+
+    elements.set(key, {
+      signature: elementSignature(element, win),
+      box: {
+        left: (iframeRect.left - stageRect.left) + (visibleLeft * scaleX),
+        top: (iframeRect.top - stageRect.top) + (visibleTop * scaleY),
+        width: width * scaleX,
+        height: height * scaleY
+      }
+    });
+  });
+
+  return elements;
+}
+
+function unionBoxes(first, second) {
+  if (!first) return second;
+  if (!second) return first;
+
+  const left = Math.min(first.left, second.left);
+  const top = Math.min(first.top, second.top);
+  const right = Math.max(first.left + first.width, second.left + second.width);
+  const bottom = Math.max(first.top + first.height, second.top + second.height);
+
+  return {
+    left,
+    top,
+    width: right - left,
+    height: bottom - top
+  };
+}
+
+function boxesOverlap(first, second) {
+  const pad = 8;
+  return !(
+    first.left + first.width + pad < second.left ||
+    second.left + second.width + pad < first.left ||
+    first.top + first.height + pad < second.top ||
+    second.top + second.height + pad < first.top
+  );
+}
+
+function mergeDiffBoxes(boxes) {
+  const merged = [];
+
+  boxes
+    .filter(box => box.width >= 8 && box.height >= 8)
+    .sort((a, b) => (b.width * b.height) - (a.width * a.height))
+    .forEach(box => {
+      const existing = merged.find(candidate => boxesOverlap(candidate, box));
+      if (existing) {
+        const next = unionBoxes(existing, box);
+        existing.left = next.left;
+        existing.top = next.top;
+        existing.width = next.width;
+        existing.height = next.height;
+      } else {
+        merged.push({ ...box });
+      }
+    });
+
+  return merged.slice(0, 24);
+}
+
+function drawWebpageDiff(stage, boxes) {
+  clearWebpageDiff(stage);
+
+  const layer = document.createElement('div');
+  layer.className = 'webpage-diff-layer';
+  layer.setAttribute('aria-label', 'Detected webpage differences');
+
+  boxes.forEach((box, index) => {
+    const marker = document.createElement('button');
+    marker.type = 'button';
+    marker.className = 'webpage-diff-box';
+    marker.style.left = `${box.left}px`;
+    marker.style.top = `${box.top}px`;
+    marker.style.width = `${box.width}px`;
+    marker.style.height = `${box.height}px`;
+    marker.setAttribute('aria-label', `Difference ${index + 1}`);
+    marker.addEventListener('click', event => {
+      const form = activeFeedbackFormForStage(stage);
+      if (!form) {
+        showReviewToast('Pick a screen size before pinning this difference.');
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      placeDot(stage, box.left + (box.width / 2), box.top + (box.height / 2), form, false);
+    });
+    layer.appendChild(marker);
+  });
+
+  stage.appendChild(layer);
+  stage.classList.add('is-diffing');
+}
+
+async function buildWebpageDiff(stage, modeGroup, diffButton) {
+  const devFrame = stage.querySelector('.webpage-frame-card--dev iframe');
+  const liveFrame = stage.querySelector('.webpage-frame-card--live iframe');
+
+  diffButton.disabled = true;
+  diffButton.textContent = 'Finding...';
+
+  try {
+    await Promise.all([
+      waitForInspectableFrame(devFrame),
+      waitForInspectableFrame(liveFrame)
+    ]);
+
+    const devElements = collectComparableElements(devFrame, stage);
+    const liveElements = collectComparableElements(liveFrame, stage);
+    const keys = new Set([...devElements.keys(), ...liveElements.keys()]);
+    const rawBoxes = [];
+
+    keys.forEach(key => {
+      const dev = devElements.get(key);
+      const live = liveElements.get(key);
+      if (dev?.signature === live?.signature) return;
+      rawBoxes.push(unionBoxes(dev?.box, live?.box));
+    });
+
+    const boxes = mergeDiffBoxes(rawBoxes);
+    if (!boxes.length) {
+      clearWebpageDiff(stage, modeGroup);
+      showReviewToast('No visible differences found in this viewport.');
+      return;
+    }
+
+    drawWebpageDiff(stage, boxes);
+    diffButton.classList.add('active');
+    diffButton.textContent = `${boxes.length} differences`;
+    showReviewToast(`${boxes.length} visible differences highlighted.`);
+  } catch (error) {
+    clearWebpageDiff(stage, modeGroup);
+    showReviewToast(error.message || 'Could not inspect these previews.');
+  } finally {
+    diffButton.disabled = false;
+  }
+}
+
 document.querySelectorAll('[data-webpage-modes]').forEach(modeGroup => {
   const slide = modeGroup.closest('.review-page');
   const stage = slide?.querySelector('[data-webpage-preview]');
   if (!stage) return;
 
   modeGroup.addEventListener('click', event => {
+    const diffButton = event.target.closest('[data-webpage-diff]');
+    if (diffButton) {
+      if (stage.classList.contains('is-diffing')) {
+        clearWebpageDiff(stage, modeGroup);
+        return;
+      }
+
+      modeGroup.querySelectorAll('[data-webpage-mode]').forEach(modeButton => {
+        modeButton.classList.toggle('active', modeButton.dataset.webpageMode === 'compare');
+      });
+
+      stage.classList.add('is-slider');
+      stage.classList.remove('is-annotating');
+      removeWebpageMarkLayer(stage);
+      stage.style.setProperty('--reveal', 50);
+      stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      buildWebpageDiff(stage, modeGroup, diffButton);
+      return;
+    }
+
     const button = event.target.closest('[data-webpage-mode]');
     if (!button) return;
 
     const mode = button.dataset.webpageMode;
+    clearWebpageDiff(stage, modeGroup);
+
     modeGroup.querySelectorAll('[data-webpage-mode]').forEach(modeButton => {
       modeButton.classList.toggle('active', modeButton === button);
     });
@@ -169,6 +467,7 @@ document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {
   const feedbackPanels = slide.querySelectorAll("[data-feedback-size]");
   const shotSizes = slide.querySelectorAll('[data-shots-size]');
   const screenDots = slide.querySelectorAll('[data-dot-screen]');
+  const screenHighlights = slide.querySelectorAll('[data-highlight-screen]');
 
   function showSize(size) {
     slide.dataset.previewSize = size;
@@ -183,6 +482,10 @@ document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {
 
     screenDots.forEach(dot => {
       dot.hidden = Boolean(dot.dataset.dotScreen) && dot.dataset.dotScreen !== size;
+    });
+
+    screenHighlights.forEach(highlight => {
+      highlight.hidden = Boolean(highlight.dataset.highlightScreen) && highlight.dataset.highlightScreen !== size;
     });
   }
 
@@ -354,6 +657,20 @@ function placeDot(target, clientX, clientY, formOverride = null, disarmAfter = t
 }
 
 document.addEventListener('click', event => {
+  const adminHighlight = event.target.closest('.admin-highlight');
+  if (adminHighlight) {
+    const target = adminHighlight.closest('[data-webpage-preview]') || adminHighlight.closest('[data-compare]');
+    const form = target ? activeFeedbackFormForStage(target) : null;
+    if (!form) {
+      showReviewToast('Pick a screen size before pinning this highlight.');
+      return;
+    }
+
+    const rect = adminHighlight.getBoundingClientRect();
+    placeDot(target, rect.left + (rect.width / 2), rect.top + (rect.height / 2), form, false);
+    return;
+  }
+
   const startButton = event.target.closest('[data-start-dot]');
   if (startButton) {
     const form = startButton.closest('form.feedback');

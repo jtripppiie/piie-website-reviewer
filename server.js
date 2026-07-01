@@ -166,6 +166,33 @@ function normalizedScreenSizes(sizes = DEFAULT_SCREEN_SIZES) {
   return normalized;
 }
 
+function clampPercent(value, fallback = 0) {
+  const number = Number.parseFloat(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(0, Math.min(100, number));
+}
+
+function normalizeHighlight(body) {
+  const allowedTypes = ['box', 'underline', 'arrow'];
+  const allowedTargets = ['both', 'dev', 'live'];
+  const allowedDirections = ['right', 'left', 'up', 'down'];
+  const screenSize = DEFAULT_SCREEN_SIZES.includes(body.screenSize) ? body.screenSize : 'desktop';
+  const type = allowedTypes.includes(body.type) ? body.type : 'box';
+
+  return {
+    highlightId: makeId('highlight'),
+    type,
+    screenSize,
+    target: allowedTargets.includes(body.target) ? body.target : 'both',
+    direction: allowedDirections.includes(body.direction) ? body.direction : 'right',
+    label: String(body.label || '').trim(),
+    x: clampPercent(body.x, 12),
+    y: clampPercent(body.y, 18),
+    width: clampPercent(body.width, type === 'underline' ? 28 : 18),
+    height: clampPercent(body.height, type === 'underline' ? 4 : 12)
+  };
+}
+
 function makeDemoPacket(titleOverride = '') {
   const packetId = makeId('packet');
   const shareToken = makeId('share');
@@ -215,6 +242,32 @@ function makeDemoPacket(titleOverride = '') {
         devUrl: TEST_DEV_URL,
         liveUrl: TEST_LIVE_URL,
         screenSizes: DEFAULT_SCREEN_SIZES,
+        highlights: [
+          {
+            highlightId: makeId('highlight'),
+            type: 'box',
+            screenSize: 'desktop',
+            target: 'both',
+            direction: 'right',
+            label: 'Headline and intro copy changed',
+            x: 8,
+            y: 17,
+            width: 58,
+            height: 20
+          },
+          {
+            highlightId: makeId('highlight'),
+            type: 'underline',
+            screenSize: 'desktop',
+            target: 'both',
+            direction: 'right',
+            label: 'Stats need review',
+            x: 8,
+            y: 56,
+            width: 50,
+            height: 5
+          }
+        ],
         order: 2
       }
     ]
@@ -533,6 +586,48 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
   await savePackets(packets);
 
   res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
+});
+
+app.post('/admin/packets/:packetId/pages/:pageId/highlights', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const packet = packets.find(p => p.packetId === req.params.packetId);
+  if (!packet) return res.status(404).send('Packet not found');
+
+  const page = packet.pages.find(p => p.pageId === req.params.pageId);
+  if (!page) return res.status(404).send('Page not found');
+  if (!['urlCompare', 'imageCompare'].includes(page.type)) {
+    return res.status(400).send('Highlights are only available for comparison pages.');
+  }
+
+  page.highlights = Array.isArray(page.highlights) ? page.highlights : [];
+  page.highlights.push(normalizeHighlight(req.body));
+  page.updatedAt = new Date().toISOString();
+  packet.updatedAt = new Date().toISOString();
+
+  await savePackets(packets);
+
+  res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}#page-${page.pageId}`);
+});
+
+app.post('/admin/packets/:packetId/pages/:pageId/highlights/:highlightId/delete', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const packet = packets.find(p => p.packetId === req.params.packetId);
+  if (!packet) return res.status(404).send('Packet not found');
+
+  const page = packet.pages.find(p => p.pageId === req.params.pageId);
+  if (!page) return res.status(404).send('Page not found');
+
+  page.highlights = (page.highlights || []).filter(highlight => highlight.highlightId !== req.params.highlightId);
+  page.updatedAt = new Date().toISOString();
+  packet.updatedAt = new Date().toISOString();
+
+  await savePackets(packets);
+
+  res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}#page-${page.pageId}`);
 });
 
 

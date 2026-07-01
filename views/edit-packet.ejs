@@ -256,6 +256,60 @@
               <button type="submit">Save Page Changes</button>
             </form>
 
+            <% if (page.type === 'urlCompare' || page.type === 'imageCompare') { %>
+              <% const highlightPresetList = [['desktop','Full desktop'],['desktop-1440','1440 desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
+              <details class="advanced-tools highlight-admin">
+                <summary>Reviewer highlights</summary>
+                <p class="muted">Add saved callouts that reviewers will see on this comparison. Positions are percentages of the preview area.</p>
+
+                <% if (page.highlights && page.highlights.length) { %>
+                  <div class="highlight-list">
+                    <% page.highlights.forEach(highlight => { %>
+                      <form class="highlight-row" method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/highlights/<%= highlight.highlightId %>/delete">
+                        <input type="hidden" name="key" value="<%= key %>">
+                        <span><strong><%= highlight.type || 'box' %></strong> · <%= highlight.screenSize || 'desktop' %> · <%= highlight.label || 'No label' %></span>
+                        <button type="submit" class="danger">Delete</button>
+                      </form>
+                    <% }) %>
+                  </div>
+                <% } else { %>
+                  <p class="muted">No saved highlights yet.</p>
+                <% } %>
+
+                <form class="highlight-form" method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/highlights">
+                  <input type="hidden" name="key" value="<%= key %>">
+                  <label>Label <input type="text" name="label" placeholder="Example: Check headline spacing"></label>
+                  <label>Shape
+                    <select name="type">
+                      <option value="box">Translucent box</option>
+                      <option value="underline">Underline</option>
+                      <option value="arrow">Arrow</option>
+                    </select>
+                  </label>
+                  <label>Screen size
+                    <select name="screenSize">
+                      <% highlightPresetList.forEach(([sizeKey, sizeLabel]) => { %>
+                        <option value="<%= sizeKey %>"><%= sizeLabel %></option>
+                      <% }) %>
+                    </select>
+                  </label>
+                  <label>Arrow direction
+                    <select name="direction">
+                      <option value="right">Right</option>
+                      <option value="left">Left</option>
+                      <option value="down">Down</option>
+                      <option value="up">Up</option>
+                    </select>
+                  </label>
+                  <label>X % <input type="number" name="x" value="12" min="0" max="100" step="0.1"></label>
+                  <label>Y % <input type="number" name="y" value="18" min="0" max="100" step="0.1"></label>
+                  <label>Width % <input type="number" name="width" value="24" min="0" max="100" step="0.1"></label>
+                  <label>Height % <input type="number" name="height" value="12" min="0" max="100" step="0.1"></label>
+                  <button type="submit">Add highlight</button>
+                </form>
+              </details>
+            <% } %>
+
             <% if (page.type === 'urlCompare') { %>
               <details class="capture-block advanced-tools">
                 <summary>Screenshot fallbacks by screen size</summary>
@@ -360,6 +414,46 @@
 
       .advanced-tools[open] summary {
         margin-bottom: 0.75rem;
+      }
+
+      .highlight-list {
+        display: grid;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .highlight-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.65rem 0.75rem;
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        border-radius: 10px;
+        background: #fff;
+      }
+
+      .highlight-row span {
+        min-width: 0;
+      }
+
+      .highlight-row button {
+        width: auto;
+        flex: 0 0 auto;
+      }
+
+      .highlight-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+      }
+
+      .highlight-form label:first-of-type {
+        grid-column: 1 / -1;
+      }
+
+      .highlight-form button {
+        align-self: end;
       }
     </style>
   </body>

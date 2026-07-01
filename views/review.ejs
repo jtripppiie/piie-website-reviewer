@@ -44,6 +44,13 @@
           });
           return result;
         }
+        function highlightStyle(highlight) {
+          const x = Number.parseFloat(highlight.x) || 0;
+          const y = Number.parseFloat(highlight.y) || 0;
+          const width = Number.parseFloat(highlight.width) || 12;
+          const height = Number.parseFloat(highlight.height) || 8;
+          return `left: ${x}%; top: ${y}%; width: ${width}%; height: ${height}%;`;
+        }
         const preferredUrlPages = packet.pages.filter(page =>
           page.type === 'urlCompare' &&
           (page.devUrl || page.liveUrl || page.devShots || page.liveShots || page.devScreenshotPath || page.liveScreenshotPath)
@@ -116,6 +123,7 @@
                     <% const beforeImage = (page.beforeShots && page.beforeShots[size]) || page.beforeImagePath; %>
                     <% const afterImage = (page.afterShots && page.afterShots[size]) || page.afterImagePath; %>
                     <% const sizeDots = responses.filter(response => response.pageId === page.pageId && response.screenSize === size && response.dotX && response.dotY); %>
+                    <% const sizeHighlights = (page.highlights || []).filter(highlight => !highlight.screenSize || highlight.screenSize === size); %>
                     <div class="shots-size <%= sizeIndex === 0 ? 'active' : '' %>" data-shots-size="<%= size %>">
                       <% if (beforeImage && afterImage) { %>
                         <% if (size === 'mobile') { %>
@@ -141,6 +149,17 @@
                             <span class="badge after-label"><%= page.afterLabel || 'After' %></span>
                             <div class="divider"></div>
                             <button class="handle" type="button" aria-label="Drag comparison handle"></button>
+
+                            <% sizeHighlights.forEach((highlight, highlightIndex) => { %>
+                              <button
+                                class="admin-highlight admin-highlight--<%= highlight.type || 'box' %> admin-highlight--<%= highlight.direction || 'right' %>"
+                                type="button"
+                                style="<%= highlightStyle(highlight) %>"
+                                data-highlight-label="<%= highlight.label || '' %>"
+                                aria-label="<%= highlight.label || `Admin highlight ${highlightIndex + 1}` %>">
+                                <% if (highlight.label) { %><span><%= highlight.label %></span><% } %>
+                              </button>
+                            <% }) %>
 
                             <% sizeDots.forEach((dot, dotIndex) => { %>
                               <button
@@ -260,11 +279,13 @@
                     <button type="button" class="active" data-webpage-mode="interact">Interact</button>
                     <button type="button" data-webpage-mode="compare">Compare</button>
                     <button type="button" data-webpage-mode="annotate">Annotate</button>
+                    <button type="button" data-webpage-diff>Find differences</button>
                   <% } %>
                 </div>
 
                 <% if (page.devUrl || page.liveUrl) { %>
                   <% const webpageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
+                  <% const webpageHighlights = page.highlights || []; %>
                   <div class="webpage-preview-stage" data-webpage-preview data-webpage-compare>
                     <div class="webpage-frame-card webpage-frame-card--dev">
                       <div class="webpage-frame-card__header">
@@ -300,6 +321,18 @@
                     <span class="badge after-label webpage-slider-only">Live</span>
                     <div class="divider webpage-slider-only"></div>
                     <button class="handle webpage-slider-only" type="button" aria-label="Drag website comparison handle"></button>
+
+                    <% webpageHighlights.forEach((highlight, highlightIndex) => { %>
+                      <button
+                        class="admin-highlight admin-highlight--<%= highlight.type || 'box' %> admin-highlight--<%= highlight.direction || 'right' %>"
+                        type="button"
+                        style="<%= highlightStyle(highlight) %>"
+                        data-highlight-screen="<%= highlight.screenSize || '' %>"
+                        data-highlight-label="<%= highlight.label || '' %>"
+                        aria-label="<%= highlight.label || `Admin highlight ${highlightIndex + 1}` %>">
+                        <% if (highlight.label) { %><span><%= highlight.label %></span><% } %>
+                      </button>
+                    <% }) %>
 
                     <% webpageDots.forEach((dot, dotIndex) => { %>
                       <button
@@ -358,6 +391,7 @@
                   </div>
                 <% } else if (page.devScreenshotPath && page.liveScreenshotPath) { %>
                   <% const pageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
+                  <% const pageHighlights = page.highlights || []; %>
                   <div class="compare wide-compare" data-compare data-annotatable>
                     <img class="before" src="<%= page.liveScreenshotPath %>" alt="Live screenshot">
                     <img class="after" src="<%= page.devScreenshotPath %>" alt="Dev screenshot">
@@ -365,6 +399,18 @@
                     <span class="badge after-label">Dev</span>
                     <div class="divider"></div>
                     <button class="handle" type="button" aria-label="Drag comparison handle"></button>
+
+                    <% pageHighlights.forEach((highlight, highlightIndex) => { %>
+                      <button
+                        class="admin-highlight admin-highlight--<%= highlight.type || 'box' %> admin-highlight--<%= highlight.direction || 'right' %>"
+                        type="button"
+                        style="<%= highlightStyle(highlight) %>"
+                        data-highlight-screen="<%= highlight.screenSize || '' %>"
+                        data-highlight-label="<%= highlight.label || '' %>"
+                        aria-label="<%= highlight.label || `Admin highlight ${highlightIndex + 1}` %>">
+                        <% if (highlight.label) { %><span><%= highlight.label %></span><% } %>
+                      </button>
+                    <% }) %>
 
                     <% pageDots.forEach((dot, dotIndex) => { %>
                       <button
