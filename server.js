@@ -17,6 +17,7 @@ const {
 } = require('./storage');
 
 const { captureUrlAllPresets } = require('./screenshot');
+const { safeLocalRedirect } = require('./security');
 
 const APP_VERSION = require('./package.json').version;
 
@@ -96,6 +97,28 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads')));
 
+// JSON storage is intentionally single-process. Serialize mutations so every
+// read-modify-write cycle finishes before the next one starts.
+let mutationQueue = Promise.resolve();
+app.use((req, res, next) => {
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return next();
+
+  const previous = mutationQueue;
+  let release;
+  mutationQueue = new Promise(resolve => { release = resolve; });
+  previous.catch(() => {}).then(() => {
+    let released = false;
+    const done = () => {
+      if (released) return;
+      released = true;
+      release();
+    };
+    res.once('finish', done);
+    res.once('close', done);
+    next();
+  });
+});
+
 const uploadStorage = multer.diskStorage({
   destination: path.join(__dirname, 'data', 'uploads'),
   filename: (req, file, cb) => {
@@ -122,6 +145,13 @@ function isAdmin(req) {
 
 function adminKey(req) {
   return req.query.key || req.body.key || '';
+}
+
+function requireAdminBeforeUpload(req, res, next) {
+  // Multipart bodies have not been parsed yet, so authorization must come
+  // from the query string before Multer is allowed to write anything.
+  if (req.query.key !== ADMIN_PASSWORD) return res.status(403).send('Forbidden');
+  next();
 }
 
 function uploadPath(file) {
@@ -495,7 +525,7 @@ app.post('/admin/packets/:packetId/update', async (req, res) => {
   res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
 });
 
-app.post('/admin/packets/:packetId/pages/:pageId/update', upload.fields([
+app.post('/admin/packets/:packetId/pages/:pageId/update', requireAdminBeforeUpload, upload.fields([
   { name: 'beforeImage', maxCount: 1 },
   { name: 'afterImage', maxCount: 1 },
   { name: 'devScreenshot', maxCount: 1 },
@@ -631,7 +661,7 @@ app.post('/admin/packets/:packetId/pages/:pageId/highlights/:highlightId/delete'
 });
 
 
-app.post('/admin/packets/:packetId/pages/:pageId/upload-shots', upload.fields(
+app.post('/admin/packets/:packetId/pages/:pageId/upload-shots', requireAdminBeforeUpload, upload.fields(
   DEFAULT_SCREEN_SIZES.flatMap(size => [
     { name: `devShot_${size}`, maxCount: 1 },
     { name: `liveShot_${size}`, maxCount: 1 },
@@ -787,7 +817,7 @@ app.post('/admin/packets/:packetId/cover', async (req, res) => {
   res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
 });
 
-app.post('/admin/packets/:packetId/image-compare', upload.fields([
+app.post('/admin/packets/:packetId/image-compare', requireAdminBeforeUpload, upload.fields([
   { name: 'beforeImage', maxCount: 1 },
   { name: 'afterImage', maxCount: 1 }
 ]), async (req, res) => {
@@ -822,7 +852,7 @@ app.post('/admin/packets/:packetId/image-compare', upload.fields([
   res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
 });
 
-app.post('/admin/packets/:packetId/url-compare', upload.fields([
+app.post('/admin/packets/:packetId/url-compare', requireAdminBeforeUpload, upload.fields([
   { name: 'devScreenshot', maxCount: 1 },
   { name: 'liveScreenshot', maxCount: 1 }
 ]), async (req, res) => {
@@ -951,7 +981,7 @@ function quickEditCookieHeader() {
 }
 
 app.get('/review-login', (req, res) => {
-  const nextUrl = req.query.next || '/';
+  const nextUrl = safeLocalRedirect(req.query.next);
   const safeNext = String(nextUrl).replaceAll('"', '&quot;');
   const error = req.query.error ? '<p class="error">Wrong reviewer username or password.</p>' : '';
 
@@ -1000,7 +1030,7 @@ app.get('/review-login', (req, res) => {
 });
 
 app.post('/review-login', (req, res) => {
-  const nextUrl = req.body.next || '/';
+  const nextUrl = safeLocalRedirect(req.body.next);
 
   if (req.body.username !== REVIEW_USERNAME || req.body.password !== REVIEW_PASSWORD) {
     return res.redirect(`/review-login?error=1&next=${encodeURIComponent(nextUrl)}`);
@@ -1293,7 +1323,7 @@ app.post('/r/:shareToken/quick-unlock', rateLimitQuickUpdate, requireReviewer, (
 // set Dev/Live URLs and drop in screenshots or before/after images. URLs are
 // limited to http(s) or root-relative same-origin paths, so a javascript: URL
 // cannot be stored and run later.
-app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireReviewer, upload.fields([
+app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireAdminBeforeUpload, requireReviewer, upload.fields([
   { name: 'beforeImage', maxCount: 1 },
   { name: 'afterImage', maxCount: 1 },
   { name: 'devScreenshot', maxCount: 1 },

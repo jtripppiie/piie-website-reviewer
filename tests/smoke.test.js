@@ -7,6 +7,7 @@ const path = require('node:path');
 
 const root = path.join(__dirname, '..');
 const { makeId } = require(path.join(root, 'storage.js'));
+const { safeLocalRedirect } = require(path.join(root, 'security.js'));
 
 function read(relPath) {
   return fs.readFileSync(path.join(root, relPath), 'utf8');
@@ -78,6 +79,22 @@ test('quick-update URL contract accepts http(s), same-origin paths, and rejects 
   assert.ok(!isAllowedReviewUrl('ftp://example.com'));
   assert.ok(!isAllowedReviewUrl('javascript:alert(1)'));
   assert.ok(!isAllowedReviewUrl('example.com'));
+});
+
+test('review login redirects only to local paths', () => {
+  assert.strictEqual(safeLocalRedirect('/r/share_123?screen=mobile#page'), '/r/share_123?screen=mobile#page');
+  assert.strictEqual(safeLocalRedirect('https://attacker.example'), '/');
+  assert.strictEqual(safeLocalRedirect('//attacker.example/path'), '/');
+  assert.strictEqual(safeLocalRedirect('javascript:alert(1)'), '/');
+});
+
+test('multipart routes authorize before writing uploads', () => {
+  const server = read('server.js');
+  assert.match(server, /update', requireAdminBeforeUpload, upload\.fields/);
+  assert.match(server, /upload-shots', requireAdminBeforeUpload, upload\.fields/);
+  assert.match(server, /image-compare', requireAdminBeforeUpload, upload\.fields/);
+  assert.match(server, /url-compare', requireAdminBeforeUpload, upload\.fields/);
+  assert.match(server, /quick-update', rateLimitQuickUpdate, requireAdminBeforeUpload, requireReviewer, upload\.fields/);
 });
 
 test('server exposes the notes and per-size upload routes', () => {

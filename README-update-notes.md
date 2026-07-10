@@ -12,6 +12,15 @@ A short log of notable changes. See `README.md` for full setup and usage.
 - Reviewers can work by screen size: Full desktop, 1440 desktop, 15.6 display,
   14.5 display, 13 display, and Mobile.
 
+## Reliability and security
+
+- Mutating requests are serialized so concurrent JSON read-modify-write cycles
+  cannot silently overwrite packet or note changes in a single app process.
+- Multipart admin authorization now runs before uploaded files are written,
+  preventing rejected uploads from accumulating in `data/uploads`.
+- Reviewer login return paths are limited to local app URLs, preventing an
+  external redirect after sign-in.
+
 ## Reviewer experience
 
 - Live Dev and Live previews can be viewed side by side in Interact mode.
