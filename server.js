@@ -87,10 +87,28 @@ if (process.env.NODE_ENV === 'production' && (!REVIEW_USERNAME || !REVIEW_PASSWO
 // Optional second password specifically for quick edit. Empty = gate disabled.
 const QUICK_EDIT_PASSWORD = process.env.QUICK_EDIT_PASSWORD || '';
 
+// Constant-time secret comparison. Both sides are hashed to a fixed-length
+// buffer first so timingSafeEqual never throws on length mismatch and the
+// comparison duration does not leak the secret length.
+function safeEqual(a, b) {
+  const ah = crypto.createHash('sha256').update(String(a ?? '')).digest();
+  const bh = crypto.createHash('sha256').update(String(b ?? '')).digest();
+  return crypto.timingSafeEqual(ah, bh);
+}
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.locals.appVersion = APP_VERSION;
+
+// Baseline security headers. Referrer-Policy also keeps the admin key from
+// leaking to third-party sites via the Referer header on outbound requests.
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  next();
+});
 
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
@@ -101,9 +119,26 @@ app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads')));
 // their read-modify-write cycles cannot overwrite one another. Response writes
 // have their own shorter storage-level queue and must not wait for captures.
 let mutationQueue = Promise.resolve();
+
+// Run a short critical section that has exclusive access to the packet store.
+// Used by the capture route so its slow screenshot work can run outside the
+// lock while the final read-modify-write still serializes with other routes.
+function withPacketLock(fn) {
+  const previous = mutationQueue;
+  let release;
+  mutationQueue = new Promise(resolve => { release = resolve; });
+  return previous
+    .catch(() => {})
+    .then(() => fn())
+    .finally(() => release());
+}
+
 app.use((req, res, next) => {
   const mutatesPackets =
     ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) &&
+    // The capture route manages its own lock so the slow Puppeteer work does
+    // not block other packet edits for the full capture duration.
+    !/\/capture$/.test(req.path) &&
     (
       req.path.startsWith('/admin/packets') ||
       /\/r\/[^/]+\/quick-update$/.test(req.path)
@@ -147,7 +182,7 @@ const upload = multer({
 });
 
 function isAdmin(req) {
-  return req.query.key === ADMIN_PASSWORD || req.body.key === ADMIN_PASSWORD;
+  return safeEqual(req.query.key, ADMIN_PASSWORD) || safeEqual(req.body.key, ADMIN_PASSWORD);
 }
 
 function adminKey(req) {
@@ -157,7 +192,7 @@ function adminKey(req) {
 function requireAdminBeforeUpload(req, res, next) {
   // Multipart bodies have not been parsed yet, so authorization must come
   // from the query string before Multer is allowed to write anything.
-  if (req.query.key !== ADMIN_PASSWORD) return res.status(403).send('Forbidden');
+  if (!safeEqual(req.query.key, ADMIN_PASSWORD)) return res.status(403).send('Forbidden');
   next();
 }
 
@@ -444,7 +479,7 @@ app.get('/admin', async (req, res) => {
 });
 
 app.post('/admin/login', (req, res) => {
-  if (req.body.password !== ADMIN_PASSWORD) {
+  if (!safeEqual(req.body.password, ADMIN_PASSWORD)) {
     return res.render('login', { error: 'Wrong password.' });
   }
 
@@ -807,31 +842,61 @@ app.post('/admin/packets/:packetId/pages/:pageId/capture', async (req, res) => {
     return res.status(400).send('Enter a Dev URL or Live URL before capturing screenshots.');
   }
 
-  const previousShots = [
-    ...Object.values(page.devShots || {}),
-    ...Object.values(page.liveShots || {})
-  ];
+  const devUrl = page.devUrl;
+  const liveUrl = page.liveUrl;
   let capturedShots = [];
 
   try {
-    if (page.devUrl) {
-      page.devShots = await captureUrlAllPresets(resolveReviewUrl(req, page.devUrl), 'dev');
-      capturedShots.push(...Object.values(page.devShots));
-      page.devScreenshotPath = page.devShots['laptop-15-6'] || page.devShots.desktop || '';
+    // Run the slow screenshot work outside the packet lock so concurrent
+    // edits are not blocked for the full capture duration.
+    let devShots = null;
+    let liveShots = null;
+
+    if (devUrl) {
+      devShots = await captureUrlAllPresets(resolveReviewUrl(req, devUrl), 'dev');
+      capturedShots.push(...Object.values(devShots));
     }
 
-    if (page.liveUrl) {
-      page.liveShots = await captureUrlAllPresets(resolveReviewUrl(req, page.liveUrl), 'live');
-      capturedShots.push(...Object.values(page.liveShots));
-      page.liveScreenshotPath = page.liveShots['laptop-15-6'] || page.liveShots.desktop || '';
+    if (liveUrl) {
+      liveShots = await captureUrlAllPresets(resolveReviewUrl(req, liveUrl), 'live');
+      capturedShots.push(...Object.values(liveShots));
     }
 
-    page.capturedAt = new Date().toISOString();
-    page.updatedAt = new Date().toISOString();
-    packet.updatedAt = new Date().toISOString();
+    // Re-read and mutate under the lock so a packet change during capture is
+    // not clobbered. If the packet or page vanished, discard the captures.
+    const applied = await withPacketLock(async () => {
+      const freshPackets = await getPackets();
+      const freshPacket = freshPackets.find(p => p.packetId === req.params.packetId);
+      const freshPage = freshPacket?.pages.find(p => p.pageId === req.params.pageId);
+      if (!freshPacket || !freshPage) return false;
 
-    await savePackets(packets);
-    previousShots.forEach(removeUploadFile);
+      const previousShots = [
+        ...Object.values(freshPage.devShots || {}),
+        ...Object.values(freshPage.liveShots || {})
+      ];
+
+      if (devShots) {
+        freshPage.devShots = devShots;
+        freshPage.devScreenshotPath = devShots['laptop-15-6'] || devShots.desktop || '';
+      }
+      if (liveShots) {
+        freshPage.liveShots = liveShots;
+        freshPage.liveScreenshotPath = liveShots['laptop-15-6'] || liveShots.desktop || '';
+      }
+
+      freshPage.capturedAt = new Date().toISOString();
+      freshPage.updatedAt = new Date().toISOString();
+      freshPacket.updatedAt = new Date().toISOString();
+
+      await savePackets(freshPackets);
+      previousShots.forEach(removeUploadFile);
+      return true;
+    });
+
+    if (!applied) {
+      capturedShots.forEach(removeUploadFile);
+      return res.status(404).send('Packet or page no longer exists.');
+    }
 
     res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}#page-${page.pageId}`);
   } catch (error) {
@@ -979,7 +1044,7 @@ function reviewerCookieValue() {
 
 function isReviewer(req) {
   const cookies = parseCookies(req);
-  return cookies.piie_reviewer === reviewerCookieValue();
+  return safeEqual(cookies.piie_reviewer, reviewerCookieValue());
 }
 
 function reviewerCookieHeader() {
@@ -1020,7 +1085,7 @@ function quickEditCookieValue() {
 
 function isQuickEditUnlocked(req) {
   if (!quickEditEnabled() || isAdmin(req)) return true;
-  return parseCookies(req).piie_quickedit === quickEditCookieValue();
+  return safeEqual(parseCookies(req).piie_quickedit, quickEditCookieValue());
 }
 
 function quickEditCookieHeader() {
@@ -1091,7 +1156,7 @@ app.get('/review-login', (req, res) => {
 app.post('/review-login', (req, res) => {
   const nextUrl = safeLocalRedirect(req.body.next);
 
-  if (req.body.username !== REVIEW_USERNAME || req.body.password !== REVIEW_PASSWORD) {
+  if (req.body.username !== REVIEW_USERNAME || !safeEqual(req.body.password, REVIEW_PASSWORD)) {
     return res.redirect(`/review-login?error=1&next=${encodeURIComponent(nextUrl)}`);
   }
 
@@ -1377,7 +1442,7 @@ app.post('/r/:shareToken/quick-unlock', rateLimitQuickUpdate, requireReviewer, (
   const pageId = (req.body.pageId || '').trim();
   const anchor = pageId ? `#${encodeURIComponent(pageId)}` : '';
 
-  if (!quickEditEnabled() || (req.body.quickEditPassword || '') === QUICK_EDIT_PASSWORD) {
+  if (!quickEditEnabled() || safeEqual(req.body.quickEditPassword || '', QUICK_EDIT_PASSWORD)) {
     if (quickEditEnabled()) res.setHeader('Set-Cookie', quickEditCookieHeader());
     return res.redirect(`/r/${shareToken}${anchor}`);
   }
@@ -1385,10 +1450,10 @@ app.post('/r/:shareToken/quick-unlock', rateLimitQuickUpdate, requireReviewer, (
   return res.redirect(`/r/${shareToken}?quickEditError=1${anchor}`);
 });
 
-// Quick edit from the review page itself. Reviewers (no admin key needed) can
-// set Dev/Live URLs and drop in screenshots or before/after images. URLs are
-// limited to http(s) or root-relative same-origin paths, so a javascript: URL
-// cannot be stored and run later.
+// Quick edit from the review page itself. Admin only (the admin key must be
+// present in the query string). Sets Dev/Live URLs and drops in screenshots or
+// before/after images. URLs are limited to http(s) or root-relative same-origin
+// paths, so a javascript: URL cannot be stored and run later.
 app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireAdminBeforeUpload, requireReviewer, upload.fields([
   { name: 'beforeImage', maxCount: 1 },
   { name: 'afterImage', maxCount: 1 },

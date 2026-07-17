@@ -18,6 +18,44 @@ function makeShotName(prefix) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// Basic SSRF guard for admin-entered capture URLs. Loopback is intentionally
+// allowed because the app captures its own same-origin demo pages, but private
+// networks and the cloud metadata endpoint are blocked so a capture cannot be
+// pointed at internal infrastructure.
+function assertCaptureUrlAllowed(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error('Invalid capture URL.');
+  }
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error('Only http and https URLs can be captured.');
+  }
+
+  const host = parsed.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+
+  // Link-local / cloud metadata (169.254.0.0/16, incl. 169.254.169.254).
+  if (/^169\.254\./.test(host)) {
+    throw new Error('Refusing to capture a link-local address.');
+  }
+
+  // Private IPv4 ranges.
+  if (
+    /^10\./.test(host) ||
+    /^192\.168\./.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+  ) {
+    throw new Error('Refusing to capture a private network address.');
+  }
+
+  // IPv6 unique-local (fc00::/7) and link-local (fe80::/10).
+  if (/^f[cd]/.test(host) || /^fe[89ab]/.test(host)) {
+    throw new Error('Refusing to capture a private network address.');
+  }
+}
+
 async function gotoWithFallback(page, url) {
   const attempts = [
     { waitUntil: 'networkidle2', timeout: 45000 },
@@ -47,6 +85,8 @@ async function gotoWithFallback(page, url) {
 async function captureUrlAllPresets(url, prefix) {
   const shots = {};
   if (!url) return shots;
+
+  assertCaptureUrlAllowed(url);
 
   const browser = await puppeteer.launch({
     headless: 'new',

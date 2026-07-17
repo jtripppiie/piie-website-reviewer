@@ -20,6 +20,20 @@ A short log of notable changes. See `README.md` for full setup and usage.
   preventing rejected uploads from accumulating in `data/uploads`.
 - Reviewer login return paths are limited to local app URLs, preventing an
   external redirect after sign-in.
+- All password and cookie comparisons (admin key, admin login, reviewer login,
+  reviewer cookie, quick-edit password and cookie) use a constant-time check to
+  avoid leaking secrets through response timing.
+- Baseline security headers are sent on every response: `X-Content-Type-Options:
+  nosniff`, `X-Frame-Options: SAMEORIGIN`, and `Referrer-Policy: no-referrer`.
+  The referrer policy also keeps the admin key out of the `Referer` header on
+  outbound requests.
+- Screenshot capture rejects non-http(s) URLs and private, loopback-exempt
+  network ranges (including the `169.254.169.254` cloud metadata endpoint) as a
+  basic SSRF guard. Same-origin local demo pages on loopback still capture.
+- Screenshot capture now runs the slow headless-browser work outside the packet
+  lock, so a long capture no longer blocks other packet edits. Only the final
+  read-modify-write is serialized, and it re-reads fresh state so a concurrent
+  edit is not clobbered.
 
 ## Reviewer experience
 
