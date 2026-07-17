@@ -15,7 +15,8 @@ async function ensureDataFiles() {
 async function ensureJsonFile(filePath, fallbackValue) {
   try {
     await fs.access(filePath);
-  } catch {
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
     await safeWriteJson(filePath, fallbackValue);
   }
 }
@@ -24,8 +25,9 @@ async function readJson(filePath, fallbackValue) {
   try {
     const raw = await fs.readFile(filePath, 'utf8');
     return JSON.parse(raw || 'null') ?? fallbackValue;
-  } catch {
-    return fallbackValue;
+  } catch (error) {
+    if (error.code === 'ENOENT') return fallbackValue;
+    throw error;
   }
 }
 
@@ -84,5 +86,6 @@ module.exports = {
   getResponses,
   saveResponses,
   updateResponses,
-  makeId
+  makeId,
+  readJson
 };

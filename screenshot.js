@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs/promises');
 const puppeteer = require('puppeteer');
 
 const UPLOADS_DIR = path.join(__dirname, 'data', 'uploads');
@@ -78,6 +79,13 @@ async function captureUrlAllPresets(url, prefix) {
         await page.close();
       }
     }
+  } catch (error) {
+    await Promise.all(
+      Object.values(shots).map(webPath =>
+        fs.unlink(path.join(UPLOADS_DIR, path.basename(webPath))).catch(() => {})
+      )
+    );
+    throw error;
   } finally {
     await browser.close();
   }

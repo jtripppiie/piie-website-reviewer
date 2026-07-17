@@ -7,7 +7,7 @@
     "dev": "node server.js",
     "start": "node server.js",
     "share": "bash share.sh",
-    "test": "node --test"
+    "test": "node tests/smoke.test.js"
   },
   "engines": {
     "node": ">=18"

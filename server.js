@@ -97,11 +97,18 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads')));
 
-// JSON storage is intentionally single-process. Serialize mutations so every
-// read-modify-write cycle finishes before the next one starts.
+// Packet storage is intentionally single-process. Serialize packet mutations so
+// their read-modify-write cycles cannot overwrite one another. Response writes
+// have their own shorter storage-level queue and must not wait for captures.
 let mutationQueue = Promise.resolve();
 app.use((req, res, next) => {
-  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return next();
+  const mutatesPackets =
+    ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) &&
+    (
+      req.path.startsWith('/admin/packets') ||
+      /\/r\/[^/]+\/quick-update$/.test(req.path)
+    );
+  if (!mutatesPackets) return next();
 
   const previous = mutationQueue;
   let release;
@@ -377,6 +384,14 @@ function removeUploadFile(webPath) {
   fs.promises.unlink(full).catch(() => {});
 }
 
+function cleanupRequestUploads(req, keepPaths = []) {
+  const keep = new Set(keepPaths);
+  Object.values(req.files || {}).flat().forEach(file => {
+    const webPath = uploadPath(file);
+    if (!keep.has(webPath)) removeUploadFile(webPath);
+  });
+}
+
 function removePacketUploads(packet) {
   if (!packet || !Array.isArray(packet.pages)) return;
 
@@ -535,10 +550,16 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', requireAdminBeforeUplo
 
   const packets = await getPackets();
   const packet = packets.find(p => p.packetId === req.params.packetId);
-  if (!packet) return res.status(404).send('Packet not found');
+  if (!packet) {
+    cleanupRequestUploads(req);
+    return res.status(404).send('Packet not found');
+  }
 
   const page = packet.pages.find(p => p.pageId === req.params.pageId);
-  if (!page) return res.status(404).send('Page not found');
+  if (!page) {
+    cleanupRequestUploads(req);
+    return res.status(404).send('Page not found');
+  }
 
   page.title = req.body.title || page.title || 'Untitled Page';
 
@@ -614,6 +635,12 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', requireAdminBeforeUplo
   packet.updatedAt = new Date().toISOString();
 
   await savePackets(packets);
+  cleanupRequestUploads(req, [
+    page.beforeImagePath,
+    page.afterImagePath,
+    page.devScreenshotPath,
+    page.liveScreenshotPath
+  ]);
 
   res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
 });
@@ -673,10 +700,16 @@ app.post('/admin/packets/:packetId/pages/:pageId/upload-shots', requireAdminBefo
 
   const packets = await getPackets();
   const packet = packets.find(p => p.packetId === req.params.packetId);
-  if (!packet) return res.status(404).send('Packet not found');
+  if (!packet) {
+    cleanupRequestUploads(req);
+    return res.status(404).send('Packet not found');
+  }
 
   const page = packet.pages.find(p => p.pageId === req.params.pageId);
-  if (!page) return res.status(404).send('Page not found');
+  if (!page) {
+    cleanupRequestUploads(req);
+    return res.status(404).send('Page not found');
+  }
 
   const sizes = DEFAULT_SCREEN_SIZES;
   if (page.type === 'urlCompare') {
@@ -737,6 +770,7 @@ app.post('/admin/packets/:packetId/pages/:pageId/upload-shots', requireAdminBefo
     if (!Object.keys(page.beforeShots).length) delete page.beforeShots;
     if (!Object.keys(page.afterShots).length) delete page.afterShots;
   } else {
+    cleanupRequestUploads(req);
     return res.status(400).send('Per size uploads are only available for comparison pages.');
   }
 
@@ -744,6 +778,12 @@ app.post('/admin/packets/:packetId/pages/:pageId/upload-shots', requireAdminBefo
   packet.updatedAt = new Date().toISOString();
 
   await savePackets(packets);
+  cleanupRequestUploads(req, [
+    ...Object.values(page.devShots || {}),
+    ...Object.values(page.liveShots || {}),
+    ...Object.values(page.beforeShots || {}),
+    ...Object.values(page.afterShots || {})
+  ]);
 
   res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}#page-${page.pageId}`);
 });
@@ -767,14 +807,22 @@ app.post('/admin/packets/:packetId/pages/:pageId/capture', async (req, res) => {
     return res.status(400).send('Enter a Dev URL or Live URL before capturing screenshots.');
   }
 
+  const previousShots = [
+    ...Object.values(page.devShots || {}),
+    ...Object.values(page.liveShots || {})
+  ];
+  let capturedShots = [];
+
   try {
     if (page.devUrl) {
       page.devShots = await captureUrlAllPresets(resolveReviewUrl(req, page.devUrl), 'dev');
+      capturedShots.push(...Object.values(page.devShots));
       page.devScreenshotPath = page.devShots['laptop-15-6'] || page.devShots.desktop || '';
     }
 
     if (page.liveUrl) {
       page.liveShots = await captureUrlAllPresets(resolveReviewUrl(req, page.liveUrl), 'live');
+      capturedShots.push(...Object.values(page.liveShots));
       page.liveScreenshotPath = page.liveShots['laptop-15-6'] || page.liveShots.desktop || '';
     }
 
@@ -783,9 +831,11 @@ app.post('/admin/packets/:packetId/pages/:pageId/capture', async (req, res) => {
     packet.updatedAt = new Date().toISOString();
 
     await savePackets(packets);
+    previousShots.forEach(removeUploadFile);
 
     res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}#page-${page.pageId}`);
   } catch (error) {
+    capturedShots.forEach(removeUploadFile);
     console.error('Screenshot capture failed:', error.message);
     res.status(500).type('html').send(`
       <p>Screenshot capture failed: ${error.message.replace(/[<>&]/g, '')}</p>
@@ -825,12 +875,16 @@ app.post('/admin/packets/:packetId/image-compare', requireAdminBeforeUpload, upl
 
   const packets = await getPackets();
   const packet = packets.find(p => p.packetId === req.params.packetId);
-  if (!packet) return res.status(404).send('Packet not found');
+  if (!packet) {
+    cleanupRequestUploads(req);
+    return res.status(404).send('Packet not found');
+  }
 
   const before = req.files?.beforeImage?.[0];
   const after = req.files?.afterImage?.[0];
 
   if (!before || !after) {
+    cleanupRequestUploads(req);
     return res.status(400).send('Please upload both before and after images.');
   }
 
@@ -848,6 +902,7 @@ app.post('/admin/packets/:packetId/image-compare', requireAdminBeforeUpload, upl
 
   packet.updatedAt = new Date().toISOString();
   await savePackets(packets);
+  cleanupRequestUploads(req, [uploadPath(before), uploadPath(after)]);
 
   res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
 });
@@ -860,7 +915,10 @@ app.post('/admin/packets/:packetId/url-compare', requireAdminBeforeUpload, uploa
 
   const packets = await getPackets();
   const packet = packets.find(p => p.packetId === req.params.packetId);
-  if (!packet) return res.status(404).send('Packet not found');
+  if (!packet) {
+    cleanupRequestUploads(req);
+    return res.status(404).send('Packet not found');
+  }
 
   const devScreenshot = req.files?.devScreenshot?.[0];
   const liveScreenshot = req.files?.liveScreenshot?.[0];
@@ -880,6 +938,7 @@ app.post('/admin/packets/:packetId/url-compare', requireAdminBeforeUpload, uploa
 
   packet.updatedAt = new Date().toISOString();
   await savePackets(packets);
+  cleanupRequestUploads(req, [uploadPath(devScreenshot), uploadPath(liveScreenshot)]);
 
   res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
 });
@@ -1112,6 +1171,13 @@ function reviewRedirect(packet, req, pageId = '') {
   return `/r/${packet.shareToken}${keyPart}${hash}`;
 }
 
+function normalizeNoteCoordinate(value) {
+  if (value === '' || value == null) return '';
+  const number = Number.parseFloat(value);
+  if (!Number.isFinite(number)) return '';
+  return String(Math.max(0, Math.min(100, number)));
+}
+
 app.get('/r/:shareToken/notes', requireReviewer, async (req, res) => {
   const packets = await getPackets();
   const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
@@ -1204,8 +1270,8 @@ app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
       initials: req.body.initials || req.body.reviewerName || '',
       status: req.body.status || 'needs-review',
       comment: req.body.comment || '',
-      dotX: req.body.dotX || '',
-      dotY: req.body.dotY || '',
+      dotX: normalizeNoteCoordinate(req.body.dotX),
+      dotY: normalizeNoteCoordinate(req.body.dotY),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });
@@ -1333,12 +1399,19 @@ app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireAdminBefore
 
   const packets = await getPackets();
   const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
-  if (!packet) return res.status(404).send('Review packet not found or not published.');
+  if (!packet) {
+    cleanupRequestUploads(req);
+    return res.status(404).send('Review packet not found or not published.');
+  }
 
   const page = packet.pages.find(p => p.pageId === req.body.pageId);
-  if (!page) return res.status(404).send('Page not found');
+  if (!page) {
+    cleanupRequestUploads(req);
+    return res.status(404).send('Page not found');
+  }
 
   if (!isQuickEditUnlocked(req)) {
+    cleanupRequestUploads(req);
     const anchor = page.pageId ? `#${encodeURIComponent(page.pageId)}` : '';
     return res.redirect(`/r/${req.params.shareToken}?quickEditError=1${anchor}`);
   }
@@ -1383,6 +1456,12 @@ app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireAdminBefore
   page.updatedAt = new Date().toISOString();
   packet.updatedAt = new Date().toISOString();
   await savePackets(packets);
+  cleanupRequestUploads(req, [
+    page.beforeImagePath,
+    page.afterImagePath,
+    page.devScreenshotPath,
+    page.liveScreenshotPath
+  ]);
 
   const keyPart = adminKey(req) ? `?key=${encodeURIComponent(adminKey(req))}` : '';
   res.redirect(`/r/${packet.shareToken}${keyPart}#${page.pageId}`);

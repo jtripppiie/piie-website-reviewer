@@ -6,7 +6,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const root = path.join(__dirname, '..');
-const { makeId } = require(path.join(root, 'storage.js'));
+const os = require('node:os');
+const { makeId, readJson } = require(path.join(root, 'storage.js'));
 const { safeLocalRedirect } = require(path.join(root, 'security.js'));
 
 function read(relPath) {
@@ -32,6 +33,15 @@ test('makeId returns a unique, prefixed id', () => {
 
   assert.match(a, /^note_/, 'id should start with the prefix');
   assert.notStrictEqual(a, b, 'two ids should not be identical');
+});
+
+test('readJson does not hide malformed storage', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'reviewer-storage-'));
+  const file = path.join(dir, 'broken.json');
+  fs.writeFileSync(file, '{not valid json');
+
+  await assert.rejects(readJson(file, []), SyntaxError);
+  fs.rmSync(dir, { recursive: true, force: true });
 });
 
 test('demo packet.json is valid and well formed', () => {
@@ -112,4 +122,17 @@ test('removeUploadFile only targets files inside data/uploads', () => {
   // The cleanup helper must refuse paths outside the uploads folder.
   assert.match(server, /function removeUploadFile/, 'removeUploadFile helper missing');
   assert.match(server, /startsWith\('\/uploads\/'\)/, 'removeUploadFile should guard the /uploads/ prefix');
+});
+
+test('feedback coordinates are clamped before rendering in inline CSS', () => {
+  const server = read('server.js');
+  assert.match(server, /dotX: normalizeNoteCoordinate\(req\.body\.dotX\)/);
+  assert.match(server, /dotY: normalizeNoteCoordinate\(req\.body\.dotY\)/);
+  assert.match(server, /Math\.max\(0, Math\.min\(100, number\)\)/);
+});
+
+test('multipart validation paths clean up uncommitted files', () => {
+  const server = read('server.js');
+  assert.match(server, /function cleanupRequestUploads/);
+  assert.match(server, /if \(!before \|\| !after\) \{\s+cleanupRequestUploads\(req\)/);
 });
