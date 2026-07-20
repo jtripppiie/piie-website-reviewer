@@ -215,6 +215,9 @@ test('static annotations can be edited, moved, deleted, and debug-seeded', () =>
   assert.match(demo, /if \(debugLogoClicks < 3\) return;/);
   assert.match(demo, /function refreshPageNotesUi/);
   assert.match(index, /id="demoDebugLogo"/);
+  assert.match(read('docs/static-review.css'), /\.preview-stage\.is-annotating \.compare-handle \{\s+z-index: 9;/);
+  assert.match(read('public/css/styles.css'), /\.webpage-preview-stage\.is-annotating \.handle \{\s+z-index: 8;/);
+  assert.match(read('public/js/review.js'), /stage\.classList\.contains\('is-annotating'\).*closest\('\.handle, \.divider'\)/);
   assert.match(index, /id="adminTools"/);
   assert.match(index, /data-admin-quick-edit>Edit review URLs/);
   assert.match(index, /Capture screenshots locally/);

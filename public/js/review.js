@@ -69,6 +69,7 @@ document.querySelectorAll('[data-webpage-compare]').forEach(stage => {
     if (event.target.closest('.comment-dot')) return;
     if (stage.dataset.pinTarget === 'true') return;
     if (!stage.classList.contains('is-slider')) return;
+    if (stage.classList.contains('is-annotating') && !event.target.closest('.handle, .divider')) return;
 
     event.preventDefault();
     dragging = true;

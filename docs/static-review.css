@@ -389,6 +389,10 @@ button.active {
   cursor: ew-resize;
 }
 
+.preview-stage.is-annotating .compare-handle {
+  z-index: 9;
+}
+
 .preview-stage.is-slider .compare-handle::before {
   content: "↔";
   color: #fff;

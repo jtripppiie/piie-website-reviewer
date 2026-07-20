@@ -806,6 +806,10 @@ button.secondary {
   background: rgba(64, 124, 167, .08);
 }
 
+.webpage-preview-stage.is-annotating .handle {
+  z-index: 8;
+}
+
 .webpage-diff-layer {
   position: absolute;
   inset: 0;
