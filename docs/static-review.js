@@ -254,8 +254,8 @@ function renderPage(page, index) {
           <div class="review-control-row">
             <span class="review-control-label">Review mode</span>
             <nav class="screen-tabs review-mode-tabs" aria-label="Review mode">
-              <button type="button" data-webpage-mode="interact" class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
-              <button type="button" data-webpage-mode="compare" class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
+              <button type="button" data-webpage-mode="interact" data-tooltip="Use Dev and Live separately. Scroll, click links, and test menus in each preview." class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
+              <button type="button" data-webpage-mode="compare" data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences." class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
             </nav>
           </div>
         </div>

@@ -79,6 +79,41 @@ button.active {
   color: #fff;
 }
 
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 9px);
+  z-index: 120;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 24px));
+  padding: 7px 9px;
+  transform: translate(-50%, 4px);
+  border-radius: 7px;
+  background: #102333;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-align: left;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
 .review-app {
   width: min(1800px, calc(100% - 12px));
   max-width: 100%;
