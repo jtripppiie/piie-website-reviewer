@@ -276,8 +276,8 @@
                     <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= screenSizeLabel(size) %></button>
                   <% }) %>
                   <% if (page.devUrl || page.liveUrl) { %>
-                    <button type="button" class="active" data-webpage-mode="interact" data-tooltip="Use Dev and Live separately. Scroll, click links, and test menus in each preview.">Interact</button>
-                    <button type="button" data-webpage-mode="compare" data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences.">Compare</button>
+                    <button type="button" class="active" data-webpage-mode="interact" title="Use Dev and Live separately. Scroll, click links, and test menus in each preview." data-tooltip="Use Dev and Live separately. Scroll, click links, and test menus in each preview.">Interact</button>
+                    <button type="button" data-webpage-mode="compare" title="Stack Dev and Live together and drag the slider to compare visual differences." data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences.">Compare</button>
                     <button type="button" data-webpage-mode="annotate">Annotate</button>
                     <button type="button" data-webpage-diff>Find differences</button>
                   <% } %>

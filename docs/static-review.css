@@ -219,7 +219,7 @@ button.active {
   justify-content: flex-start;
   gap: 8px;
   width: 100%;
-  overflow-x: auto;
+  overflow: visible;
   padding-bottom: 4px;
 }
 
@@ -234,6 +234,13 @@ button.active {
 
 .review-controls button {
   white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .review-controls {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
 }
 
 .preview-stage {
