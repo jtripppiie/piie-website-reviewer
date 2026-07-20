@@ -20,6 +20,7 @@ const state = {
   activeSizes: {},
   compareModes: {},
   feedbackCollapsed: {},
+  pendingDots: {},
   notes: JSON.parse(localStorage.getItem(NOTES_KEY) || '[]'),
   cleared: JSON.parse(localStorage.getItem(CLEARED_KEY) || '[]'),
   urlOverrides: JSON.parse(localStorage.getItem(URLS_KEY) || '{}')
@@ -162,6 +163,7 @@ function escapeHtml(value) {
 
 function renderFeedbackPanel(page, activeSize) {
   const collapsed = Boolean(state.feedbackCollapsed[page.pageId]);
+  const pendingDot = state.pendingDots[page.pageId] || {};
   return `
     <aside class="feedback-panel${collapsed ? ' is-collapsed' : ''}" data-feedback-panel data-feedback-page="${escapeHtml(page.pageId)}">
       <div class="feedback-panel__bar">
@@ -176,6 +178,8 @@ function renderFeedbackPanel(page, activeSize) {
 
       <form class="feedback-form" data-note-form="${escapeHtml(page.pageId)}">
         <input type="hidden" name="screenSize" value="${escapeHtml(activeSize)}">
+        <input type="hidden" name="dotX" value="${escapeHtml(pendingDot.dotX || '')}">
+        <input type="hidden" name="dotY" value="${escapeHtml(pendingDot.dotY || '')}">
 
         <label>
           Reviewer name or initials
@@ -260,12 +264,13 @@ function renderPage(page, index) {
           <nav class="screen-tabs review-mode-tabs" aria-label="Review mode">
             <button type="button" data-webpage-mode="interact" data-tooltip="Use Dev and Live separately. Scroll, click links, and test menus in each preview." class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
             <button type="button" data-webpage-mode="compare" data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences." class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
+            <button type="button" data-webpage-mode="annotate" data-tooltip="Click a spot on the preview, then save a note pinned to that location." class="${compareMode === 'annotate' ? 'active' : ''}">Annotate</button>
           </nav>
         </div>
 
         <div class="preview-status" data-status-for="${escapeHtml(page.pageId)}" aria-live="polite"></div>
 
-        <div class="preview-stage${compareMode === 'compare' ? ' is-slider' : ''}" data-webpage-compare>
+        <div class="preview-stage${compareMode === 'compare' ? ' is-slider' : ''}${compareMode === 'annotate' ? ' is-annotating' : ''}" data-webpage-compare>
           <article class="frame-card frame-card--dev">
             <div class="frame-card__header">
               <strong>Dev preview</strong>
@@ -285,10 +290,36 @@ function renderPage(page, index) {
           <span class="compare-label compare-label--live">Live</span>
           <div class="compare-divider" aria-hidden="true"></div>
           <button class="compare-handle" type="button" aria-label="Drag comparison handle"></button>
+          <div class="annotation-dots" data-annotation-dots>
+            ${renderAnnotationDots(page, activeSize)}
+          </div>
+          <button class="annotation-layer" type="button" data-annotation-layer aria-label="Click a location to pin the next note"></button>
         </div>
       </div>
     </section>
   `;
+}
+
+function renderAnnotationDots(page, screenSize) {
+  return pageNotes(page.pageId, screenSize)
+    .filter(note =>
+      note.dotX !== '' && note.dotY !== '' &&
+      note.dotX != null && note.dotY != null &&
+      Number.isFinite(Number(note.dotX)) && Number.isFinite(Number(note.dotY))
+    )
+    .map((note, index) => `
+      <span class="demo-comment-dot" style="left:${Number(note.dotX)}%;top:${Number(note.dotY)}%;background:${reviewerDotColor(note.reviewerName)}" title="${escapeHtml((note.reviewerName || 'Reviewer') + ': ' + (note.comment || 'Pinned note'))}">${index + 1}</span>
+    `).join('');
+}
+
+function reviewerDotColor(reviewerName) {
+  const palette = ['#b42318', '#175cd3', '#067647', '#7a5af8', '#c11574', '#b54708', '#026aa2', '#4e5ba6'];
+  const name = String(reviewerName || 'Reviewer').trim().toLowerCase();
+  let hash = 0;
+  for (const character of name) {
+    hash = ((hash << 5) - hash + character.charCodeAt(0)) | 0;
+  }
+  return palette[Math.abs(hash) % palette.length];
 }
 
 function presetFor(size) {
@@ -521,7 +552,37 @@ document.addEventListener('click', event => {
       button.classList.toggle('active', button === modeButton);
     });
     stage?.classList.toggle('is-slider', mode === 'compare');
+    stage?.classList.toggle('is-annotating', mode === 'annotate');
     applyLayout(pageEl);
+    return;
+  }
+
+  const annotationLayer = event.target.closest('[data-annotation-layer]');
+  if (annotationLayer) {
+    const pageEl = annotationLayer.closest('.review-page[data-page-id]');
+    const stage = annotationLayer.closest('[data-webpage-compare]');
+    if (!pageEl || !stage) return;
+
+    const rect = stage.getBoundingClientRect();
+    const dotX = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+    const dotY = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100));
+    const pageId = pageEl.dataset.pageId;
+    state.pendingDots[pageId] = { dotX: dotX.toFixed(2), dotY: dotY.toFixed(2) };
+
+    const form = document.querySelector(`[data-note-form="${pageId}"]`);
+    if (form) {
+      form.elements.dotX.value = dotX.toFixed(2);
+      form.elements.dotY.value = dotY.toFixed(2);
+      form.querySelector('textarea[name="comment"]')?.focus();
+    }
+
+    stage.querySelector('.pending-comment-dot')?.remove();
+    const pending = document.createElement('span');
+    pending.className = 'demo-comment-dot pending-comment-dot';
+    pending.style.left = `${dotX}%`;
+    pending.style.top = `${dotY}%`;
+    pending.textContent = '+';
+    stage.querySelector('[data-annotation-dots]')?.appendChild(pending);
     return;
   }
 
@@ -541,10 +602,18 @@ document.addEventListener('click', event => {
 
   const hidden = document.querySelector(`[data-note-form="${pageId}"] input[name="screenSize"]`);
   if (hidden) hidden.value = size;
+  delete state.pendingDots[pageId];
+  const noteForm = document.querySelector(`[data-note-form="${pageId}"]`);
+  if (noteForm) {
+    noteForm.elements.dotX.value = '';
+    noteForm.elements.dotY.value = '';
+  }
 
   const page = state.packet.pages.find(item => item.pageId === pageId);
   const notesTarget = document.querySelector(`[data-notes-for="${pageId}"]`);
   if (page && notesTarget) notesTarget.innerHTML = renderNotes(page, size);
+  const dotsTarget = pageEl.querySelector('[data-annotation-dots]');
+  if (page && dotsTarget) dotsTarget.innerHTML = renderAnnotationDots(page, size);
 
   applyLayout(pageEl);
   updateDebug();
@@ -611,9 +680,12 @@ document.addEventListener('submit', event => {
     reviewerName: data.get('reviewerName'),
     status: data.get('status'),
     comment: data.get('comment'),
+    dotX: data.get('dotX') || '',
+    dotY: data.get('dotY') || '',
     createdAt: new Date().toISOString()
   });
 
+  delete state.pendingDots[pageId];
   saveNotes();
   form.reset();
   render();

@@ -145,6 +145,9 @@ test('static demo includes interact and compare modes', () => {
   assert.match(demo, /setCompareReveal/);
   assert.match(demo, /data-webpage-mode="interact" data-tooltip=/);
   assert.match(demo, /data-webpage-mode="compare" data-tooltip=/);
+  assert.match(demo, /data-webpage-mode="annotate" data-tooltip=/);
+  assert.match(demo, /data-annotation-layer/);
+  assert.match(demo, /reviewerDotColor/);
   assert.match(realReview, /data-webpage-mode="interact" data-tooltip=/);
   assert.match(realReview, /data-webpage-mode="compare" data-tooltip=/);
   assert.match(index, /id="headerFeedback"/);
