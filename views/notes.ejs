@@ -14,6 +14,7 @@
           <% if (responses.length) { %>
             <%
               const dlParams = [];
+              if (adminKeyValue) dlParams.push('key=' + encodeURIComponent(adminKeyValue));
               if (filterPage) dlParams.push('page=' + encodeURIComponent(filterPage));
               if (filterStatus) dlParams.push('status=' + encodeURIComponent(filterStatus));
               const dlQuery = dlParams.length ? '?' + dlParams.join('&') : '';
@@ -85,6 +86,7 @@
                       <summary>Edit note</summary>
 
                       <form method="post" action="/r/<%= packet.shareToken %>/feedback/<%= note.responseId %>/update">
+                        <input type="hidden" name="next" value="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">
                         <% if (adminKeyValue) { %>
                           <input type="hidden" name="key" value="<%= adminKeyValue %>">
                         <% } %>
@@ -120,6 +122,7 @@
                       </form>
 
                       <form method="post" action="/r/<%= packet.shareToken %>/feedback/<%= note.responseId %>/delete" onsubmit="return confirm('Delete this review note? This cannot be undone.');">
+                        <input type="hidden" name="next" value="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">
                         <% if (adminKeyValue) { %>
                           <input type="hidden" name="key" value="<%= adminKeyValue %>">
                         <% } %>

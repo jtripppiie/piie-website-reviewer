@@ -121,11 +121,16 @@ test('multipart routes authorize before writing uploads', () => {
 
 test('server exposes the notes and per-size upload routes', () => {
   const server = read('server.js');
+  const notesView = read('views/notes.ejs');
 
   assert.match(server, /\/r\/:shareToken\/notes['"`]/, 'view notes route missing');
   assert.match(server, /\/r\/:shareToken\/notes\/download/, 'download notes route missing');
   assert.match(server, /\/pages\/:pageId\/upload-shots/, 'per-size upload route missing');
   assert.match(server, /\/admin\/packets\/demo['"`]/, 'demo packet route missing');
+  assert.match(notesView, /if \(adminKeyValue\) dlParams\.push\('key=' \+ encodeURIComponent\(adminKeyValue\)\)/, 'admin key missing from CSV download');
+  assert.match(notesView, /name="next" value="\/r\/<%= packet\.shareToken %>\/notes/);
+  assert.match(server, /req\.body\.next \? safeLocalRedirect\(req\.body\.next\) : reviewRedirect/);
+  assert.match(server, /app: 'PIIE Web Reviewer',[\s\S]*version: APP_VERSION/);
 });
 
 test('new reviews support optional automatic URL screenshots', () => {

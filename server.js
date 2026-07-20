@@ -1424,7 +1424,8 @@ app.post('/r/:shareToken/feedback/:responseId/update', requireReviewer, async (r
 
   if (!found) return res.status(404).send('Review note not found.');
 
-  res.redirect(reviewRedirect(packet, req, pageId));
+  const next = req.body.next ? safeLocalRedirect(req.body.next) : reviewRedirect(packet, req, pageId);
+  res.redirect(next);
 });
 
 app.post('/r/:shareToken/feedback/:responseId/delete', requireReviewer, async (req, res) => {
@@ -1447,7 +1448,8 @@ app.post('/r/:shareToken/feedback/:responseId/delete', requireReviewer, async (r
 
   if (!found) return res.status(404).send('Review note not found.');
 
-  res.redirect(reviewRedirect(packet, req, pageId));
+  const next = req.body.next ? safeLocalRedirect(req.body.next) : reviewRedirect(packet, req, pageId);
+  res.redirect(next);
 });
 
 app.post('/r/:shareToken/clear-notes', async (req, res) => {
@@ -1729,6 +1731,7 @@ app.get('/healthz', async (req, res) => {
   res.json({
     ok: true,
     app: 'PIIE Web Reviewer',
+    version: APP_VERSION,
     time: new Date().toISOString(),
     cwd: process.cwd(),
     node: process.version
