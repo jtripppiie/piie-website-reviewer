@@ -264,7 +264,7 @@ function renderPage(page, index) {
           <nav class="screen-tabs review-mode-tabs" aria-label="Review mode">
             <button type="button" data-webpage-mode="interact" title="Use Dev and Live separately. Scroll, click links, and test menus in each preview." data-tooltip="Use Dev and Live separately. Scroll, click links, and test menus in each preview." class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
             <button type="button" data-webpage-mode="compare" title="Stack Dev and Live together and drag the slider to compare visual differences." data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences." class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
-            <button type="button" data-webpage-mode="annotate" title="Click a spot on the preview, then save a note pinned to that location." data-tooltip="Click a spot on the preview, then save a note pinned to that location." class="annotate-action${compareMode === 'annotate' ? ' active' : ''}">+ Add note pin</button>
+            <button type="button" data-webpage-mode="annotate" title="Click a spot on the preview, then save a note pinned to that location." data-tooltip="Click a spot on the preview, then save a note pinned to that location." class="${compareMode === 'annotate' ? 'active' : ''}">Annotate</button>
           </nav>
         </div>
 
