@@ -20,6 +20,7 @@ const state = {
   packet: null,
   activeSizes: {},
   scaleModes: {},
+  compareModes: {},
   feedbackCollapsed: {},
   notes: JSON.parse(localStorage.getItem(NOTES_KEY) || '[]'),
   cleared: JSON.parse(localStorage.getItem(CLEARED_KEY) || '[]'),
@@ -155,6 +156,7 @@ function escapeHtml(value) {
 function renderPage(page, index) {
   const sizes = normalizedScreenSizes(page.screenSizes);
   const activeSize = state.activeSizes[page.pageId] || sizes[0] || 'desktop';
+  const compareMode = state.compareModes[page.pageId] || 'interact';
   state.activeSizes[page.pageId] = activeSize;
 
   if (page.type === 'cover') {
@@ -239,6 +241,8 @@ function renderPage(page, index) {
 
         <nav class="screen-tabs" aria-label="Screen size">
           ${sizes.map(size => `<button type="button" data-size="${escapeHtml(size)}" ${size === activeSize ? 'class="active"' : ''}>${escapeHtml(screenSizeLabel(size))}</button>`).join('')}
+          <button type="button" data-webpage-mode="interact" class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
+          <button type="button" data-webpage-mode="compare" class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
         </nav>
 
         <p class="viewport-note">
@@ -252,8 +256,8 @@ function renderPage(page, index) {
 
         <div class="preview-status" data-status-for="${escapeHtml(page.pageId)}" aria-live="polite"></div>
 
-        <div class="preview-stage">
-          <article class="frame-card">
+        <div class="preview-stage${compareMode === 'compare' ? ' is-slider' : ''}" data-webpage-compare>
+          <article class="frame-card frame-card--dev">
             <div class="frame-card__header">
               <strong>Dev preview</strong>
               ${page.devUrl ? `<a href="${escapeHtml(page.devUrl)}" target="_blank" rel="noopener">Open Dev</a>` : ''}
@@ -261,13 +265,17 @@ function renderPage(page, index) {
             ${page.devScreenshotPath ? `<img class="preview-screenshot" src="${escapeHtml(page.devScreenshotPath)}" alt="Dev screenshot">` : page.devUrl ? `<iframe src="${escapeHtml(page.devUrl)}" title="Dev preview"></iframe>` : '<p>No Dev URL</p>'}
           </article>
 
-          <article class="frame-card">
+          <article class="frame-card frame-card--live">
             <div class="frame-card__header">
               <strong>Live preview</strong>
               ${page.liveUrl ? `<a href="${escapeHtml(page.liveUrl)}" target="_blank" rel="noopener">Open Live</a>` : ''}
             </div>
             ${page.liveScreenshotPath ? `<img class="preview-screenshot" src="${escapeHtml(page.liveScreenshotPath)}" alt="Live screenshot">` : page.liveUrl ? `<iframe src="${escapeHtml(page.liveUrl)}" title="Live preview"></iframe>` : '<p>No Live URL</p>'}
           </article>
+          <span class="compare-label compare-label--dev">Dev</span>
+          <span class="compare-label compare-label--live">Live</span>
+          <div class="compare-divider" aria-hidden="true"></div>
+          <button class="compare-handle" type="button" aria-label="Drag comparison handle"></button>
         </div>
       </div>
     </section>
@@ -321,7 +329,7 @@ function computeScale(pageEl, preset, scaleMode) {
   const stage = pageEl.querySelector('.preview-stage');
   if (!stage) return 1;
   const size = pageEl.dataset.previewSize;
-  const cardCount = size === 'mobile' ? 2 : 1;
+  const cardCount = stage.classList.contains('is-slider') ? 1 : (size === 'mobile' ? 2 : 1);
   const available = stage.clientWidth - STAGE_GAP * (cardCount - 1);
   const raw = (available / cardCount) / preset.w;
   // Desktop fills the available width. Laptop presets and mobile only scale down.
@@ -337,13 +345,14 @@ function applyLayout(pageEl) {
   const stage = pageEl.querySelector('.preview-stage');
   if (!stage) return;
   const preset = resolvedPreset(pageEl, presetFor(size));
+  const sliderMode = stage.classList.contains('is-slider');
 
   pageEl.dataset.previewSize = size;
 
   const cardCount = size === 'mobile' ? 2 : 1;
   const scale = computeScale(pageEl, preset, scaleMode);
 
-  stage.style.setProperty('display', 'flex', 'important');
+  stage.style.setProperty('display', sliderMode ? 'grid' : 'flex', 'important');
   stage.style.setProperty('flex-wrap', 'wrap', 'important');
   stage.style.setProperty('gap', `${STAGE_GAP}px`, 'important');
   stage.style.setProperty('align-items', 'flex-start', 'important');
@@ -355,6 +364,7 @@ function applyLayout(pageEl) {
   let screenshotLine = '';
 
   stage.querySelectorAll('.frame-card').forEach(card => {
+    card.style.setProperty('grid-area', sliderMode ? '1 / 1' : 'auto', 'important');
     card.style.setProperty('min-width', '0', 'important');
     card.style.setProperty('width', 'auto', 'important');
     card.style.setProperty('max-width', 'none', 'important');
@@ -505,6 +515,22 @@ app.addEventListener('click', event => {
     return;
   }
 
+  const modeButton = event.target.closest('button[data-webpage-mode]');
+  if (modeButton) {
+    const pageEl = modeButton.closest('.review-page[data-page-id]');
+    if (!pageEl) return;
+
+    const mode = modeButton.dataset.webpageMode;
+    const stage = pageEl.querySelector('[data-webpage-compare]');
+    state.compareModes[pageEl.dataset.pageId] = mode;
+    pageEl.querySelectorAll('[data-webpage-mode]').forEach(button => {
+      button.classList.toggle('active', button === modeButton);
+    });
+    stage?.classList.toggle('is-slider', mode === 'compare');
+    applyLayout(pageEl);
+    return;
+  }
+
   const button = event.target.closest('button[data-size]');
   if (!button) return;
 
@@ -528,6 +554,40 @@ app.addEventListener('click', event => {
 
   applyLayout(pageEl);
   updateDebug();
+});
+
+let activeCompareDrag = null;
+
+function setCompareReveal(stage, clientX) {
+  const stageRect = stage.getBoundingClientRect();
+  const rect = stage.querySelector('.frame-card')?.getBoundingClientRect() || stageRect;
+  const clampedX = Math.max(rect.left, Math.min(rect.right, clientX));
+  const reveal = ((clampedX - rect.left) / rect.width) * 100;
+  stage.style.setProperty('--reveal', `${reveal}%`);
+  stage.style.setProperty('--handle-left', `${clampedX - stageRect.left}px`);
+}
+
+app.addEventListener('pointerdown', event => {
+  const handle = event.target.closest('.compare-handle, .compare-divider');
+  const stage = handle?.closest('[data-webpage-compare].is-slider');
+  if (!stage) return;
+
+  activeCompareDrag = stage;
+  setCompareReveal(stage, event.clientX);
+  handle.setPointerCapture?.(event.pointerId);
+  event.preventDefault();
+});
+
+app.addEventListener('pointermove', event => {
+  if (activeCompareDrag) setCompareReveal(activeCompareDrag, event.clientX);
+});
+
+app.addEventListener('pointerup', () => {
+  activeCompareDrag = null;
+});
+
+app.addEventListener('pointercancel', () => {
+  activeCompareDrag = null;
 });
 
 window.addEventListener('resize', () => {

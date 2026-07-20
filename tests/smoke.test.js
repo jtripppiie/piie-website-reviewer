@@ -126,6 +126,15 @@ test('new reviews support optional automatic URL screenshots', () => {
   assert.match(server, /\['desktop', 'mobile'\]/);
 });
 
+test('static demo includes interact and compare modes', () => {
+  const demo = read('docs/static-review.js');
+
+  assert.match(demo, /data-webpage-mode="interact"/);
+  assert.match(demo, /data-webpage-mode="compare"/);
+  assert.match(demo, /data-webpage-compare/);
+  assert.match(demo, /setCompareReveal/);
+});
+
 test('removeUploadFile only targets files inside data/uploads', () => {
   const server = read('server.js');
 
