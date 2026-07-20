@@ -249,7 +249,7 @@ function renderNoteEditor(note) {
 function renderPage(page, index) {
   const sizes = normalizedScreenSizes(page.screenSizes);
   const activeSize = state.activeSizes[page.pageId] || sizes[0] || 'desktop';
-  const compareMode = state.compareModes[page.pageId] || 'interact';
+  const compareMode = state.compareModes[page.pageId] || 'compare';
   state.activeSizes[page.pageId] = activeSize;
 
   if (page.type === 'cover') {
