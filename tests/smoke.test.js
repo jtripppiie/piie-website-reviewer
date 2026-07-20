@@ -201,9 +201,6 @@ test('static annotations can be edited, moved, deleted, and debug-seeded', () =>
   assert.doesNotMatch(demo, /function render\(\) \{\s+syncDebugNotes\(\)/);
   assert.match(demo, /if \(debugLogoClicks < 3\) return;/);
   assert.match(demo, /function refreshPageNotesUi/);
-  assert.match(demo, /Your browser viewport:/);
-  assert.match(demo, /Closest review preset:/);
-  assert.match(read('public/js/force-preview-layout.js'), /Your browser viewport/);
   assert.match(index, /id="demoDebugLogo"/);
 });
 

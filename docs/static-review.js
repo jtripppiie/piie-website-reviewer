@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '1.1.2';
+const APP_VERSION = '1.1.3';
 
 const PRESETS = {
   desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
@@ -522,12 +522,6 @@ function presetFor(size) {
   return PRESETS[size] || PRESETS.desktop;
 }
 
-function closestPresetForBrowser() {
-  return Object.values(PRESETS).reduce((closest, preset) =>
-    Math.abs(preset.w - window.innerWidth) < Math.abs(closest.w - window.innerWidth) ? preset : closest
-  , PRESETS.desktop);
-}
-
 function normalizedScreenSizes(sizes) {
   const defaults = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
   const result = [];
@@ -654,12 +648,9 @@ function applyLayout(pageEl) {
 
   const status = document.querySelector(`[data-status-for="${pageId}"]`);
   if (status) {
-    const closestPreset = closestPresetForBrowser();
     const rows = [
       `<p><strong>Selected review size:</strong> ${escapeHtml(preset.label)}</p>`,
-      `<p><strong>Test viewport:</strong> ${preset.w} x ${preset.h} CSS px</p>`,
-      `<p><strong>Your browser viewport:</strong> ${Math.round(window.innerWidth)} x ${Math.round(window.innerHeight)} CSS px</p>`,
-      `<p><strong>Closest review preset:</strong> ${escapeHtml(closestPreset.label)} (based on browser width)</p>`
+      `<p><strong>Test viewport:</strong> ${preset.w} x ${preset.h} CSS px</p>`
     ];
     if (screenshotLine) {
       const isMismatch = /Match: no/.test(screenshotLine);
