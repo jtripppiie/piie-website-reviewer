@@ -212,3 +212,22 @@ body.quick-edit-on .quick-edit {
   font-size: 12px;
   cursor: pointer;
 }
+
+/* Accessibility floor for reviewer controls and note content. */
+button,
+.button,
+[data-tooltip]::after,
+.note-summary,
+.notes-list,
+.note,
+.note-meta,
+.note p,
+.feedback-panel,
+.feedback-form label,
+.feedback-form input,
+.feedback-form select,
+.feedback-form textarea,
+.demo-comment-dot,
+.demo-comment-dot[data-pin-tooltip]::after {
+  font-size: 14px !important;
+}

@@ -158,6 +158,12 @@ test('static demo includes interact and compare modes', () => {
   assert.match(demo, /renderFeedbackPanel/);
 });
 
+test('static reviewer buttons and notes have a 14px accessibility floor', () => {
+  const overrides = read('docs/static-demo-overrides.css');
+
+  assert.match(overrides, /button,[\s\S]*\.feedback-panel,[\s\S]*font-size: 14px !important;/);
+});
+
 test('removeUploadFile only targets files inside data/uploads', () => {
   const server = read('server.js');
 
