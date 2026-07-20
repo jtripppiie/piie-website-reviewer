@@ -456,7 +456,14 @@ button.active {
   font-size: 12px;
   font-weight: 800;
   pointer-events: auto;
-  cursor: help;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.demo-comment-dot.is-dragging {
+  cursor: grabbing;
+  box-shadow: 0 4px 14px rgba(16, 35, 51, .55);
 }
 
 .pending-comment-dot {

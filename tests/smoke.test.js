@@ -185,6 +185,8 @@ test('static annotations can be edited, moved, deleted, and debug-seeded', () =>
   assert.match(demo, /movingNoteId/);
   assert.match(demo, /Move mode: click the new pin location\./);
   assert.match(demo, /showDemoToast\('Pin moved\.'\)/);
+  assert.match(demo, /\.demo-comment-dot\[data-note-id\]:not\(\.pending-comment-dot\)/);
+  assert.match(demo, /Math\.hypot\(pointerEvent\.clientX - startX/);
   assert.match(demo, /debugSample/);
   assert.match(demo, /function syncDebugNotes/);
   assert.match(demo, /normalizedScreenSizes\(page\.screenSizes\)\.forEach\(screenSize/);

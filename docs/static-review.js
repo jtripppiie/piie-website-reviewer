@@ -707,9 +707,79 @@ function render() {
   updateDebug();
 }
 
+let draggedPinId = null;
+let suppressPinClickUntil = 0;
+
+app.addEventListener('pointerdown', event => {
+  const pin = event.target.closest('.demo-comment-dot[data-note-id]:not(.pending-comment-dot)');
+  if (!pin || event.button !== 0) return;
+
+  const note = state.notes.find(item => item.noteId === pin.dataset.noteId);
+  const stage = pin.closest('[data-webpage-compare]');
+  if (!note || !stage) return;
+
+  const startX = event.clientX;
+  const startY = event.clientY;
+  let dragging = false;
+
+  function positionPin(pointerEvent) {
+    const rect = stage.getBoundingClientRect();
+    const dotX = Math.max(0, Math.min(100, ((pointerEvent.clientX - rect.left) / rect.width) * 100));
+    const dotY = Math.max(0, Math.min(100, ((pointerEvent.clientY - rect.top) / rect.height) * 100));
+    pin.style.left = `${dotX.toFixed(2)}%`;
+    pin.style.top = `${dotY.toFixed(2)}%`;
+    return { dotX, dotY };
+  }
+
+  function onMove(pointerEvent) {
+    if (!dragging && Math.hypot(pointerEvent.clientX - startX, pointerEvent.clientY - startY) < 5) return;
+    dragging = true;
+    draggedPinId = note.noteId;
+    pin.classList.add('is-dragging');
+    positionPin(pointerEvent);
+    pointerEvent.preventDefault();
+  }
+
+  function finish(pointerEvent) {
+    pin.removeEventListener('pointermove', onMove);
+    pin.removeEventListener('pointerup', finish);
+    pin.removeEventListener('pointercancel', cancel);
+    pin.classList.remove('is-dragging');
+    if (!dragging) return;
+
+    const { dotX, dotY } = positionPin(pointerEvent);
+    note.dotX = dotX.toFixed(2);
+    note.dotY = dotY.toFixed(2);
+    state.selectedNoteId = note.noteId;
+    state.feedbackCollapsed[note.pageId] = false;
+    suppressPinClickUntil = Date.now() + 500;
+    saveNotes();
+    render();
+    showDemoToast('Pin moved.');
+  }
+
+  function cancel() {
+    pin.removeEventListener('pointermove', onMove);
+    pin.removeEventListener('pointerup', finish);
+    pin.removeEventListener('pointercancel', cancel);
+    pin.classList.remove('is-dragging');
+    draggedPinId = null;
+    render();
+  }
+
+  pin.setPointerCapture(event.pointerId);
+  pin.addEventListener('pointermove', onMove);
+  pin.addEventListener('pointerup', finish);
+  pin.addEventListener('pointercancel', cancel);
+});
+
 document.addEventListener('click', event => {
   const pin = event.target.closest('.demo-comment-dot[data-note-id]');
   if (pin) {
+    if (pin.dataset.noteId === draggedPinId && Date.now() < suppressPinClickUntil) {
+      draggedPinId = null;
+      return;
+    }
     const note = state.notes.find(item => item.noteId === pin.dataset.noteId);
     if (!note) return;
     state.selectedNoteId = note.noteId;
