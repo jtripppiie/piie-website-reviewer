@@ -13,13 +13,11 @@ const PRESETS = {
   mobile: { label: 'Mobile', w: 390, h: 844 }
 };
 
-const SCALE_LABELS = { fit: 'Fit to screen', '100': '100%', '75': '75%', '50': '50%' };
 const STAGE_GAP = 16;
 
 const state = {
   packet: null,
   activeSizes: {},
-  scaleModes: {},
   compareModes: {},
   feedbackCollapsed: {},
   notes: JSON.parse(localStorage.getItem(NOTES_KEY) || '[]'),
@@ -265,11 +263,6 @@ function renderPage(page, index) {
           </nav>
         </div>
 
-        <div class="preview-scale-controls" role="group" aria-label="Preview scale" data-scale-controls="${escapeHtml(page.pageId)}">
-          <span class="preview-scale-controls__label">Preview scale:</span>
-          ${Object.keys(SCALE_LABELS).map(mode => `<button type="button" data-scale="${mode}">${SCALE_LABELS[mode]}</button>`).join('')}
-        </div>
-
         <div class="preview-status" data-status-for="${escapeHtml(page.pageId)}" aria-live="polite"></div>
 
         <div class="preview-stage${compareMode === 'compare' ? ' is-slider' : ''}" data-webpage-compare>
@@ -337,11 +330,7 @@ function ensureScaler(card) {
   return scaler;
 }
 
-function computeScale(pageEl, preset, scaleMode) {
-  if (scaleMode === '100') return 1;
-  if (scaleMode === '75') return 0.75;
-  if (scaleMode === '50') return 0.5;
-
+function computeScale(pageEl, preset) {
   const stage = pageEl.querySelector('.preview-stage');
   if (!stage) return 1;
   const size = pageEl.dataset.previewSize;
@@ -357,7 +346,6 @@ function applyLayout(pageEl) {
   if (!pageId) return;
 
   const size = state.activeSizes[pageId] || 'desktop';
-  const scaleMode = state.scaleModes[pageId] || 'fit';
   const stage = pageEl.querySelector('.preview-stage');
   if (!stage) return;
   const preset = resolvedPreset(pageEl, presetFor(size));
@@ -366,7 +354,7 @@ function applyLayout(pageEl) {
   pageEl.dataset.previewSize = size;
 
   const cardCount = size === 'mobile' ? 2 : 1;
-  const scale = computeScale(pageEl, preset, scaleMode);
+  const scale = computeScale(pageEl, preset);
 
   stage.style.setProperty('display', sliderMode ? 'grid' : 'flex', 'important');
   stage.style.setProperty('flex-wrap', 'wrap', 'important');
@@ -434,12 +422,9 @@ function applyLayout(pageEl) {
 
   const status = pageEl.querySelector(`[data-status-for="${pageId}"]`);
   if (status) {
-    const percent = Math.round(scale * 100);
-    const scaleText = scaleMode === 'fit' ? `Fit to screen (${percent}%)` : `${SCALE_LABELS[scaleMode]} (${percent}%)`;
     const rows = [
       `<p><strong>Selected review size:</strong> ${escapeHtml(preset.label)}</p>`,
-      `<p><strong>Test viewport:</strong> ${preset.w} x ${preset.h} CSS px</p>`,
-      `<p><strong>Preview scale:</strong> ${escapeHtml(scaleText)}</p>`
+      `<p><strong>Test viewport:</strong> ${preset.w} x ${preset.h} CSS px</p>`
     ];
     if (screenshotLine) {
       const isMismatch = /Match: no/.test(screenshotLine);
@@ -451,12 +436,6 @@ function applyLayout(pageEl) {
     status.innerHTML = rows.join('');
   }
 
-  const controls = pageEl.querySelector(`[data-scale-controls="${pageId}"]`);
-  if (controls) {
-    controls.querySelectorAll('button[data-scale]').forEach(button => {
-      button.classList.toggle('active', button.dataset.scale === scaleMode);
-    });
-  }
 }
 
 function applyAllLayouts() {
@@ -527,15 +506,6 @@ document.addEventListener('click', event => {
     saveCleared();
     saveNotes();
     render();
-    return;
-  }
-
-  const scaleButton = event.target.closest('button[data-scale]');
-  if (scaleButton) {
-    const pageEl = scaleButton.closest('.review-page');
-    if (!pageEl || !pageEl.dataset.pageId) return;
-    state.scaleModes[pageEl.dataset.pageId] = scaleButton.dataset.scale;
-    applyLayout(pageEl);
     return;
   }
 

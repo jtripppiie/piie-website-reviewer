@@ -36,18 +36,6 @@
   padding: 24px;
 }
 
-/* Preview scale controls and viewport status for the static demo.
-   The JavaScript sets the real test viewport size on each frame and scales the
-   preview visually, so these rules only style the control row and status. */
-.preview-scale-controls {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 8px;
-}
-
 @media (max-width: 700px) {
   .feedback-panel {
     top: 8px !important;
@@ -59,29 +47,6 @@
   .feedback-panel.is-collapsed {
     width: auto;
   }
-}
-
-.preview-scale-controls__label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #475569;
-}
-
-.preview-scale-controls button {
-  border: 1px solid #d8dee6;
-  border-radius: 8px;
-  background: #fff;
-  color: #111827;
-  padding: 6px 10px;
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.preview-scale-controls button.active {
-  background: #407ca7;
-  border-color: #407ca7;
-  color: #fff;
 }
 
 .preview-status {
