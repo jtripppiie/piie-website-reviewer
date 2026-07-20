@@ -184,6 +184,8 @@ test('static reviewer buttons and notes have a 14px accessibility floor', () => 
   assert.match(overrides, /button,[\s\S]*\.feedback-panel,[\s\S]*font-size: 14px !important;/);
   assert.match(demoStyles, /\.feedback-panel__toggle \{[\s\S]*?min-width: 120px;/);
   assert.match(localStyles, /\.feedback-panel__toggle \{[\s\S]*?min-width: 120px;/);
+  assert.doesNotMatch(read('docs/static-review.js'), /Selected review size:/);
+  assert.doesNotMatch(read('public/js/force-preview-layout.js'), /\['Selected review size'/);
 });
 
 test('static annotations can be edited, moved, deleted, and debug-seeded', () => {

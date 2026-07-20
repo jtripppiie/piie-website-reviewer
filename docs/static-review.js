@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '1.1.4';
+const APP_VERSION = '1.1.5';
 
 const PRESETS = {
   desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
@@ -649,7 +649,6 @@ function applyLayout(pageEl) {
   const status = document.querySelector(`[data-status-for="${pageId}"]`);
   if (status) {
     const rows = [
-      `<p><strong>Selected review size:</strong> ${escapeHtml(preset.label)}</p>`,
       `<p><strong>Test viewport:</strong> ${preset.w} x ${preset.h} CSS px</p>`
     ];
     if (screenshotLine) {

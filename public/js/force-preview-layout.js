@@ -229,7 +229,6 @@
     status.innerHTML = '';
 
     const lines = [
-      ['Selected review size', preset.label],
       ['Test viewport', `${preset.w} x ${preset.h} CSS px`],
       ['Preview scale', scaleText]
     ];
