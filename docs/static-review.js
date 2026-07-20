@@ -250,10 +250,6 @@ function renderPage(page, index) {
           <button type="button" data-webpage-mode="compare" class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
         </nav>
 
-        <p class="viewport-note">
-          Heads up: these are common screen widths, not exact inch sizes. Zoom, display scaling, and your monitor can all change what actually fits. We go by the browser width listed for each one.
-        </p>
-
         <div class="preview-scale-controls" role="group" aria-label="Preview scale" data-scale-controls="${escapeHtml(page.pageId)}">
           <span class="preview-scale-controls__label">Preview scale:</span>
           ${Object.keys(SCALE_LABELS).map(mode => `<button type="button" data-scale="${mode}">${SCALE_LABELS[mode]}</button>`).join('')}

@@ -1,4 +1,4 @@
-/* Static demo overrides. The review panel should not stay pinned while scrolling. */
+/* Keep the review controls available above the static preview while scrolling. */
 .app-header {
   position: static !important;
   top: auto !important;
@@ -6,11 +6,13 @@
 }
 
 .feedback-panel {
-  position: static !important;
-  top: auto !important;
-  z-index: auto !important;
-  max-height: none !important;
-  overflow: visible !important;
+  position: fixed !important;
+  top: 12px !important;
+  right: 16px !important;
+  z-index: 100 !important;
+  max-height: calc(100vh - 24px) !important;
+  overflow: auto !important;
+  box-shadow: 0 12px 32px rgba(16, 35, 51, .2);
 }
 
 .note-summary {
@@ -34,16 +36,6 @@
   padding: 24px;
 }
 
-.viewport-note {
-  margin: 4px 0 10px;
-  padding: 8px 10px;
-  border: 1px solid #d8dee6;
-  border-radius: 8px;
-  background: #f9fafb;
-  color: #475569;
-  font-size: 13px;
-}
-
 /* Preview scale controls and viewport status for the static demo.
    The JavaScript sets the real test viewport size on each frame and scales the
    preview visually, so these rules only style the control row and status. */
@@ -54,6 +46,19 @@
   flex-wrap: wrap;
   gap: 8px;
   margin: 0 0 8px;
+}
+
+@media (max-width: 700px) {
+  .feedback-panel {
+    top: 8px !important;
+    right: 8px !important;
+    width: min(420px, calc(100vw - 16px));
+    max-height: calc(100vh - 16px) !important;
+  }
+
+  .feedback-panel.is-collapsed {
+    width: auto;
+  }
 }
 
 .preview-scale-controls__label {
