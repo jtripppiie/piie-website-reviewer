@@ -378,10 +378,45 @@ button.active {
   box-shadow: 0 2px 8px rgba(16, 35, 51, .35);
   font-size: 12px;
   font-weight: 800;
+  pointer-events: auto;
+  cursor: help;
 }
 
 .pending-comment-dot {
   background: var(--blue);
+  pointer-events: none;
+  cursor: default;
+}
+
+.demo-comment-dot[data-pin-tooltip]::after {
+  content: attr(data-pin-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 9px);
+  z-index: 10;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 24px));
+  padding: 8px 10px;
+  transform: translate(-50%, 4px);
+  border-radius: 8px;
+  background: #102333;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+}
+
+.demo-comment-dot[data-pin-tooltip]:hover::after,
+.demo-comment-dot[data-pin-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
 }
 
 .review-page[data-preview-size="desktop"] .preview-stage,

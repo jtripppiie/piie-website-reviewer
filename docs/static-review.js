@@ -308,7 +308,13 @@ function renderAnnotationDots(page, screenSize) {
       Number.isFinite(Number(note.dotX)) && Number.isFinite(Number(note.dotY))
     )
     .map((note, index) => `
-      <span class="demo-comment-dot" style="left:${Number(note.dotX)}%;top:${Number(note.dotY)}%;background:${reviewerDotColor(note.reviewerName)}" title="${escapeHtml((note.reviewerName || 'Reviewer') + ': ' + (note.comment || 'Pinned note'))}">${index + 1}</span>
+      <span
+        class="demo-comment-dot"
+        tabindex="0"
+        style="left:${Number(note.dotX)}%;top:${Number(note.dotY)}%;background:${reviewerDotColor(note.reviewerName)}"
+        title="${escapeHtml((note.reviewerName || 'Reviewer') + ': ' + (note.comment || 'Pinned note'))}"
+        aria-label="${escapeHtml((note.reviewerName || 'Reviewer') + ': ' + (note.comment || 'Pinned note'))}"
+        data-pin-tooltip="${escapeHtml((note.reviewerName || 'Reviewer') + ': ' + (note.comment || 'Pinned note'))}">${index + 1}</span>
     `).join('');
 }
 
