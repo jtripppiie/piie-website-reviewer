@@ -17,6 +17,7 @@ function read(relPath) {
 test('package.json version matches the demo APP_VERSION', () => {
   const pkg = JSON.parse(read('package.json'));
   const demoJs = read('docs/static-review.js');
+  const demoIndex = read('docs/index.html');
   const match = demoJs.match(/const APP_VERSION = '([^']+)'/);
 
   assert.ok(match, 'APP_VERSION constant not found in docs/static-review.js');
@@ -25,6 +26,9 @@ test('package.json version matches the demo APP_VERSION', () => {
     pkg.version,
     `Version mismatch: package.json is ${pkg.version} but docs/static-review.js is ${match[1]}`
   );
+  assert.match(demoIndex, new RegExp(`static-review\\.css\\?v=${pkg.version.replaceAll('.', '\\.')}`));
+  assert.match(demoIndex, new RegExp(`static-demo-overrides\\.css\\?v=${pkg.version.replaceAll('.', '\\.')}`));
+  assert.match(demoIndex, new RegExp(`static-review\\.js\\?v=${pkg.version.replaceAll('.', '\\.')}`));
 });
 
 test('makeId returns a unique, prefixed id', () => {
