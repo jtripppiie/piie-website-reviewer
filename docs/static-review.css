@@ -79,21 +79,21 @@ button.active {
   color: #fff;
 }
 
-.annotate-action {
+.review-mode-tabs button.annotate-action {
   min-width: 150px;
-  border-color: #407ca7;
-  background: #407ca7;
-  color: #fff;
-  box-shadow: 0 0 0 2px rgba(64, 124, 167, .16);
+  border-color: #407ca7 !important;
+  background-color: #407ca7 !important;
+  color: #fff !important;
+  box-shadow: none;
   font-weight: 800;
 }
 
-.annotate-action:hover,
-.annotate-action:focus-visible {
-  border-color: #326b95;
-  background: #326b95;
-  color: #fff;
-  box-shadow: 0 0 0 3px rgba(64, 124, 167, .24);
+.review-mode-tabs button.annotate-action:hover,
+.review-mode-tabs button.annotate-action:focus-visible {
+  border-color: #326b95 !important;
+  background-color: #326b95 !important;
+  color: #fff !important;
+  box-shadow: none;
 }
 
 [data-tooltip] {
