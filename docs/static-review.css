@@ -79,21 +79,8 @@ button.active {
   color: #fff;
 }
 
-.review-mode-tabs button.annotate-action {
+.annotate-action {
   min-width: 150px;
-  border-color: #407ca7 !important;
-  background-color: #407ca7 !important;
-  color: #fff !important;
-  box-shadow: none;
-  font-weight: 800;
-}
-
-.review-mode-tabs button.annotate-action:hover,
-.review-mode-tabs button.annotate-action:focus-visible {
-  border-color: #326b95 !important;
-  background-color: #326b95 !important;
-  color: #fff !important;
-  box-shadow: none;
 }
 
 [data-tooltip] {
@@ -215,10 +202,28 @@ button.active {
   width: auto;
   max-height: none;
   overflow: visible;
+  border-color: #407ca7;
+  background: #407ca7;
+  color: #fff;
 }
 
 .feedback-panel.is-collapsed > *:not(.feedback-panel__bar) {
   display: none;
+}
+
+.feedback-panel.is-collapsed .feedback-panel__bar h3 {
+  color: #fff;
+}
+
+.feedback-panel.is-collapsed .feedback-panel__toggle {
+  border-color: rgba(255, 255, 255, .75);
+  background: transparent;
+  color: #fff;
+}
+
+.feedback-panel.is-collapsed .feedback-panel__toggle:hover,
+.feedback-panel.is-collapsed .feedback-panel__toggle:focus-visible {
+  background: rgba(255, 255, 255, .14);
 }
 
 .screen-tabs {
