@@ -110,6 +110,38 @@ function pageNotes(pageId, screenSize) {
   return allNotes().filter(note => note.pageId === pageId && note.screenSize === screenSize);
 }
 
+function syncDebugNotes() {
+  state.notes = state.notes.filter(note => !note.debugSample);
+  if (!state.debugMode || !state.packet) return;
+
+  const samples = [
+    ['JT', 'approved', 'Navigation spacing looks consistent here.', 18, 20, '#b42318'],
+    ['Alex', 'needs-design-changes', 'Please check the alignment of this content block.', 38, 36, '#175cd3'],
+    ['Design', 'approved-after-these-changes', 'This image treatment is close; adjust the crop slightly.', 62, 54, '#067647'],
+    ['MC', 'needs-mobile-review', 'Confirm this area at the mobile breakpoint.', 82, 72, '#7a5af8']
+  ];
+
+  activePages().filter(page => page.type === 'urlCompare').forEach(page => {
+    normalizedScreenSizes(page.screenSizes).forEach(screenSize => {
+      samples.forEach(([reviewerName, status, comment, dotX, dotY, dotColor], index) => {
+        state.notes.push({
+          noteId: `debug_note_${page.pageId}_${screenSize}_${index}`,
+          pageId: page.pageId,
+          screenSize,
+          reviewerName,
+          status,
+          comment,
+          dotX: String(dotX),
+          dotY: String(dotY),
+          dotColor,
+          createdAt: new Date().toISOString(),
+          debugSample: true
+        });
+      });
+    });
+  });
+}
+
 function updateDebug() {
   debugOutput.textContent = JSON.stringify({
     app: 'PIIE Web Reviewer Static Demo',
@@ -645,6 +677,7 @@ function applyAllLayouts() {
 }
 
 function render() {
+  syncDebugNotes();
   const pages = activePages();
   const debugLogo = document.querySelector('#demoDebugLogo');
   if (debugLogo) debugLogo.setAttribute('aria-pressed', state.debugMode ? 'true' : 'false');
@@ -1108,33 +1141,6 @@ document.querySelector('#clearNotes').addEventListener('click', () => {
 
 document.querySelector('#demoDebugLogo').addEventListener('click', event => {
   state.debugMode = !state.debugMode;
-  state.notes = state.notes.filter(note => !note.debugSample);
-
-  const page = activePages().find(item => item.type === 'urlCompare');
-  if (state.debugMode && page) {
-    const screenSize = state.activeSizes[page.pageId] || normalizedScreenSizes(page.screenSizes)[0] || 'desktop';
-    const samples = [
-      ['JT', 'approved', 'Navigation spacing looks consistent here.', 18, 20, '#b42318'],
-      ['Alex', 'needs-design-changes', 'Please check the alignment of this content block.', 38, 36, '#175cd3'],
-      ['Design', 'approved-after-these-changes', 'This image treatment is close; adjust the crop slightly.', 62, 54, '#067647'],
-      ['MC', 'needs-mobile-review', 'Confirm this area at the mobile breakpoint.', 82, 72, '#7a5af8']
-    ];
-    samples.forEach(([reviewerName, status, comment, dotX, dotY, dotColor], index) => {
-      state.notes.push({
-        noteId: `debug_note_${index}`,
-        pageId: page.pageId,
-        screenSize,
-        reviewerName,
-        status,
-        comment,
-        dotX: String(dotX),
-        dotY: String(dotY),
-        dotColor,
-        createdAt: new Date().toISOString(),
-        debugSample: true
-      });
-    });
-  }
 
   event.currentTarget.setAttribute('aria-pressed', state.debugMode ? 'true' : 'false');
   render();

@@ -184,6 +184,8 @@ test('static annotations can be edited, moved, deleted, and debug-seeded', () =>
   assert.match(demo, /data-cancel-pending-pin/);
   assert.match(demo, /movingNoteId/);
   assert.match(demo, /debugSample/);
+  assert.match(demo, /function syncDebugNotes/);
+  assert.match(demo, /normalizedScreenSizes\(page\.screenSizes\)\.forEach\(screenSize/);
   assert.match(index, /id="demoDebugLogo"/);
 });
 
