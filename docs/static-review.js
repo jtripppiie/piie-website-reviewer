@@ -91,10 +91,19 @@ function statusIcon(status) {
   return '!';
 }
 
+function activePages() {
+  return Array.isArray(state.packet?.pages)
+    ? state.packet.pages.filter(page => !page.disabled)
+    : [];
+}
+
 function allNotes() {
   const demoNotes = Array.isArray(state.packet?.seedNotes) ? state.packet.seedNotes : [];
   const cleared = new Set(state.cleared);
-  return [...demoNotes, ...state.notes].filter(note => !cleared.has(note.noteId));
+  const activePageIds = new Set(activePages().map(page => page.pageId));
+  return [...demoNotes, ...state.notes].filter(note =>
+    activePageIds.has(note.pageId) && !cleared.has(note.noteId)
+  );
 }
 
 function pageNotes(pageId, screenSize) {
@@ -109,7 +118,7 @@ function updateDebug() {
     time: new Date().toISOString(),
     packetTitle: state.packet?.title,
     packetId: state.packet?.packetId,
-    pageCount: state.packet?.pages?.length || 0,
+    pageCount: activePages().length,
     activeSizes: state.activeSizes,
     demoNoteCount: state.packet?.seedNotes?.length || 0,
     localNoteCount: state.notes.length,
@@ -463,11 +472,12 @@ function applyAllLayouts() {
 }
 
 function render() {
+  const pages = activePages();
   app.innerHTML = `
-    ${(state.packet.pages || []).map(renderPage).join('')}
+    ${pages.map(renderPage).join('')}
   `;
   const feedbackHost = document.querySelector('#headerFeedback');
-  const feedbackPage = (state.packet.pages || []).find(page => page.type === 'urlCompare');
+  const feedbackPage = pages.find(page => page.type === 'urlCompare');
   if (feedbackHost) {
     const activeSize = feedbackPage
       ? (state.activeSizes[feedbackPage.pageId] || normalizedScreenSizes(feedbackPage.screenSizes)[0] || 'desktop')
@@ -674,7 +684,7 @@ function handleUrlForm(form) {
 }
 
 function renderNotesView() {
-  const pages = Array.isArray(state.packet?.pages) ? state.packet.pages : [];
+  const pages = activePages();
   const notes = allNotes();
 
   const sections = pages.map(page => {

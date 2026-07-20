@@ -72,6 +72,14 @@ test('demo packet.json is valid and well formed', () => {
   }
 });
 
+test('controlled static fallback remains available but disabled', () => {
+  const packet = JSON.parse(read('docs/packet.json'));
+  const controlled = packet.pages.find(page => page.pageId === 'public_controlled_demo_page');
+
+  assert.ok(controlled, 'controlled fallback page should remain in packet data');
+  assert.strictEqual(controlled.disabled, true);
+});
+
 test('quick-update URL contract accepts http(s), same-origin paths, and rejects junk', () => {
   // Mirrors the validation used by the /r/:shareToken/quick-update route.
   const isAllowedReviewUrl = value => {
