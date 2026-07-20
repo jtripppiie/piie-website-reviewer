@@ -428,7 +428,7 @@ function drawDifferenceBoxes(pageEl, differences) {
   }).join('');
 }
 
-async function findVisibleDifferences(pageEl) {
+async function findVisibleDifferences(pageEl, { automatic = false } = {}) {
   const stage = pageEl.querySelector('[data-webpage-compare]');
   const button = pageEl.querySelector('[data-webpage-diff]');
   const frames = pageEl.querySelectorAll('.frame-card iframe');
@@ -438,9 +438,14 @@ async function findVisibleDifferences(pageEl) {
   }
 
   if (button.classList.contains('active')) {
+    if (automatic) return;
     clearDifferenceLayer(pageEl);
     return;
   }
+
+  if (button.disabled) return;
+  button.disabled = true;
+  button.textContent = 'Finding...';
 
   try {
     const dev = visibleElementSnapshot(frames[0]);
@@ -461,11 +466,24 @@ async function findVisibleDifferences(pageEl) {
     button.classList.add('active');
     button.textContent = `${differences.length} differences`;
     applyLayout(pageEl);
-    showDemoToast(differences.length ? `${differences.length} visible differences highlighted.` : 'No visible differences found in the current viewport.');
+    if (!automatic) showDemoToast(differences.length ? `${differences.length} visible differences highlighted.` : 'No visible differences found in the current viewport.');
   } catch {
     clearDifferenceLayer(pageEl);
-    showDemoToast('This external website cannot be inspected by GitHub Pages. Use the local app or captured screenshots for difference highlighting.');
+    if (!automatic) showDemoToast('This external website cannot be inspected by GitHub Pages. Use the local app or captured screenshots for difference highlighting.');
+  } finally {
+    button.disabled = false;
   }
+}
+
+function autoApplyVisibleDifferences(pageEl) {
+  const mode = state.compareModes[pageEl?.dataset.pageId] || 'compare';
+  if (!pageEl || mode !== 'compare') return;
+
+  const attempt = () => {
+    if (pageEl.isConnected) findVisibleDifferences(pageEl, { automatic: true });
+  };
+  pageEl.querySelectorAll('.frame-card iframe').forEach(frame => frame.addEventListener('load', attempt, { once: true }));
+  setTimeout(attempt, 500);
 }
 
 function presetFor(size) {
@@ -650,7 +668,10 @@ function render() {
       statusHost.innerHTML = '';
     }
   }
-  requestAnimationFrame(applyAllLayouts);
+  requestAnimationFrame(() => {
+    applyAllLayouts();
+    document.querySelectorAll('.review-page[data-page-id]').forEach(autoApplyVisibleDifferences);
+  });
   updateDebug();
 }
 
@@ -774,6 +795,7 @@ document.addEventListener('click', event => {
     stage?.classList.toggle('is-slider', mode === 'compare');
     stage?.classList.toggle('is-annotating', mode === 'annotate');
     applyLayout(pageEl);
+    if (mode === 'compare') autoApplyVisibleDifferences(pageEl);
     return;
   }
 
@@ -867,6 +889,8 @@ document.addEventListener('click', event => {
     noteForm.elements.dotX.value = '';
     noteForm.elements.dotY.value = '';
   }
+  applyLayout(pageEl);
+  autoApplyVisibleDifferences(pageEl);
 
   const page = state.packet.pages.find(item => item.pageId === pageId);
   const notesTarget = document.querySelector(`[data-notes-for="${pageId}"]`);

@@ -151,6 +151,8 @@ test('static demo includes interact and compare modes', () => {
   assert.match(demo, /data-annotation-layer/);
   assert.match(demo, /data-webpage-diff/);
   assert.match(demo, /findVisibleDifferences/);
+  assert.match(demo, /autoApplyVisibleDifferences/);
+  assert.match(demo, /findVisibleDifferences\(pageEl, \{ automatic: true \}\)/);
   assert.match(demo, /difference-box/);
   assert.match(demo, /reviewerDotColor/);
   assert.match(demo, /data-pin-tooltip/);
@@ -159,6 +161,7 @@ test('static demo includes interact and compare modes', () => {
   assert.match(demo, /compareMode = state\.compareModes\[page\.pageId\] \|\| 'compare'/);
   assert.match(realReview, /class="active" data-webpage-mode="compare"/);
   assert.match(realReview, /webpage-preview-stage is-slider/);
+  assert.match(read('public/js/review.js'), /autoApplyWebpageDiff/);
   assert.match(index, /id="headerFeedback"/);
   assert.match(index, /id="headerPreviewStatus"/);
   assert.match(demo, /renderFeedbackPanel/);

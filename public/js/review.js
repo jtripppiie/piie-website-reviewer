@@ -367,7 +367,7 @@ function drawWebpageDiff(stage, boxes) {
   stage.classList.add('is-diffing');
 }
 
-async function buildWebpageDiff(stage, modeGroup, diffButton) {
+async function buildWebpageDiff(stage, modeGroup, diffButton, { silent = false } = {}) {
   const devFrame = stage.querySelector('.webpage-frame-card--dev iframe');
   const liveFrame = stage.querySelector('.webpage-frame-card--live iframe');
 
@@ -395,20 +395,34 @@ async function buildWebpageDiff(stage, modeGroup, diffButton) {
     const boxes = mergeDiffBoxes(rawBoxes);
     if (!boxes.length) {
       clearWebpageDiff(stage, modeGroup);
-      showReviewToast('No visible differences found in this viewport.');
+      diffButton.textContent = 'No differences';
+      if (!silent) showReviewToast('No visible differences found in this viewport.');
       return;
     }
 
     drawWebpageDiff(stage, boxes);
     diffButton.classList.add('active');
     diffButton.textContent = `${boxes.length} differences`;
-    showReviewToast(`${boxes.length} visible differences highlighted.`);
+    if (!silent) showReviewToast(`${boxes.length} visible differences highlighted.`);
   } catch (error) {
     clearWebpageDiff(stage, modeGroup);
-    showReviewToast(error.message || 'Could not inspect these previews.');
+    if (!silent) showReviewToast(error.message || 'Could not inspect these previews.');
   } finally {
     diffButton.disabled = false;
   }
+}
+
+function autoApplyWebpageDiff(stage, modeGroup) {
+  const diffButton = modeGroup?.querySelector('[data-webpage-diff]');
+  if (!stage || !diffButton || !stage.classList.contains('is-slider')) return;
+
+  const attempt = () => {
+    if (!stage.isConnected || stage.classList.contains('is-diffing') || diffButton.disabled) return;
+    buildWebpageDiff(stage, modeGroup, diffButton, { silent: true });
+  };
+
+  stage.querySelectorAll('iframe').forEach(frame => frame.addEventListener('load', attempt, { once: true }));
+  setTimeout(attempt, 500);
 }
 
 document.querySelectorAll('[data-webpage-modes]').forEach(modeGroup => {
@@ -457,9 +471,14 @@ document.querySelectorAll('[data-webpage-modes]').forEach(modeGroup => {
       showReviewToast('Click the preview to mark a spot for the active note form.');
     } else {
       removeWebpageMarkLayer(stage);
-      if (mode === 'compare') stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (mode === 'compare') {
+        stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        autoApplyWebpageDiff(stage, modeGroup);
+      }
     }
   });
+
+  autoApplyWebpageDiff(stage, modeGroup);
 });
 
 document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {
@@ -500,6 +519,9 @@ document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {
     });
 
     showSize(size);
+    const modeGroup = slide.querySelector('[data-webpage-modes]');
+    const stage = slide.querySelector('[data-webpage-preview]');
+    if (modeGroup && stage) autoApplyWebpageDiff(stage, modeGroup);
   });
 
   const initial = tabGroup.querySelector('button.active[data-size]') || tabGroup.querySelector('button[data-size]');
