@@ -62,7 +62,8 @@ body {
   height: 44px;
   padding: 3px;
   overflow: hidden;
-  border-color: #407ca7;
+  border: 0;
+  background: transparent;
   color: #407ca7;
   font-weight: 900;
 }
