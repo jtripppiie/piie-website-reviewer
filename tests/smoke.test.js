@@ -128,11 +128,14 @@ test('new reviews support optional automatic URL screenshots', () => {
 
 test('static demo includes interact and compare modes', () => {
   const demo = read('docs/static-review.js');
+  const index = read('docs/index.html');
 
   assert.match(demo, /data-webpage-mode="interact"/);
   assert.match(demo, /data-webpage-mode="compare"/);
   assert.match(demo, /data-webpage-compare/);
   assert.match(demo, /setCompareReveal/);
+  assert.match(index, /id="headerFeedback"/);
+  assert.match(demo, /renderFeedbackPanel/);
 });
 
 test('removeUploadFile only targets files inside data/uploads', () => {

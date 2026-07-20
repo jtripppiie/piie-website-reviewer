@@ -153,6 +153,49 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
+function renderFeedbackPanel(page, activeSize) {
+  const collapsed = Boolean(state.feedbackCollapsed[page.pageId]);
+  return `
+    <aside class="feedback-panel${collapsed ? ' is-collapsed' : ''}" data-feedback-panel data-feedback-page="${escapeHtml(page.pageId)}">
+      <div class="feedback-panel__bar">
+        <h3>Review Results</h3>
+        <button type="button" class="feedback-panel__toggle" data-feedback-toggle aria-expanded="${collapsed ? 'false' : 'true'}">
+          ${collapsed ? 'Expand' : 'Collapse'}
+        </button>
+      </div>
+      <div data-notes-for="${escapeHtml(page.pageId)}">${renderNotes(page, activeSize)}</div>
+
+      <button type="button" class="demo-clear" data-clear-notes="${escapeHtml(page.pageId)}">Clear results for this screen size</button>
+
+      <form class="feedback-form" data-note-form="${escapeHtml(page.pageId)}">
+        <input type="hidden" name="screenSize" value="${escapeHtml(activeSize)}">
+
+        <label>
+          Reviewer name or initials
+          <input type="text" name="reviewerName" required>
+        </label>
+
+        <label>
+          Status
+          <select name="status">
+            <option value="approved">Approved</option>
+            <option value="approved-after-these-changes">Approved after these changes</option>
+            <option value="needs-design-changes">Needs design changes</option>
+            <option value="needs-mobile-review">Needs mobile review</option>
+          </select>
+        </label>
+
+        <label>
+          Comment
+          <textarea name="comment"></textarea>
+        </label>
+
+        <button type="submit">Save note</button>
+      </form>
+    </aside>
+  `;
+}
+
 function renderPage(page, index) {
   const sizes = normalizedScreenSizes(page.screenSizes);
   const activeSize = state.activeSizes[page.pageId] || sizes[0] || 'desktop';
@@ -200,44 +243,6 @@ function renderPage(page, index) {
           </form>
           <button type="button" class="quick-edit__fill" data-fill-sample>Fill a sample review note</button>
         </div>
-
-        <aside class="feedback-panel${state.feedbackCollapsed[page.pageId] ? ' is-collapsed' : ''}" data-feedback-panel>
-          <div class="feedback-panel__bar">
-            <h3>Review Results</h3>
-            <button type="button" class="feedback-panel__toggle" data-feedback-toggle aria-expanded="${state.feedbackCollapsed[page.pageId] ? 'false' : 'true'}">
-              ${state.feedbackCollapsed[page.pageId] ? 'Expand' : 'Collapse'}
-            </button>
-          </div>
-          <div data-notes-for="${escapeHtml(page.pageId)}">${renderNotes(page, activeSize)}</div>
-
-          <button type="button" class="demo-clear" data-clear-notes="${escapeHtml(page.pageId)}">Clear results for this screen size</button>
-
-          <form class="feedback-form" data-note-form="${escapeHtml(page.pageId)}">
-            <input type="hidden" name="screenSize" value="${escapeHtml(activeSize)}">
-
-            <label>
-              Reviewer name or initials
-              <input type="text" name="reviewerName" required>
-            </label>
-
-            <label>
-              Status
-              <select name="status">
-                <option value="approved">Approved</option>
-                <option value="approved-after-these-changes">Approved after these changes</option>
-                <option value="needs-design-changes">Needs design changes</option>
-                <option value="needs-mobile-review">Needs mobile review</option>
-              </select>
-            </label>
-
-            <label>
-              Comment
-              <textarea name="comment"></textarea>
-            </label>
-
-            <button type="submit">Save note</button>
-          </form>
-        </aside>
 
         <nav class="screen-tabs" aria-label="Screen size">
           ${sizes.map(size => `<button type="button" data-size="${escapeHtml(size)}" ${size === activeSize ? 'class="active"' : ''}>${escapeHtml(screenSizeLabel(size))}</button>`).join('')}
@@ -459,19 +464,27 @@ function render() {
   app.innerHTML = `
     ${(state.packet.pages || []).map(renderPage).join('')}
   `;
+  const feedbackHost = document.querySelector('#headerFeedback');
+  const feedbackPage = (state.packet.pages || []).find(page => page.type === 'urlCompare');
+  if (feedbackHost) {
+    const activeSize = feedbackPage
+      ? (state.activeSizes[feedbackPage.pageId] || normalizedScreenSizes(feedbackPage.screenSizes)[0] || 'desktop')
+      : 'desktop';
+    feedbackHost.innerHTML = feedbackPage ? renderFeedbackPanel(feedbackPage, activeSize) : '';
+  }
   requestAnimationFrame(applyAllLayouts);
   updateDebug();
 }
 
-app.addEventListener('click', event => {
+document.addEventListener('click', event => {
   const feedbackToggle = event.target.closest('[data-feedback-toggle]');
   if (feedbackToggle) {
     const panel = feedbackToggle.closest('[data-feedback-panel]');
-    const pageEl = feedbackToggle.closest('.review-page[data-page-id]');
-    if (!panel || !pageEl) return;
+    const pageId = panel?.dataset.feedbackPage;
+    if (!panel || !pageId) return;
 
     const collapsed = panel.classList.toggle('is-collapsed');
-    state.feedbackCollapsed[pageEl.dataset.pageId] = collapsed;
+    state.feedbackCollapsed[pageId] = collapsed;
     feedbackToggle.textContent = collapsed ? 'Expand' : 'Collapse';
     feedbackToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     return;
@@ -485,7 +498,6 @@ app.addEventListener('click', event => {
 
   const clearButton = event.target.closest('button[data-clear-notes]');
   if (clearButton) {
-    const pageEl = clearButton.closest('.review-page');
     const pageId = clearButton.dataset.clearNotes;
     const size = state.activeSizes[pageId] || 'desktop';
 
@@ -545,11 +557,11 @@ app.addEventListener('click', event => {
     tab.classList.toggle('active', tab === button);
   });
 
-  const hidden = pageEl.querySelector('input[name="screenSize"]');
+  const hidden = document.querySelector(`[data-note-form="${pageId}"] input[name="screenSize"]`);
   if (hidden) hidden.value = size;
 
   const page = state.packet.pages.find(item => item.pageId === pageId);
-  const notesTarget = pageEl.querySelector(`[data-notes-for="${pageId}"]`);
+  const notesTarget = document.querySelector(`[data-notes-for="${pageId}"]`);
   if (page && notesTarget) notesTarget.innerHTML = renderNotes(page, size);
 
   applyLayout(pageEl);
@@ -594,7 +606,7 @@ window.addEventListener('resize', () => {
   document.querySelectorAll('.review-page[data-page-id]').forEach(applyLayout);
 });
 
-app.addEventListener('submit', event => {
+document.addEventListener('submit', event => {
   const urlForm = event.target.closest('[data-url-form]');
   if (urlForm) {
     event.preventDefault();

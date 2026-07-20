@@ -32,6 +32,17 @@ body {
   z-index: 50;
 }
 
+.header-feedback {
+  display: flex;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.header-feedback .feedback-panel {
+  justify-self: auto;
+  margin: 0;
+}
+
 .eyebrow {
   margin: 0 0 4px;
   color: var(--blue);
