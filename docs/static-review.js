@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '1.1.6';
+const APP_VERSION = '1.1.7';
 
 const PRESETS = {
   desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
@@ -340,7 +340,7 @@ function renderPage(page, index) {
             <button type="button" data-webpage-mode="interact" hidden disabled aria-hidden="true">Interact</button>
             <button type="button" data-webpage-mode="compare" title="Stack Dev and Live together and drag the slider to compare visual differences." data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences." class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
             <button type="button" data-webpage-mode="annotate" title="Click a spot on the preview, then save a note pinned to that location." data-tooltip="Click a spot on the preview, then save a note pinned to that location." class="${compareMode === 'annotate' ? 'active' : ''}">Annotate</button>
-            <button type="button" data-webpage-diff title="Highlight visible differences when both previews can be inspected by this page." data-tooltip="Highlight visible differences when both previews can be inspected by this page.">Find differences</button>
+            <button type="button" data-webpage-diff title="Highlight visible differences when both previews can be inspected by this page." data-tooltip="Highlight visible differences when both previews can be inspected by this page.">Highlight differences</button>
           </nav>
         </div>
 
@@ -413,7 +413,7 @@ function clearDifferenceLayer(pageEl) {
   const button = pageEl?.querySelector('[data-webpage-diff]');
   if (button) {
     button.classList.remove('active');
-    button.textContent = 'Find differences';
+    button.textContent = 'Highlight differences';
   }
 }
 
@@ -465,7 +465,7 @@ async function findVisibleDifferences(pageEl, { automatic = false } = {}) {
   const button = pageEl.querySelector('[data-webpage-diff]');
   const frames = pageEl.querySelectorAll('.frame-card iframe');
   if (!stage || !button || frames.length < 2) {
-    showDemoToast('Both Dev and Live previews are required to find differences.');
+    showDemoToast('Both Dev and Live previews are required to highlight differences.');
     return;
   }
 
@@ -477,7 +477,7 @@ async function findVisibleDifferences(pageEl, { automatic = false } = {}) {
 
   if (button.disabled) return;
   button.disabled = true;
-  button.textContent = 'Finding...';
+  button.textContent = 'Highlighting...';
 
   try {
     const dev = visibleElementSnapshot(frames[0]);

@@ -159,6 +159,9 @@ test('static demo includes interact and compare modes', () => {
   assert.match(demo, /<h3>Add Notes<\/h3>/);
   assert.match(demo, /data-annotation-layer/);
   assert.match(demo, /data-webpage-diff/);
+  assert.match(demo, />Highlight differences<\/button>/);
+  assert.doesNotMatch(demo, />Find differences<\/button>/);
+  assert.match(realReview, />Highlight differences<\/button>/);
   assert.match(demo, /findVisibleDifferences/);
   assert.match(demo, /autoApplyVisibleDifferences/);
   assert.match(demo, /findVisibleDifferences\(pageEl, \{ automatic: true \}\)/);

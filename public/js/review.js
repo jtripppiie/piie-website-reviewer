@@ -140,7 +140,7 @@ function resetWebpageDiffButton(modeGroup) {
   if (!diffButton) return;
 
   diffButton.classList.remove('active');
-  diffButton.textContent = 'Find differences';
+  diffButton.textContent = 'Highlight differences';
   diffButton.disabled = false;
 }
 
@@ -372,7 +372,7 @@ async function buildWebpageDiff(stage, modeGroup, diffButton, { silent = false }
   const liveFrame = stage.querySelector('.webpage-frame-card--live iframe');
 
   diffButton.disabled = true;
-  diffButton.textContent = 'Finding...';
+  diffButton.textContent = 'Highlighting...';
 
   try {
     await Promise.all([
