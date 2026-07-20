@@ -677,7 +677,6 @@ function applyAllLayouts() {
 }
 
 function render() {
-  syncDebugNotes();
   const pages = activePages();
   const debugLogo = document.querySelector('#demoDebugLogo');
   if (debugLogo) debugLogo.setAttribute('aria-pressed', state.debugMode ? 'true' : 'false');
@@ -761,8 +760,9 @@ document.addEventListener('click', event => {
     state.movingNoteId = note.noteId;
     state.selectedNoteId = null;
     state.compareModes[note.pageId] = 'annotate';
-    state.feedbackCollapsed[note.pageId] = false;
+    state.feedbackCollapsed[note.pageId] = true;
     render();
+    showDemoToast('Move mode: click the new pin location.');
     return;
   }
 
@@ -857,8 +857,10 @@ document.addEventListener('click', event => {
         note.dotY = dotY.toFixed(2);
         state.selectedNoteId = note.noteId;
         state.movingNoteId = null;
+        state.feedbackCollapsed[pageId] = false;
         saveNotes();
         render();
+        showDemoToast('Pin moved.');
         return;
       }
     }
@@ -1141,6 +1143,7 @@ document.querySelector('#clearNotes').addEventListener('click', () => {
 
 document.querySelector('#demoDebugLogo').addEventListener('click', event => {
   state.debugMode = !state.debugMode;
+  syncDebugNotes();
 
   event.currentTarget.setAttribute('aria-pressed', state.debugMode ? 'true' : 'false');
   render();
@@ -1238,6 +1241,7 @@ fetch('packet.json')
   .then(packet => {
     state.packet = packet;
     applyUrlOverrides();
+    syncDebugNotes();
     render();
   })
   .catch(error => {
