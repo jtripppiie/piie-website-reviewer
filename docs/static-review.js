@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.1.1';
 
 const PRESETS = {
   desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
@@ -337,7 +337,7 @@ function renderPage(page, index) {
           </nav>
           <span class="review-control-label">Review mode</span>
           <nav class="screen-tabs review-mode-tabs" aria-label="Review mode">
-            <button type="button" data-webpage-mode="interact" title="Use Dev and Live separately. Scroll, click links, and test menus in each preview." data-tooltip="Use Dev and Live separately. Scroll, click links, and test menus in each preview." class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
+            <button type="button" data-webpage-mode="interact" hidden disabled aria-hidden="true">Interact</button>
             <button type="button" data-webpage-mode="compare" title="Stack Dev and Live together and drag the slider to compare visual differences." data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences." class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
             <button type="button" data-webpage-mode="annotate" title="Click a spot on the preview, then save a note pinned to that location." data-tooltip="Click a spot on the preview, then save a note pinned to that location." class="${compareMode === 'annotate' ? 'active' : ''}">Annotate</button>
             <button type="button" data-webpage-diff title="Highlight visible differences when both previews can be inspected by this page." data-tooltip="Highlight visible differences when both previews can be inspected by this page.">Find differences</button>
@@ -522,6 +522,12 @@ function presetFor(size) {
   return PRESETS[size] || PRESETS.desktop;
 }
 
+function closestPresetForBrowser() {
+  return Object.values(PRESETS).reduce((closest, preset) =>
+    Math.abs(preset.w - window.innerWidth) < Math.abs(closest.w - window.innerWidth) ? preset : closest
+  , PRESETS.desktop);
+}
+
 function normalizedScreenSizes(sizes) {
   const defaults = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
   const result = [];
@@ -648,9 +654,12 @@ function applyLayout(pageEl) {
 
   const status = document.querySelector(`[data-status-for="${pageId}"]`);
   if (status) {
+    const closestPreset = closestPresetForBrowser();
     const rows = [
       `<p><strong>Selected review size:</strong> ${escapeHtml(preset.label)}</p>`,
-      `<p><strong>Test viewport:</strong> ${preset.w} x ${preset.h} CSS px</p>`
+      `<p><strong>Test viewport:</strong> ${preset.w} x ${preset.h} CSS px</p>`,
+      `<p><strong>Your browser viewport:</strong> ${Math.round(window.innerWidth)} x ${Math.round(window.innerHeight)} CSS px</p>`,
+      `<p><strong>Closest review preset:</strong> ${escapeHtml(closestPreset.label)} (based on browser width)</p>`
     ];
     if (screenshotLine) {
       const isMismatch = /Match: no/.test(screenshotLine);
@@ -675,6 +684,8 @@ function applyAllLayouts() {
     });
   });
 }
+
+window.visualViewport?.addEventListener('resize', applyAllLayouts);
 
 function render() {
   const pages = activePages();
@@ -704,6 +715,24 @@ function render() {
     applyAllLayouts();
     document.querySelectorAll('.review-page[data-page-id]').forEach(autoApplyVisibleDifferences);
   });
+  updateDebug();
+}
+
+function refreshPageNotesUi(pageId) {
+  const page = activePages().find(item => item.pageId === pageId);
+  if (!page) return;
+  const size = state.activeSizes[pageId] || normalizedScreenSizes(page.screenSizes)[0] || 'desktop';
+  const pageEl = document.querySelector(`.review-page[data-page-id="${pageId}"]`);
+  const notesTarget = document.querySelector(`[data-notes-for="${pageId}"]`);
+  const dotsTarget = pageEl?.querySelector('[data-annotation-dots]');
+  const feedbackPage = activePages().find(item => item.type === 'urlCompare');
+  const feedbackHost = document.querySelector('#headerFeedback');
+
+  if (notesTarget) notesTarget.innerHTML = renderNotes(page, size);
+  if (dotsTarget) dotsTarget.innerHTML = renderAnnotationDots(page, size);
+  if (feedbackHost && feedbackPage?.pageId === pageId) {
+    feedbackHost.innerHTML = renderFeedbackPanel(page, size);
+  }
   updateDebug();
 }
 
@@ -754,7 +783,7 @@ app.addEventListener('pointerdown', event => {
     state.feedbackCollapsed[note.pageId] = false;
     suppressPinClickUntil = Date.now() + 500;
     saveNotes();
-    render();
+    refreshPageNotesUi(note.pageId);
     showDemoToast('Pin moved.');
   }
 
@@ -764,7 +793,8 @@ app.addEventListener('pointerdown', event => {
     pin.removeEventListener('pointercancel', cancel);
     pin.classList.remove('is-dragging');
     draggedPinId = null;
-    render();
+    pin.style.left = `${note.dotX}%`;
+    pin.style.top = `${note.dotY}%`;
   }
 
   pin.setPointerCapture(event.pointerId);
@@ -785,7 +815,7 @@ document.addEventListener('click', event => {
     state.selectedNoteId = note.noteId;
     state.movingNoteId = null;
     state.feedbackCollapsed[note.pageId] = false;
-    render();
+    refreshPageNotesUi(note.pageId);
     return;
   }
 
@@ -807,8 +837,9 @@ document.addEventListener('click', event => {
 
   const cancelEdit = event.target.closest('[data-cancel-note-edit]');
   if (cancelEdit) {
+    const pageId = cancelEdit.closest('[data-feedback-page]')?.dataset.feedbackPage;
     state.selectedNoteId = null;
-    render();
+    if (pageId) refreshPageNotesUi(pageId);
     return;
   }
 
@@ -819,7 +850,7 @@ document.addEventListener('click', event => {
     state.notes = state.notes.filter(item => item.noteId !== note.noteId);
     state.selectedNoteId = null;
     saveNotes();
-    render();
+    refreshPageNotesUi(note.pageId);
     return;
   }
 
@@ -831,14 +862,23 @@ document.addEventListener('click', event => {
     state.selectedNoteId = null;
     state.compareModes[note.pageId] = 'annotate';
     state.feedbackCollapsed[note.pageId] = true;
-    render();
+    const pageEl = document.querySelector(`.review-page[data-page-id="${note.pageId}"]`);
+    const stage = pageEl?.querySelector('[data-webpage-compare]');
+    pageEl?.querySelectorAll('[data-webpage-mode]').forEach(button => {
+      button.classList.toggle('active', button.dataset.webpageMode === 'annotate');
+    });
+    stage?.classList.remove('is-slider');
+    stage?.classList.add('is-annotating');
+    clearDifferenceLayer(pageEl);
+    refreshPageNotesUi(note.pageId);
     showDemoToast('Move mode: click the new pin location.');
     return;
   }
 
   if (event.target.closest('[data-cancel-note-move]')) {
+    const pageId = event.target.closest('[data-feedback-page]')?.dataset.feedbackPage;
     state.movingNoteId = null;
-    render();
+    if (pageId) refreshPageNotesUi(pageId);
     return;
   }
 
@@ -879,7 +919,7 @@ document.addEventListener('click', event => {
 
     saveCleared();
     saveNotes();
-    render();
+    refreshPageNotesUi(pageId);
     return;
   }
 
@@ -929,7 +969,7 @@ document.addEventListener('click', event => {
         state.movingNoteId = null;
         state.feedbackCollapsed[pageId] = false;
         saveNotes();
-        render();
+        refreshPageNotesUi(pageId);
         showDemoToast('Pin moved.');
         return;
       }
@@ -1058,7 +1098,7 @@ document.addEventListener('submit', event => {
     note.updatedAt = new Date().toISOString();
     state.selectedNoteId = null;
     saveNotes();
-    render();
+    refreshPageNotesUi(note.pageId);
     return;
   }
 
@@ -1091,8 +1131,7 @@ document.addEventListener('submit', event => {
 
   delete state.pendingDots[pageId];
   saveNotes();
-  form.reset();
-  render();
+  refreshPageNotesUi(pageId);
 });
 
 // Apply a URL edit from the demo quick-edit panel. Preview only - it updates
@@ -1211,14 +1250,26 @@ document.querySelector('#clearNotes').addEventListener('click', () => {
   render();
 });
 
-document.querySelector('#demoDebugLogo').addEventListener('click', event => {
-  state.debugMode = !state.debugMode;
-  syncDebugNotes();
+{
+  const debugLogo = document.querySelector('#demoDebugLogo');
+  let debugLogoClicks = 0;
+  let debugLogoTimer = null;
 
-  event.currentTarget.setAttribute('aria-pressed', state.debugMode ? 'true' : 'false');
-  render();
-  showDemoToast(state.debugMode ? 'Debug notes enabled.' : 'Debug notes hidden.');
-});
+  debugLogo.addEventListener('click', event => {
+    debugLogoClicks += 1;
+    clearTimeout(debugLogoTimer);
+    debugLogoTimer = setTimeout(() => { debugLogoClicks = 0; }, 700);
+    if (debugLogoClicks < 3) return;
+
+    debugLogoClicks = 0;
+    clearTimeout(debugLogoTimer);
+    state.debugMode = !state.debugMode;
+    syncDebugNotes();
+    event.currentTarget.setAttribute('aria-pressed', state.debugMode ? 'true' : 'false');
+    render();
+    showDemoToast(state.debugMode ? 'Debug notes enabled.' : 'Debug notes hidden.');
+  });
+}
 
 // Hidden demo helper: triple-click the title to auto-fill every feedback form
 // with sample data so the demo is quick to show without typing it all out.

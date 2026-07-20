@@ -226,12 +226,17 @@
 
     const scalers = slide.querySelectorAll('.viewport-scaler');
     const verifyText = scalers.length ? verifyIframe(scalers[0], preset) : '';
+    const closestPreset = Object.entries(PRESETS).filter(([key]) => key !== 'desktop-1440').map(([, candidate]) => candidate).reduce((closest, candidate) =>
+      Math.abs(candidate.w - window.innerWidth) < Math.abs(closest.w - window.innerWidth) ? candidate : closest
+    , PRESETS.desktop);
 
     status.innerHTML = '';
 
     const lines = [
       ['Selected review size', preset.label],
       ['Test viewport', `${preset.w} x ${preset.h} CSS px`],
+      ['Your browser viewport', `${Math.round(window.innerWidth)} x ${Math.round(window.innerHeight)} CSS px`],
+      ['Closest review preset', `${closestPreset.label} (based on browser width)`],
       ['Preview scale', scaleText]
     ];
 
@@ -320,4 +325,5 @@
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(reflowAll, 150);
   });
+  window.visualViewport?.addEventListener('resize', reflowAll);
 })();

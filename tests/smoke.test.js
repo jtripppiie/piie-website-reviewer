@@ -147,7 +147,7 @@ test('static demo includes interact and compare modes', () => {
   assert.match(demo, /data-webpage-mode="compare"/);
   assert.match(demo, /data-webpage-compare/);
   assert.match(demo, /setCompareReveal/);
-  assert.match(demo, /data-webpage-mode="interact" title=.*data-tooltip=/);
+  assert.match(demo, /data-webpage-mode="interact" hidden disabled aria-hidden="true"/);
   assert.match(demo, /data-webpage-mode="compare" title=.*data-tooltip=/);
   assert.match(demo, /data-webpage-mode="annotate" title=.*data-tooltip=/);
   assert.match(demo, />Annotate<\/button>/);
@@ -160,7 +160,7 @@ test('static demo includes interact and compare modes', () => {
   assert.match(demo, /difference-box/);
   assert.match(demo, /reviewerDotColor/);
   assert.match(demo, /data-pin-tooltip/);
-  assert.match(realReview, /data-webpage-mode="interact" title=.*data-tooltip=/);
+  assert.match(realReview, /data-webpage-mode="interact" hidden disabled aria-hidden="true"/);
   assert.match(realReview, /data-webpage-mode="compare" title=.*data-tooltip=/);
   assert.match(demo, /compareMode = state\.compareModes\[page\.pageId\] \|\| 'compare'/);
   assert.match(realReview, /class="active" data-webpage-mode="compare"/);
@@ -195,6 +195,11 @@ test('static annotations can be edited, moved, deleted, and debug-seeded', () =>
   assert.match(demo, /function syncDebugNotes/);
   assert.match(demo, /normalizedScreenSizes\(page\.screenSizes\)\.forEach\(screenSize/);
   assert.doesNotMatch(demo, /function render\(\) \{\s+syncDebugNotes\(\)/);
+  assert.match(demo, /if \(debugLogoClicks < 3\) return;/);
+  assert.match(demo, /function refreshPageNotesUi/);
+  assert.match(demo, /Your browser viewport:/);
+  assert.match(demo, /Closest review preset:/);
+  assert.match(read('public/js/force-preview-layout.js'), /Your browser viewport/);
   assert.match(index, /id="demoDebugLogo"/);
 });
 
