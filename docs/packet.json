@@ -11,7 +11,7 @@
       "instructions": "This real public site is the default demo because it currently allows iframe embedding and gives reviewers a more realistic page to inspect.",
       "devUrl": "https://nelsonengineeringalaska.com/",
       "liveUrl": "https://nelsonengineeringalaska.com/",
-      "screenSizes": ["desktop", "desktop-1440", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
+      "screenSizes": ["desktop", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
     },
     {
       "pageId": "public_controlled_demo_page",
@@ -21,7 +21,7 @@
       "instructions": "These same-origin demo files embed reliably on GitHub Pages and stay available as a fallback if a third-party site changes its iframe policy.",
       "devUrl": "demo-dev.html",
       "liveUrl": "demo-live.html",
-      "screenSizes": ["desktop", "desktop-1440", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
+      "screenSizes": ["desktop", "laptop-15-6", "laptop-14-5", "laptop-13", "mobile"]
     }
   ],
   "seedNotes": [
@@ -40,7 +40,7 @@
       "screenSize": "desktop",
       "reviewerName": "Design",
       "status": "approved-after-these-changes",
-      "comment": "Try the Full desktop and 1440 desktop tabs to show how the review viewport changes.",
+      "comment": "Try the screen-size buttons to see how the review viewport changes.",
       "createdAt": "2026-06-23T20:05:00.000Z"
     },
     {

@@ -90,7 +90,7 @@ site.
 
 On URL compare pages, the admin edit screen also has **Screenshot fallbacks by
 screen size**. When you want static review assets, you can capture or hand-upload
-a Dev and Live screenshot for each size (Full desktop, 1440 desktop, 15.6, 14.5,
+a Dev and Live screenshot for each size (Full desktop, 15.6, 14.5,
 13, Mobile). Each screenshot also has a **View at 100%** link that opens it at
 its true native size in a new tab.
 

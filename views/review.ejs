@@ -21,7 +21,6 @@
         function screenSizeLabel(size) {
           const labels = {
             desktop: 'Full desktop',
-            'desktop-1440': '1440 desktop',
             'laptop-15-6': '15.6 display',
             'laptop-14-5': '14.5 display',
             'laptop-13': '13 display',
@@ -31,13 +30,12 @@
           return labels[size] || size;
         }
 
-        const defaultScreenSizes = ['desktop', 'desktop-1440', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+        const defaultScreenSizes = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
         function normalizedScreenSizes(sizes) {
           const result = [];
           const source = Array.isArray(sizes) && sizes.length ? sizes : defaultScreenSizes;
-          source.filter(size => size !== 'tablet').forEach(size => {
+          source.filter(size => size !== 'tablet' && size !== 'desktop-1440').forEach(size => {
             if (!result.includes(size)) result.push(size);
-            if (size === 'desktop' && !result.includes('desktop-1440')) result.push('desktop-1440');
           });
           defaultScreenSizes.forEach(size => {
             if (!result.includes(size)) result.push(size);

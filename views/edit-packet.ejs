@@ -151,7 +151,7 @@
               <% } %>
 
               <% if (page.type === 'imageCompare') { %>
-                <% const presetList = [['desktop','Full desktop'],['desktop-1440','1440 desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
+                <% const presetList = [['desktop','Full desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
                 <p class="muted">This page is one image comparison: one Before image and one After image.</p>
                 <label>
                   Instructions
@@ -192,7 +192,7 @@
 
                 <details class="advanced-tools">
                   <summary>Optional per-size image uploads</summary>
-                  <p class="muted">Upload separate Before and After images for Full desktop, 1440, laptop sizes, and Mobile only when you need size-specific assets.</p>
+                  <p class="muted">Upload separate Before and After images for Full desktop, laptop sizes, and Mobile only when you need size-specific assets.</p>
                   <form method="post" action="/admin/packets/<%= packet.packetId %>/pages/<%= page.pageId %>/upload-shots?key=<%= encodeURIComponent(key) %>" enctype="multipart/form-data">
                     <input type="hidden" name="key" value="<%= key %>">
                     <% presetList.forEach(([sizeKey, sizeLabel]) => { %>
@@ -268,7 +268,7 @@
             </form>
 
             <% if (page.type === 'urlCompare' || page.type === 'imageCompare') { %>
-              <% const highlightPresetList = [['desktop','Full desktop'],['desktop-1440','1440 desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
+              <% const highlightPresetList = [['desktop','Full desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
               <details class="advanced-tools highlight-admin">
                 <summary>Reviewer highlights</summary>
                 <p class="muted">Add saved callouts that reviewers will see on this comparison. Positions are percentages of the preview area.</p>
@@ -338,7 +338,7 @@
                   <p class="muted">Last captured: <%= page.capturedAt %></p>
                 <% } %>
 
-                <% const presetList = [['desktop','Full desktop'],['desktop-1440','1440 desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
+                <% const presetList = [['desktop','Full desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
 
                 <% if (page.devShots || page.liveShots) { %>
                   <div class="capture-grid">

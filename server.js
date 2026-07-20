@@ -205,7 +205,7 @@ const DEFAULT_DEV_URL = DEFAULT_DEMO_URL;
 const DEFAULT_LIVE_URL = DEFAULT_DEMO_URL;
 const TEST_DEV_URL = '/public/demo/dev-home.html';
 const TEST_LIVE_URL = '/public/demo/live-home.html';
-const DEFAULT_SCREEN_SIZES = ['desktop', 'desktop-1440', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+const DEFAULT_SCREEN_SIZES = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
 
 function isAllowedReviewUrl(value) {
   const trimmed = (value || '').trim();
@@ -224,11 +224,8 @@ function normalizedScreenSizes(sizes = DEFAULT_SCREEN_SIZES) {
   const source = Array.isArray(sizes) && sizes.length ? sizes : DEFAULT_SCREEN_SIZES;
   const normalized = [];
 
-  source.filter(size => size !== 'tablet').forEach(size => {
+  source.filter(size => size !== 'tablet' && size !== 'desktop-1440').forEach(size => {
     if (!normalized.includes(size)) normalized.push(size);
-    if (size === 'desktop' && !normalized.includes('desktop-1440')) {
-      normalized.push('desktop-1440');
-    }
   });
 
   DEFAULT_SCREEN_SIZES.forEach(size => {

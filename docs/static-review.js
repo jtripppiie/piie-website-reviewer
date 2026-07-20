@@ -6,7 +6,6 @@ const APP_VERSION = '1.0.0';
 
 const PRESETS = {
   desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
-  'desktop-1440': { label: '1440 desktop', w: 1440, h: 900 },
   'laptop-15-6': { label: '15.6 display', w: 1366, h: 768 },
   'laptop-14-5': { label: '14.5 display', w: 1280, h: 760 },
   'laptop-13': { label: '13 display', w: 1180, h: 720 },
@@ -66,7 +65,6 @@ function applyUrlOverrides() {
 function screenSizeLabel(size) {
   return {
     desktop: 'Full desktop',
-    'desktop-1440': '1440 desktop',
     'laptop-15-6': '15.6 display',
     'laptop-14-5': '14.5 display',
     'laptop-13': '13 display',
@@ -475,12 +473,11 @@ function presetFor(size) {
 }
 
 function normalizedScreenSizes(sizes) {
-  const defaults = ['desktop', 'desktop-1440', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
+  const defaults = ['desktop', 'laptop-15-6', 'laptop-14-5', 'laptop-13', 'mobile'];
   const result = [];
   const source = Array.isArray(sizes) && sizes.length ? sizes : defaults;
-  source.filter(size => size !== 'tablet').forEach(size => {
+  source.filter(size => size !== 'tablet' && size !== 'desktop-1440').forEach(size => {
     if (!result.includes(size)) result.push(size);
-    if (size === 'desktop' && !result.includes('desktop-1440')) result.push('desktop-1440');
   });
   defaults.forEach(size => {
     if (!result.includes(size)) result.push(size);

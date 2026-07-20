@@ -9,7 +9,7 @@ A short log of notable changes. See `README.md` for full setup and usage.
 - The default demo URL remains the Nelson Structural site.
 - Admin also has a local testing mode that uses `public/demo/dev-home.html` and
   `public/demo/live-home.html` for a predictable same-origin dry run.
-- Reviewers can work by screen size: Full desktop, 1440 desktop, 15.6 display,
+- Reviewers can work by screen size: Full desktop, 15.6 display,
   14.5 display, 13 display, and Mobile.
 
 ## Reliability and security
