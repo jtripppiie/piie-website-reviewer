@@ -268,8 +268,6 @@ function renderPage(page, index) {
           </nav>
         </div>
 
-        <div class="preview-status" data-status-for="${escapeHtml(page.pageId)}" aria-live="polite"></div>
-
         <div class="preview-stage${compareMode === 'compare' ? ' is-slider' : ''}${compareMode === 'annotate' ? ' is-annotating' : ''}" data-webpage-compare>
           <article class="frame-card frame-card--dev">
             <div class="frame-card__header">
@@ -457,7 +455,7 @@ function applyLayout(pageEl) {
     scaler.style.setProperty('max-width', '100%', 'important');
   });
 
-  const status = pageEl.querySelector(`[data-status-for="${pageId}"]`);
+  const status = document.querySelector(`[data-status-for="${pageId}"]`);
   if (status) {
     const rows = [
       `<p><strong>Selected review size:</strong> ${escapeHtml(preset.label)}</p>`,
@@ -493,12 +491,21 @@ function render() {
     ${pages.map(renderPage).join('')}
   `;
   const feedbackHost = document.querySelector('#headerFeedback');
+  const statusHost = document.querySelector('#headerPreviewStatus');
   const feedbackPage = pages.find(page => page.type === 'urlCompare');
   if (feedbackHost) {
     const activeSize = feedbackPage
       ? (state.activeSizes[feedbackPage.pageId] || normalizedScreenSizes(feedbackPage.screenSizes)[0] || 'desktop')
       : 'desktop';
     feedbackHost.innerHTML = feedbackPage ? renderFeedbackPanel(feedbackPage, activeSize) : '';
+  }
+  if (statusHost) {
+    if (feedbackPage) {
+      statusHost.dataset.statusFor = feedbackPage.pageId;
+    } else {
+      delete statusHost.dataset.statusFor;
+      statusHost.innerHTML = '';
+    }
   }
   requestAnimationFrame(applyAllLayouts);
   updateDebug();

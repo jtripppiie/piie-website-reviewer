@@ -43,6 +43,26 @@ body {
   margin: 0;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.header-preview-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 7px 10px;
+}
+
+.header-preview-status p {
+  margin: 0;
+}
+
 .eyebrow {
   margin: 0 0 4px;
   color: var(--blue);

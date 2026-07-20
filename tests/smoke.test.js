@@ -154,6 +154,7 @@ test('static demo includes interact and compare modes', () => {
   assert.match(realReview, /data-webpage-mode="interact" title=.*data-tooltip=/);
   assert.match(realReview, /data-webpage-mode="compare" title=.*data-tooltip=/);
   assert.match(index, /id="headerFeedback"/);
+  assert.match(index, /id="headerPreviewStatus"/);
   assert.match(demo, /renderFeedbackPanel/);
 });
 
