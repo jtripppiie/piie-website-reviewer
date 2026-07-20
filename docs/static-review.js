@@ -245,19 +245,15 @@ function renderPage(page, index) {
         </div>
 
         <div class="review-controls">
-          <div class="review-control-row">
-            <span class="review-control-label">Screen size</span>
-            <nav class="screen-tabs screen-size-tabs" aria-label="Screen size">
-              ${sizes.map(size => `<button type="button" data-size="${escapeHtml(size)}" ${size === activeSize ? 'class="active"' : ''}>${escapeHtml(screenSizeLabel(size))}</button>`).join('')}
-            </nav>
-          </div>
-          <div class="review-control-row">
-            <span class="review-control-label">Review mode</span>
-            <nav class="screen-tabs review-mode-tabs" aria-label="Review mode">
-              <button type="button" data-webpage-mode="interact" data-tooltip="Use Dev and Live separately. Scroll, click links, and test menus in each preview." class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
-              <button type="button" data-webpage-mode="compare" data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences." class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
-            </nav>
-          </div>
+          <span class="review-control-label">Screen size</span>
+          <nav class="screen-tabs screen-size-tabs" aria-label="Screen size">
+            ${sizes.map(size => `<button type="button" data-size="${escapeHtml(size)}" ${size === activeSize ? 'class="active"' : ''}>${escapeHtml(screenSizeLabel(size))}</button>`).join('')}
+          </nav>
+          <span class="review-control-label">Review mode</span>
+          <nav class="screen-tabs review-mode-tabs" aria-label="Review mode">
+            <button type="button" data-webpage-mode="interact" data-tooltip="Use Dev and Live separately. Scroll, click links, and test menus in each preview." class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
+            <button type="button" data-webpage-mode="compare" data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences." class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
+          </nav>
         </div>
 
         <div class="preview-scale-controls" role="group" aria-label="Preview scale" data-scale-controls="${escapeHtml(page.pageId)}">

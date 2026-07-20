@@ -206,35 +206,34 @@ button.active {
 
 .screen-tabs {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .review-controls {
   grid-column: 1 / -1;
   grid-row: 3;
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-  width: 100%;
-}
-
-.review-control-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
+  justify-content: flex-start;
   gap: 8px;
   width: 100%;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 
 .review-control-label {
+  flex: 0 0 auto;
   color: var(--muted);
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: .04em;
+}
+
+.review-controls button {
+  white-space: nowrap;
 }
 
 .preview-stage {
