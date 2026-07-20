@@ -244,11 +244,21 @@ function renderPage(page, index) {
           <button type="button" class="quick-edit__fill" data-fill-sample>Fill a sample review note</button>
         </div>
 
-        <nav class="screen-tabs" aria-label="Screen size">
-          ${sizes.map(size => `<button type="button" data-size="${escapeHtml(size)}" ${size === activeSize ? 'class="active"' : ''}>${escapeHtml(screenSizeLabel(size))}</button>`).join('')}
-          <button type="button" data-webpage-mode="interact" class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
-          <button type="button" data-webpage-mode="compare" class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
-        </nav>
+        <div class="review-controls">
+          <div class="review-control-row">
+            <span class="review-control-label">Screen size</span>
+            <nav class="screen-tabs screen-size-tabs" aria-label="Screen size">
+              ${sizes.map(size => `<button type="button" data-size="${escapeHtml(size)}" ${size === activeSize ? 'class="active"' : ''}>${escapeHtml(screenSizeLabel(size))}</button>`).join('')}
+            </nav>
+          </div>
+          <div class="review-control-row">
+            <span class="review-control-label">Review mode</span>
+            <nav class="screen-tabs review-mode-tabs" aria-label="Review mode">
+              <button type="button" data-webpage-mode="interact" class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
+              <button type="button" data-webpage-mode="compare" class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
+            </nav>
+          </div>
+        </div>
 
         <div class="preview-scale-controls" role="group" aria-label="Preview scale" data-scale-controls="${escapeHtml(page.pageId)}">
           <span class="preview-scale-controls__label">Preview scale:</span>
@@ -549,7 +559,7 @@ document.addEventListener('click', event => {
   state.activeSizes[pageId] = size;
   pageEl.dataset.previewSize = size;
 
-  pageEl.querySelectorAll('.screen-tabs button').forEach(tab => {
+  pageEl.querySelectorAll('.screen-size-tabs button[data-size]').forEach(tab => {
     tab.classList.toggle('active', tab === button);
   });
 

@@ -170,11 +170,36 @@ button.active {
 }
 
 .screen-tabs {
-  grid-column: 1 / -1;
-  grid-row: 3;
   display: flex;
+  justify-content: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.review-controls {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.review-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.review-control-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
 }
 
 .preview-stage {
@@ -190,6 +215,7 @@ button.active {
 
 .preview-stage.is-slider {
   position: relative;
+  grid-template-columns: minmax(0, 1fr) !important;
   justify-items: center;
   overflow: hidden !important;
   touch-action: none;
@@ -197,6 +223,7 @@ button.active {
 
 .preview-stage.is-slider .frame-card {
   grid-area: 1 / 1;
+  justify-self: center !important;
 }
 
 .preview-stage.is-slider .frame-card--live {
@@ -429,7 +456,7 @@ iframe {
   .page-heading,
   .url-note,
   .feedback-panel,
-  .screen-tabs,
+  .review-controls,
   .preview-stage {
     grid-column: 1;
     grid-row: auto;
