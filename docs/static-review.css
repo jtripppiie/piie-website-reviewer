@@ -465,6 +465,36 @@ button.active {
   cursor: default;
 }
 
+.difference-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.difference-box {
+  position: absolute;
+  border: 2px solid #407ca7;
+  border-radius: 6px;
+  background: rgba(64, 124, 167, .2);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .75);
+}
+
+.difference-box > span {
+  position: absolute;
+  top: -11px;
+  right: -11px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #407ca7;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .demo-comment-dot[data-pin-tooltip]::after {
   content: attr(data-pin-tooltip);
   position: absolute;

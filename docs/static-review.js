@@ -304,6 +304,7 @@ function renderPage(page, index) {
             <button type="button" data-webpage-mode="interact" title="Use Dev and Live separately. Scroll, click links, and test menus in each preview." data-tooltip="Use Dev and Live separately. Scroll, click links, and test menus in each preview." class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
             <button type="button" data-webpage-mode="compare" title="Stack Dev and Live together and drag the slider to compare visual differences." data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences." class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
             <button type="button" data-webpage-mode="annotate" title="Click a spot on the preview, then save a note pinned to that location." data-tooltip="Click a spot on the preview, then save a note pinned to that location." class="${compareMode === 'annotate' ? 'active' : ''}">Annotate</button>
+            <button type="button" data-webpage-diff title="Highlight visible differences when both previews can be inspected by this page." data-tooltip="Highlight visible differences when both previews can be inspected by this page.">Find differences</button>
           </nav>
         </div>
 
@@ -331,6 +332,7 @@ function renderPage(page, index) {
             ${renderAnnotationDots(page, activeSize)}
           </div>
           <button class="annotation-layer" type="button" data-annotation-layer aria-label="Click a location to pin the next note"></button>
+          <div class="difference-layer" data-difference-layer aria-live="polite"></div>
         </div>
       </div>
     </section>
@@ -367,6 +369,99 @@ function reviewerDotColor(reviewerName) {
     reviewerColorAssignments.set(name, available || reviewerColorPalette[reviewerColorAssignments.size % reviewerColorPalette.length]);
   }
   return reviewerColorAssignments.get(name);
+}
+
+function clearDifferenceLayer(pageEl) {
+  const layer = pageEl?.querySelector('[data-difference-layer]');
+  if (layer) layer.innerHTML = '';
+  const button = pageEl?.querySelector('[data-webpage-diff]');
+  if (button) {
+    button.classList.remove('active');
+    button.textContent = 'Find differences';
+  }
+}
+
+function visibleElementSnapshot(frame) {
+  const win = frame.contentWindow;
+  const doc = frame.contentDocument;
+  if (!win || !doc) throw new Error('Preview document is unavailable.');
+
+  const selector = 'header, nav, main, section, article, h1, h2, h3, p, a, button, img';
+  return [...doc.querySelectorAll(selector)].map((element, index) => {
+    const rect = element.getBoundingClientRect();
+    const style = win.getComputedStyle(element);
+    if (rect.width < 4 || rect.height < 4 || rect.bottom < 0 || rect.top > win.innerHeight || style.visibility === 'hidden' || style.display === 'none') {
+      return null;
+    }
+
+    const text = String(element.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 240);
+    const media = element.tagName === 'IMG' ? String(element.getAttribute('src') || '') : '';
+    return {
+      key: `${element.tagName}:${index}`,
+      signature: [text, media, style.color, style.backgroundColor, style.fontSize, style.fontWeight].join('|'),
+      rect: {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height
+      },
+      viewport: { width: win.innerWidth, height: win.innerHeight }
+    };
+  }).filter(Boolean);
+}
+
+function drawDifferenceBoxes(pageEl, differences) {
+  const layer = pageEl.querySelector('[data-difference-layer]');
+  if (!layer) return;
+
+  layer.innerHTML = differences.slice(0, 30).map((difference, index) => {
+    const { rect, viewport } = difference;
+    const left = Math.max(0, Math.min(100, (rect.left / viewport.width) * 100));
+    const top = Math.max(0, Math.min(100, (rect.top / viewport.height) * 100));
+    const width = Math.max(1, Math.min(100 - left, (rect.width / viewport.width) * 100));
+    const height = Math.max(1, Math.min(100 - top, (rect.height / viewport.height) * 100));
+    return `<span class="difference-box" style="left:${left}%;top:${top}%;width:${width}%;height:${height}%"><span>${index + 1}</span></span>`;
+  }).join('');
+}
+
+async function findVisibleDifferences(pageEl) {
+  const stage = pageEl.querySelector('[data-webpage-compare]');
+  const button = pageEl.querySelector('[data-webpage-diff]');
+  const frames = pageEl.querySelectorAll('.frame-card iframe');
+  if (!stage || !button || frames.length < 2) {
+    showDemoToast('Both Dev and Live previews are required to find differences.');
+    return;
+  }
+
+  if (button.classList.contains('active')) {
+    clearDifferenceLayer(pageEl);
+    return;
+  }
+
+  try {
+    const dev = visibleElementSnapshot(frames[0]);
+    const live = visibleElementSnapshot(frames[1]);
+    const liveByKey = new Map(live.map(item => [item.key, item]));
+    const differences = dev.filter(item => {
+      const counterpart = liveByKey.get(item.key);
+      return !counterpart || counterpart.signature !== item.signature;
+    });
+
+    state.compareModes[pageEl.dataset.pageId] = 'compare';
+    pageEl.querySelectorAll('[data-webpage-mode]').forEach(modeButton => {
+      modeButton.classList.toggle('active', modeButton.dataset.webpageMode === 'compare');
+    });
+    stage.classList.add('is-slider');
+    stage.classList.remove('is-annotating');
+    drawDifferenceBoxes(pageEl, differences);
+    button.classList.add('active');
+    button.textContent = `${differences.length} differences`;
+    applyLayout(pageEl);
+    showDemoToast(differences.length ? `${differences.length} visible differences highlighted.` : 'No visible differences found in the current viewport.');
+  } catch {
+    clearDifferenceLayer(pageEl);
+    showDemoToast('This external website cannot be inspected by GitHub Pages. Use the local app or captured screenshots for difference highlighting.');
+  }
 }
 
 function presetFor(size) {
@@ -652,6 +747,7 @@ document.addEventListener('click', event => {
 
     const mode = modeButton.dataset.webpageMode;
     const stage = pageEl.querySelector('[data-webpage-compare]');
+    clearDifferenceLayer(pageEl);
     state.compareModes[pageEl.dataset.pageId] = mode;
     pageEl.querySelectorAll('[data-webpage-mode]').forEach(button => {
       button.classList.toggle('active', button === modeButton);
@@ -659,6 +755,13 @@ document.addEventListener('click', event => {
     stage?.classList.toggle('is-slider', mode === 'compare');
     stage?.classList.toggle('is-annotating', mode === 'annotate');
     applyLayout(pageEl);
+    return;
+  }
+
+  const diffButton = event.target.closest('[data-webpage-diff]');
+  if (diffButton) {
+    const pageEl = diffButton.closest('.review-page[data-page-id]');
+    if (pageEl) findVisibleDifferences(pageEl);
     return;
   }
 
@@ -722,6 +825,8 @@ document.addEventListener('click', event => {
   const pageEl = button.closest('.review-page');
   const pageId = pageEl.dataset.pageId;
   const size = button.dataset.size;
+
+  clearDifferenceLayer(pageEl);
 
   state.activeSizes[pageId] = size;
   pageEl.dataset.previewSize = size;
