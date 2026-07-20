@@ -237,6 +237,7 @@ button,
 .note-editor select,
 .note-editor textarea,
 .note-workflow-message,
+.pending-pin-message,
 .demo-comment-dot,
 .demo-comment-dot[data-pin-tooltip]::after {
   font-size: 14px !important;

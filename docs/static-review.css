@@ -639,6 +639,29 @@ iframe {
   gap: 8px;
 }
 
+.feedback-form.is-pinning {
+  padding: 10px;
+  border: 2px solid #407ca7;
+  border-radius: 10px;
+  background: #eef6fb;
+  box-shadow: 0 0 0 3px rgba(64, 124, 167, .12);
+}
+
+.pending-pin-message {
+  margin: 10px 0 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #407ca7;
+  color: #fff;
+  font-weight: 800;
+}
+
+.feedback-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .note-editor,
 .note-workflow-message {
   display: grid;

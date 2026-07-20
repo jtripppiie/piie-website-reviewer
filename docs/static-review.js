@@ -167,6 +167,7 @@ function escapeHtml(value) {
 function renderFeedbackPanel(page, activeSize) {
   const collapsed = Boolean(state.feedbackCollapsed[page.pageId]);
   const pendingDot = state.pendingDots[page.pageId] || {};
+  const hasPendingDot = Boolean(pendingDot.dotX && pendingDot.dotY);
   const selectedNote = state.notes.find(note => note.noteId === state.selectedNoteId && note.pageId === page.pageId);
   const movingNote = state.notes.find(note => note.noteId === state.movingNoteId && note.pageId === page.pageId);
   return `
@@ -188,7 +189,9 @@ function renderFeedbackPanel(page, activeSize) {
 
       <button type="button" class="demo-clear" data-clear-notes="${escapeHtml(page.pageId)}">Clear results for this screen size</button>
 
-      <form class="feedback-form" data-note-form="${escapeHtml(page.pageId)}">
+      <p class="pending-pin-message" data-pending-pin-message ${hasPendingDot ? '' : 'hidden'}>Pin placed—add your note below.</p>
+
+      <form class="feedback-form${hasPendingDot ? ' is-pinning' : ''}" data-note-form="${escapeHtml(page.pageId)}">
         <input type="hidden" name="screenSize" value="${escapeHtml(activeSize)}">
         <input type="hidden" name="dotX" value="${escapeHtml(pendingDot.dotX || '')}">
         <input type="hidden" name="dotY" value="${escapeHtml(pendingDot.dotY || '')}">
@@ -213,7 +216,10 @@ function renderFeedbackPanel(page, activeSize) {
           <textarea name="comment"></textarea>
         </label>
 
-        <button type="submit">Save note</button>
+        <div class="feedback-form__actions">
+          <button type="submit" data-save-note>${hasPendingDot ? 'Save pinned note' : 'Save note'}</button>
+          <button type="button" data-cancel-pending-pin ${hasPendingDot ? '' : 'hidden'}>Cancel pin</button>
+        </div>
       </form>
     </aside>
   `;
@@ -663,6 +669,22 @@ document.addEventListener('click', event => {
     return;
   }
 
+  const cancelPendingPin = event.target.closest('[data-cancel-pending-pin]');
+  if (cancelPendingPin) {
+    const form = cancelPendingPin.closest('[data-note-form]');
+    const pageId = form?.dataset.noteForm;
+    if (!form || !pageId) return;
+    delete state.pendingDots[pageId];
+    form.elements.dotX.value = '';
+    form.elements.dotY.value = '';
+    form.classList.remove('is-pinning');
+    form.querySelector('[data-save-note]').textContent = 'Save note';
+    cancelPendingPin.hidden = true;
+    document.querySelector('[data-pending-pin-message]')?.setAttribute('hidden', '');
+    document.querySelector(`.review-page[data-page-id="${pageId}"] .pending-comment-dot`)?.remove();
+    return;
+  }
+
   const cancelEdit = event.target.closest('[data-cancel-note-edit]');
   if (cancelEdit) {
     state.selectedNoteId = null;
@@ -806,6 +828,11 @@ document.addEventListener('click', event => {
     if (form) {
       form.elements.dotX.value = dotX.toFixed(2);
       form.elements.dotY.value = dotY.toFixed(2);
+      form.classList.add('is-pinning');
+      form.querySelector('[data-save-note]').textContent = 'Save pinned note';
+      form.querySelector('[data-cancel-pending-pin]').hidden = false;
+      const message = document.querySelector('[data-pending-pin-message]');
+      if (message) message.hidden = false;
       form.querySelector('textarea[name="comment"]')?.focus();
     }
 

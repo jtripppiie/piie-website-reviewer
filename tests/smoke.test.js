@@ -177,6 +177,8 @@ test('static annotations can be edited, moved, deleted, and debug-seeded', () =>
   assert.match(demo, /data-edit-note/);
   assert.match(demo, /data-move-note/);
   assert.match(demo, /data-delete-note/);
+  assert.match(demo, /Save pinned note/);
+  assert.match(demo, /data-cancel-pending-pin/);
   assert.match(demo, /movingNoteId/);
   assert.match(demo, /debugSample/);
   assert.match(index, /id="demoDebugLogo"/);
