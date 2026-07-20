@@ -146,6 +146,8 @@ test('static demo includes interact and compare modes', () => {
   assert.match(demo, /data-webpage-mode="interact" title=.*data-tooltip=/);
   assert.match(demo, /data-webpage-mode="compare" title=.*data-tooltip=/);
   assert.match(demo, /data-webpage-mode="annotate" title=.*data-tooltip=/);
+  assert.match(demo, />\+ Add note pin<\/button>/);
+  assert.match(demo, /<h3>Add Notes<\/h3>/);
   assert.match(demo, /data-annotation-layer/);
   assert.match(demo, /reviewerDotColor/);
   assert.match(demo, /data-pin-tooltip/);

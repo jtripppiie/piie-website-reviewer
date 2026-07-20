@@ -79,6 +79,20 @@ button.active {
   color: #fff;
 }
 
+.annotate-action:not(.active) {
+  border-color: #175cd3;
+  background: #eff6ff;
+  color: #175cd3;
+  box-shadow: 0 0 0 2px rgba(23, 92, 211, .12);
+  font-weight: 800;
+}
+
+.annotate-action:not(.active):hover,
+.annotate-action:not(.active):focus-visible {
+  background: #dbeafe;
+  box-shadow: 0 0 0 3px rgba(23, 92, 211, .2);
+}
+
 [data-tooltip] {
   position: relative;
 }
