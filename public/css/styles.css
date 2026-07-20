@@ -1614,6 +1614,7 @@ body.debug-layout-on .empty-preview {
 
 .feedback-panel__toggle {
   flex: none;
+  min-width: 120px;
   border: 1px solid var(--border);
   background: #fff;
   color: #111827;

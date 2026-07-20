@@ -173,8 +173,12 @@ test('static demo includes interact and compare modes', () => {
 
 test('static reviewer buttons and notes have a 14px accessibility floor', () => {
   const overrides = read('docs/static-demo-overrides.css');
+  const demoStyles = read('docs/static-review.css');
+  const localStyles = read('public/css/styles.css');
 
   assert.match(overrides, /button,[\s\S]*\.feedback-panel,[\s\S]*font-size: 14px !important;/);
+  assert.match(demoStyles, /\.feedback-panel__toggle \{[\s\S]*?min-width: 120px;/);
+  assert.match(localStyles, /\.feedback-panel__toggle \{[\s\S]*?min-width: 120px;/);
 });
 
 test('static annotations can be edited, moved, deleted, and debug-seeded', () => {

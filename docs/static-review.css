@@ -251,6 +251,7 @@ button.active {
 
 .feedback-panel__toggle {
   width: auto;
+  min-width: 120px;
 }
 
 .feedback-panel.is-collapsed {
