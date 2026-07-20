@@ -68,6 +68,10 @@
   margin-bottom: 0;
 }
 
+.header-preview-status {
+  margin: 0 !important;
+}
+
 .viewport-scaler {
   position: relative;
   display: block;
@@ -227,6 +231,12 @@ button,
 .feedback-form input,
 .feedback-form select,
 .feedback-form textarea,
+.note-editor,
+.note-editor label,
+.note-editor input,
+.note-editor select,
+.note-editor textarea,
+.note-workflow-message,
 .demo-comment-dot,
 .demo-comment-dot[data-pin-tooltip]::after {
   font-size: 14px !important;

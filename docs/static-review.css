@@ -54,6 +54,38 @@ body {
   align-self: center;
 }
 
+.debug-logo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 132px;
+  height: 44px;
+  padding: 3px;
+  overflow: hidden;
+  border-color: #407ca7;
+  color: #407ca7;
+  font-weight: 900;
+}
+
+.debug-logo[aria-pressed="true"] {
+  background: #407ca7;
+  color: #fff;
+  box-shadow: 0 0 0 3px rgba(64, 124, 167, .22);
+}
+
+.debug-logo img {
+  position: absolute;
+  inset: 3px;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  object-fit: contain;
+  background: #fff;
+}
+
+.debug-logo__fallback {
+  font-size: 11px;
+}
+
 .header-preview-status {
   display: inline-flex;
   align-items: center;
@@ -574,6 +606,51 @@ iframe {
 .feedback-form {
   display: grid;
   gap: 8px;
+}
+
+.note-editor,
+.note-workflow-message {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 10px;
+  border: 2px solid #407ca7;
+  border-radius: 10px;
+  background: #eef6fb;
+}
+
+.note-editor h4 {
+  margin: 0;
+}
+
+.note-editor label {
+  display: grid;
+  gap: 4px;
+}
+
+.note-editor input,
+.note-editor select,
+.note-editor textarea {
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.note-editor textarea {
+  min-height: 72px;
+}
+
+.note-editor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.note-editor__actions .danger {
+  border-color: #b91c1c;
+  color: #b91c1c;
 }
 
 .feedback-form label {

@@ -164,6 +164,18 @@ test('static reviewer buttons and notes have a 14px accessibility floor', () => 
   assert.match(overrides, /button,[\s\S]*\.feedback-panel,[\s\S]*font-size: 14px !important;/);
 });
 
+test('static annotations can be edited, moved, deleted, and debug-seeded', () => {
+  const demo = read('docs/static-review.js');
+  const index = read('docs/index.html');
+
+  assert.match(demo, /data-edit-note/);
+  assert.match(demo, /data-move-note/);
+  assert.match(demo, /data-delete-note/);
+  assert.match(demo, /movingNoteId/);
+  assert.match(demo, /debugSample/);
+  assert.match(index, /id="demoDebugLogo"/);
+});
+
 test('removeUploadFile only targets files inside data/uploads', () => {
   const server = read('server.js');
 

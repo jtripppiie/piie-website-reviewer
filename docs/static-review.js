@@ -21,6 +21,9 @@ const state = {
   compareModes: {},
   feedbackCollapsed: {},
   pendingDots: {},
+  selectedNoteId: null,
+  movingNoteId: null,
+  debugMode: false,
   notes: JSON.parse(localStorage.getItem(NOTES_KEY) || '[]'),
   cleared: JSON.parse(localStorage.getItem(CLEARED_KEY) || '[]'),
   urlOverrides: JSON.parse(localStorage.getItem(URLS_KEY) || '{}')
@@ -37,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function saveNotes() {
-  localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes));
+  localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes.filter(note => !note.debugSample)));
 }
 
 function saveCleared() {
@@ -164,6 +167,8 @@ function escapeHtml(value) {
 function renderFeedbackPanel(page, activeSize) {
   const collapsed = Boolean(state.feedbackCollapsed[page.pageId]);
   const pendingDot = state.pendingDots[page.pageId] || {};
+  const selectedNote = state.notes.find(note => note.noteId === state.selectedNoteId && note.pageId === page.pageId);
+  const movingNote = state.notes.find(note => note.noteId === state.movingNoteId && note.pageId === page.pageId);
   return `
     <aside class="feedback-panel${collapsed ? ' is-collapsed' : ''}" data-feedback-panel data-feedback-page="${escapeHtml(page.pageId)}">
       <div class="feedback-panel__bar">
@@ -172,6 +177,13 @@ function renderFeedbackPanel(page, activeSize) {
           ${collapsed ? 'Expand' : 'Collapse'}
         </button>
       </div>
+      ${movingNote ? `
+        <div class="note-workflow-message" role="status">
+          Moving <strong>${escapeHtml(movingNote.reviewerName || 'Reviewer')}</strong>'s pin. Click its new location on the preview.
+          <button type="button" data-cancel-note-move>Cancel move</button>
+        </div>
+      ` : ''}
+      ${selectedNote ? renderNoteEditor(selectedNote) : ''}
       <div data-notes-for="${escapeHtml(page.pageId)}">${renderNotes(page, activeSize)}</div>
 
       <button type="button" class="demo-clear" data-clear-notes="${escapeHtml(page.pageId)}">Clear results for this screen size</button>
@@ -204,6 +216,33 @@ function renderFeedbackPanel(page, activeSize) {
         <button type="submit">Save note</button>
       </form>
     </aside>
+  `;
+}
+
+function renderNoteEditor(note) {
+  return `
+    <form class="note-editor" data-edit-note="${escapeHtml(note.noteId)}">
+      <h4>Edit selected pin</h4>
+      <label>Reviewer name or initials
+        <input type="text" name="reviewerName" value="${escapeHtml(note.reviewerName || '')}" required>
+      </label>
+      <label>Status
+        <select name="status">
+          ${['approved', 'approved-after-these-changes', 'needs-design-changes', 'needs-mobile-review'].map(status =>
+            `<option value="${status}"${note.status === status ? ' selected' : ''}>${escapeHtml(statusLabel(status))}</option>`
+          ).join('')}
+        </select>
+      </label>
+      <label>Comment
+        <textarea name="comment">${escapeHtml(note.comment || '')}</textarea>
+      </label>
+      <div class="note-editor__actions">
+        <button type="submit">Save changes</button>
+        <button type="button" data-move-note="${escapeHtml(note.noteId)}">Move pin</button>
+        <button type="button" data-delete-note="${escapeHtml(note.noteId)}" class="danger">Delete note</button>
+        <button type="button" data-cancel-note-edit>Cancel</button>
+      </div>
+    </form>
   `;
 }
 
@@ -309,21 +348,25 @@ function renderAnnotationDots(page, screenSize) {
       <span
         class="demo-comment-dot"
         tabindex="0"
-        style="left:${Number(note.dotX)}%;top:${Number(note.dotY)}%;background:${reviewerDotColor(note.reviewerName)}"
+        style="left:${Number(note.dotX)}%;top:${Number(note.dotY)}%;background:${note.dotColor || reviewerDotColor(note.reviewerName)}"
         title="${escapeHtml((note.reviewerName || 'Reviewer') + ': ' + (note.comment || 'Pinned note'))}"
         aria-label="${escapeHtml((note.reviewerName || 'Reviewer') + ': ' + (note.comment || 'Pinned note'))}"
+        data-note-id="${escapeHtml(note.noteId || '')}"
         data-pin-tooltip="${escapeHtml((note.reviewerName || 'Reviewer') + ': ' + (note.comment || 'Pinned note'))}">${index + 1}</span>
     `).join('');
 }
 
+const reviewerColorAssignments = new Map();
+const reviewerColorPalette = ['#b42318', '#175cd3', '#067647', '#7a5af8', '#c11574', '#b54708', '#026aa2', '#4e5ba6'];
+
 function reviewerDotColor(reviewerName) {
-  const palette = ['#b42318', '#175cd3', '#067647', '#7a5af8', '#c11574', '#b54708', '#026aa2', '#4e5ba6'];
   const name = String(reviewerName || 'Reviewer').trim().toLowerCase();
-  let hash = 0;
-  for (const character of name) {
-    hash = ((hash << 5) - hash + character.charCodeAt(0)) | 0;
+  if (!reviewerColorAssignments.has(name)) {
+    const used = new Set(reviewerColorAssignments.values());
+    const available = reviewerColorPalette.find(color => !used.has(color));
+    reviewerColorAssignments.set(name, available || reviewerColorPalette[reviewerColorAssignments.size % reviewerColorPalette.length]);
   }
-  return palette[Math.abs(hash) % palette.length];
+  return reviewerColorAssignments.get(name);
 }
 
 function presetFor(size) {
@@ -487,6 +530,8 @@ function applyAllLayouts() {
 
 function render() {
   const pages = activePages();
+  const debugLogo = document.querySelector('#demoDebugLogo');
+  if (debugLogo) debugLogo.setAttribute('aria-pressed', state.debugMode ? 'true' : 'false');
   app.innerHTML = `
     ${pages.map(renderPage).join('')}
   `;
@@ -512,6 +557,53 @@ function render() {
 }
 
 document.addEventListener('click', event => {
+  const pin = event.target.closest('.demo-comment-dot[data-note-id]');
+  if (pin) {
+    const note = state.notes.find(item => item.noteId === pin.dataset.noteId);
+    if (!note) return;
+    state.selectedNoteId = note.noteId;
+    state.movingNoteId = null;
+    state.feedbackCollapsed[note.pageId] = false;
+    render();
+    return;
+  }
+
+  const cancelEdit = event.target.closest('[data-cancel-note-edit]');
+  if (cancelEdit) {
+    state.selectedNoteId = null;
+    render();
+    return;
+  }
+
+  const deleteNote = event.target.closest('[data-delete-note]');
+  if (deleteNote) {
+    const note = state.notes.find(item => item.noteId === deleteNote.dataset.deleteNote);
+    if (!note || !confirm('Delete this note and its pin?')) return;
+    state.notes = state.notes.filter(item => item.noteId !== note.noteId);
+    state.selectedNoteId = null;
+    saveNotes();
+    render();
+    return;
+  }
+
+  const moveNote = event.target.closest('[data-move-note]');
+  if (moveNote) {
+    const note = state.notes.find(item => item.noteId === moveNote.dataset.moveNote);
+    if (!note) return;
+    state.movingNoteId = note.noteId;
+    state.selectedNoteId = null;
+    state.compareModes[note.pageId] = 'annotate';
+    state.feedbackCollapsed[note.pageId] = false;
+    render();
+    return;
+  }
+
+  if (event.target.closest('[data-cancel-note-move]')) {
+    state.movingNoteId = null;
+    render();
+    return;
+  }
+
   const feedbackToggle = event.target.closest('[data-feedback-toggle]');
   if (feedbackToggle) {
     const panel = feedbackToggle.closest('[data-feedback-panel]');
@@ -580,7 +672,32 @@ document.addEventListener('click', event => {
     const dotX = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
     const dotY = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100));
     const pageId = pageEl.dataset.pageId;
+
+    if (state.movingNoteId) {
+      const note = state.notes.find(item => item.noteId === state.movingNoteId && item.pageId === pageId);
+      if (note) {
+        note.dotX = dotX.toFixed(2);
+        note.dotY = dotY.toFixed(2);
+        state.selectedNoteId = note.noteId;
+        state.movingNoteId = null;
+        saveNotes();
+        render();
+        return;
+      }
+    }
+
     state.pendingDots[pageId] = { dotX: dotX.toFixed(2), dotY: dotY.toFixed(2) };
+
+    const panel = document.querySelector(`[data-feedback-panel][data-feedback-page="${pageId}"]`);
+    if (panel) {
+      panel.classList.remove('is-collapsed');
+      const toggle = panel.querySelector('[data-feedback-toggle]');
+      if (toggle) {
+        toggle.textContent = 'Collapse';
+        toggle.setAttribute('aria-expanded', 'true');
+      }
+      state.feedbackCollapsed[pageId] = false;
+    }
 
     const form = document.querySelector(`[data-note-form="${pageId}"]`);
     if (form) {
@@ -671,6 +788,22 @@ window.addEventListener('resize', () => {
 });
 
 document.addEventListener('submit', event => {
+  const editForm = event.target.closest('[data-edit-note]');
+  if (editForm) {
+    event.preventDefault();
+    const note = state.notes.find(item => item.noteId === editForm.dataset.editNote);
+    if (!note) return;
+    const data = new FormData(editForm);
+    note.reviewerName = String(data.get('reviewerName') || '').trim();
+    note.status = String(data.get('status') || 'approved');
+    note.comment = String(data.get('comment') || '').trim();
+    note.updatedAt = new Date().toISOString();
+    state.selectedNoteId = null;
+    saveNotes();
+    render();
+    return;
+  }
+
   const urlForm = event.target.closest('[data-url-form]');
   if (urlForm) {
     event.preventDefault();
@@ -813,8 +946,46 @@ document.querySelector('#viewNotes').addEventListener('click', openNotesView);
 document.querySelector('#clearNotes').addEventListener('click', () => {
   if (!confirm('Clear notes saved in this browser? Demo notes will remain visible.')) return;
   state.notes = [];
+  state.debugMode = false;
+  state.selectedNoteId = null;
+  state.movingNoteId = null;
   saveNotes();
   render();
+});
+
+document.querySelector('#demoDebugLogo').addEventListener('click', event => {
+  state.debugMode = !state.debugMode;
+  state.notes = state.notes.filter(note => !note.debugSample);
+
+  const page = activePages().find(item => item.type === 'urlCompare');
+  if (state.debugMode && page) {
+    const screenSize = state.activeSizes[page.pageId] || normalizedScreenSizes(page.screenSizes)[0] || 'desktop';
+    const samples = [
+      ['JT', 'approved', 'Navigation spacing looks consistent here.', 18, 20, '#b42318'],
+      ['Alex', 'needs-design-changes', 'Please check the alignment of this content block.', 38, 36, '#175cd3'],
+      ['Design', 'approved-after-these-changes', 'This image treatment is close; adjust the crop slightly.', 62, 54, '#067647'],
+      ['MC', 'needs-mobile-review', 'Confirm this area at the mobile breakpoint.', 82, 72, '#7a5af8']
+    ];
+    samples.forEach(([reviewerName, status, comment, dotX, dotY, dotColor], index) => {
+      state.notes.push({
+        noteId: `debug_note_${index}`,
+        pageId: page.pageId,
+        screenSize,
+        reviewerName,
+        status,
+        comment,
+        dotX: String(dotX),
+        dotY: String(dotY),
+        dotColor,
+        createdAt: new Date().toISOString(),
+        debugSample: true
+      });
+    });
+  }
+
+  event.currentTarget.setAttribute('aria-pressed', state.debugMode ? 'true' : 'false');
+  render();
+  showDemoToast(state.debugMode ? 'Debug notes enabled.' : 'Debug notes hidden.');
 });
 
 // Hidden demo helper: triple-click the title to auto-fill every feedback form

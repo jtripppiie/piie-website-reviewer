@@ -10,6 +10,10 @@
 <body>
   <header class="app-header">
     <div class="header-actions">
+      <button type="button" class="debug-logo" id="demoDebugLogo" title="Toggle demo notes from multiple reviewers" aria-pressed="false">
+        <img src="assets/logo.png" alt="" onerror="this.hidden=true">
+        <span class="debug-logo__fallback">PIIE</span>
+      </button>
       <button type="button" id="viewNotes">View notes</button>
       <button type="button" id="clearNotes">Clear Local Notes</button>
       <div class="preview-status header-preview-status" id="headerPreviewStatus" aria-live="polite"></div>
