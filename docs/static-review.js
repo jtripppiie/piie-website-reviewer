@@ -20,6 +20,7 @@ const state = {
   packet: null,
   activeSizes: {},
   scaleModes: {},
+  feedbackCollapsed: {},
   notes: JSON.parse(localStorage.getItem(NOTES_KEY) || '[]'),
   cleared: JSON.parse(localStorage.getItem(CLEARED_KEY) || '[]'),
   urlOverrides: JSON.parse(localStorage.getItem(URLS_KEY) || '{}')
@@ -27,9 +28,6 @@ const state = {
 
 const app = document.querySelector('#app');
 const debugOutput = document.querySelector('#debugOutput');
-
-const versionLabel = document.querySelector('#appVersion');
-if (versionLabel) versionLabel.textContent = 'v' + APP_VERSION;
 
 document.addEventListener('DOMContentLoaded', function () {
   var badge = document.createElement('div');
@@ -185,20 +183,6 @@ function renderPage(page, index) {
   return `
     <section class="review-page" data-page-id="${escapeHtml(page.pageId)}" data-preview-size="${escapeHtml(activeSize)}">
       <div class="review-workspace">
-        <div class="page-heading">
-          <p class="eyebrow">Page ${index + 1}</p>
-          <h2>${escapeHtml(page.title || 'Untitled Page')}</h2>
-          <p>${escapeHtml(page.instructions || '')}</p>
-        </div>
-
-        <div class="url-note">
-          <p>This is the demo. The sample notes are made up, and anything you add only saves in this browser.</p>
-          <div class="actions">
-            ${page.devUrl ? `<a class="button" href="${escapeHtml(page.devUrl)}" target="_blank" rel="noopener">Open Dev</a>` : ''}
-            ${page.liveUrl ? `<a class="button" href="${escapeHtml(page.liveUrl)}" target="_blank" rel="noopener">Open Live</a>` : ''}
-          </div>
-        </div>
-
         <div class="quick-edit" data-quick-edit>
           <div class="quick-edit__head">Quick edit - preview only (saved in this browser)</div>
           <form class="quick-edit__form" data-url-form="${escapeHtml(page.pageId)}">
@@ -215,8 +199,13 @@ function renderPage(page, index) {
           <button type="button" class="quick-edit__fill" data-fill-sample>Fill a sample review note</button>
         </div>
 
-        <aside class="feedback-panel">
-          <h3>Review Results</h3>
+        <aside class="feedback-panel${state.feedbackCollapsed[page.pageId] ? ' is-collapsed' : ''}" data-feedback-panel>
+          <div class="feedback-panel__bar">
+            <h3>Review Results</h3>
+            <button type="button" class="feedback-panel__toggle" data-feedback-toggle aria-expanded="${state.feedbackCollapsed[page.pageId] ? 'false' : 'true'}">
+              ${state.feedbackCollapsed[page.pageId] ? 'Expand' : 'Collapse'}
+            </button>
+          </div>
           <div data-notes-for="${escapeHtml(page.pageId)}">${renderNotes(page, activeSize)}</div>
 
           <button type="button" class="demo-clear" data-clear-notes="${escapeHtml(page.pageId)}">Clear results for this screen size</button>
@@ -465,6 +454,19 @@ function render() {
 }
 
 app.addEventListener('click', event => {
+  const feedbackToggle = event.target.closest('[data-feedback-toggle]');
+  if (feedbackToggle) {
+    const panel = feedbackToggle.closest('[data-feedback-panel]');
+    const pageEl = feedbackToggle.closest('.review-page[data-page-id]');
+    if (!panel || !pageEl) return;
+
+    const collapsed = panel.classList.toggle('is-collapsed');
+    state.feedbackCollapsed[pageEl.dataset.pageId] = collapsed;
+    feedbackToggle.textContent = collapsed ? 'Expand' : 'Collapse';
+    feedbackToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    return;
+  }
+
   const fillButton = event.target.closest('button[data-fill-sample]');
   if (fillButton) {
     fillDemoData();

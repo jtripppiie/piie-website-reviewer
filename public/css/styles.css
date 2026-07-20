@@ -2528,3 +2528,70 @@ button.danger,
     font-size: 14px;
   }
 }
+.edit-packet-page button {
+  margin-top: 1rem;
+}
+
+.capture-choice {
+  gap: .35rem;
+  margin-top: 1rem;
+  padding: .9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.capture-choice > span,
+.radio-choice {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  font-weight: 700;
+}
+
+.capture-choice input,
+.radio-choice input {
+  width: auto;
+}
+
+.capture-choice small,
+.capture-submit-status {
+  color: var(--muted);
+}
+
+.capture-options {
+  margin-top: .75rem;
+}
+
+.capture-options .radio-choice {
+  margin-top: .65rem;
+}
+
+.capture-submit-status {
+  margin-bottom: 0;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+
+.admin-notice {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid;
+  border-radius: 10px;
+  font-weight: 650;
+}
+
+.admin-notice--success {
+  color: #185c37;
+  border-color: #8fd1aa;
+  background: #edf9f1;
+}
+
+.admin-notice--error {
+  color: #7a2323;
+  border-color: #e0a4a4;
+  background: #fff1f1;
+}

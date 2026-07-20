@@ -22,17 +22,36 @@ if ! command -v cloudflared >/dev/null 2>&1; then
   exit 1
 fi
 
-if curl -fsS "http://localhost:${PORT}/healthz" >/dev/null 2>&1; then
-  echo "Reviewer already running on http://localhost:${PORT}; reusing it for sharing."
-else
-  echo "Starting the reviewer on http://localhost:${PORT} ..."
-  PORT="$PORT" node server.js &
-  SERVER_PID=$!
-  STARTED_SERVER=1
+HEALTH_URL="http://localhost:${PORT}/healthz"
+if health="$(curl -fsS "$HEALTH_URL" 2>/dev/null)"; then
+  if [[ "$health" != *'"app":"PIIE Web Reviewer"'* ]]; then
+    echo "Port ${PORT} is already being used by another application." >&2
+    exit 1
+  fi
 
-  # Give the server a moment to bind the port before opening the tunnel.
-  sleep 2
+  echo "Stopping the previously running reviewer so the latest code is loaded..."
+  mapfile -t pids < <(lsof -t -iTCP:"${PORT}" -sTCP:LISTEN 2>/dev/null || true)
+  if [[ "${#pids[@]}" -eq 0 ]]; then
+    echo "Could not identify the reviewer process on port ${PORT}." >&2
+    exit 1
+  fi
+  kill "${pids[@]}"
+
+  for _ in {1..30}; do
+    if ! curl -fsS "$HEALTH_URL" >/dev/null 2>&1; then
+      break
+    fi
+    sleep 0.2
+  done
 fi
+
+echo "Starting the reviewer on http://localhost:${PORT} ..."
+PORT="$PORT" node server.js &
+SERVER_PID=$!
+STARTED_SERVER=1
+
+# Give the server a moment to bind the port before opening the tunnel.
+sleep 2
 
 echo ""
 echo "Opening a public Cloudflare tunnel."

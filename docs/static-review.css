@@ -133,6 +133,31 @@ button.active {
   background: #f9fafb;
 }
 
+.feedback-panel__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.feedback-panel__bar h3 {
+  margin: 0;
+}
+
+.feedback-panel__toggle {
+  width: auto;
+}
+
+.feedback-panel.is-collapsed {
+  width: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.feedback-panel.is-collapsed > *:not(.feedback-panel__bar) {
+  display: none;
+}
+
 .screen-tabs {
   grid-column: 1 / -1;
   grid-row: 3;

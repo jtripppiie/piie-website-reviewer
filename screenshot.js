@@ -77,16 +77,73 @@ async function gotoWithFallback(page, url) {
   throw lastError;
 }
 
+async function dismissCookieDialog(page) {
+  try {
+    const dismissed = await page.evaluate(() => {
+      const selectors = [
+        '#onetrust-accept-btn-handler',
+        '[data-testid="cookie-accept"]',
+        '[data-cookie-accept]',
+        '.cookie-accept'
+      ];
+
+      for (const selector of selectors) {
+        const element = document.querySelector(selector);
+        if (element && element.getClientRects().length) {
+          element.click();
+          return true;
+        }
+      }
+
+      const acceptedLabels = new Set([
+        'accept',
+        'accept all',
+        'allow all',
+        'agree',
+        'i agree'
+      ]);
+      const candidates = document.querySelectorAll('button, [role="button"], a');
+      for (const element of candidates) {
+        const label = (element.textContent || '').trim().toLowerCase();
+        if (acceptedLabels.has(label) && element.getClientRects().length) {
+          element.click();
+          return true;
+        }
+      }
+
+      return false;
+    });
+
+    if (dismissed) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+  } catch {
+    // Cookie controls vary by site. Failure to dismiss one should not prevent
+    // an otherwise valid screenshot.
+  }
+}
+
 /**
- * Capture full page screenshots for a single URL at every viewport preset.
+ * Capture full page screenshots for a single URL. Passing presetSizes limits
+ * capture to those size keys; omitting it preserves the all-sizes behavior.
  * Returns a map of size to a public uploads path, for example:
  *   { desktop: '/uploads/shot_..._desktop.png', ... }
  */
-async function captureUrlAllPresets(url, prefix) {
+async function captureUrlAllPresets(url, prefix, presetSizes) {
   const shots = {};
   if (!url) return shots;
 
   assertCaptureUrlAllowed(url);
+  const requestedSizes = Array.isArray(presetSizes) && presetSizes.length
+    ? new Set(presetSizes)
+    : null;
+  const presets = requestedSizes
+    ? CAPTURE_PRESETS.filter(preset => requestedSizes.has(preset.size))
+    : CAPTURE_PRESETS;
+
+  if (!presets.length) {
+    throw new Error('No valid screenshot sizes were selected.');
+  }
 
   const browser = await puppeteer.launch({
     headless: 'new',
@@ -96,7 +153,7 @@ async function captureUrlAllPresets(url, prefix) {
   try {
     const baseName = makeShotName(prefix);
 
-    for (const preset of CAPTURE_PRESETS) {
+    for (const preset of presets) {
       const page = await browser.newPage();
 
       try {
@@ -109,6 +166,7 @@ async function captureUrlAllPresets(url, prefix) {
         });
 
         await gotoWithFallback(page, url);
+        await dismissCookieDialog(page);
 
         const fileName = `${baseName}_${preset.size}.png`;
         const filePath = path.join(UPLOADS_DIR, fileName);

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <%- include('partials/head', { title: 'Edit Packet' }) %>
-  <body class="admin-body">
+  <body class="admin-body edit-packet-page">
     <main class="shell">
       <header class="admin-hero">
         <div>
@@ -10,6 +10,17 @@
         </div>
         <a class="button secondary" href="/admin?key=<%= key %>">Back to admin</a>
       </header>
+
+      <% if (captured) { %>
+        <div class="admin-notice admin-notice--success" role="status">
+          Desktop and Mobile screenshots were captured from the Dev and Live URLs.
+        </div>
+      <% } %>
+      <% if (captureError) { %>
+        <div class="admin-notice admin-notice--error" role="alert">
+          The review was created, but automatic screenshots failed: <%= captureError %>
+        </div>
+      <% } %>
 
       <section class="card admin-simple-flow">
         <p class="eyebrow">1.0 workflow</p>

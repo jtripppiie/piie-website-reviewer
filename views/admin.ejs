@@ -11,7 +11,7 @@
         <a class="button secondary" href="https://jtripppiie.github.io/piie-website-reviewer/" target="_blank" rel="noopener">Live demo</a>
       </header>
 
-      <form class="card admin-primary-card" method="post" action="/admin/packets">
+      <form class="card admin-primary-card" method="post" action="/admin/packets" data-auto-capture-form>
         <input type="hidden" name="key" value="<%= key %>">
         <p class="eyebrow">New review</p>
         <h2>Start with Dev vs Live</h2>
@@ -49,8 +49,51 @@
           <option value="https://jtripppiie.github.io/piie-website-reviewer/demo-live.html" label="Controlled demo - Live">
         </datalist>
 
-        <button type="submit">Create review packet</button>
+        <label class="capture-choice">
+          <span>
+            <input type="checkbox" name="autoCapture" value="true" checked data-auto-capture-toggle>
+            Capture screenshots automatically
+          </span>
+          <small>Captures Desktop and Mobile from both URLs. This may take up to a minute.</small>
+        </label>
+
+        <details class="advanced-tools capture-options">
+          <summary>Screenshot sizes</summary>
+          <label class="radio-choice">
+            <input type="radio" name="captureMode" value="primary" checked>
+            Desktop and Mobile
+          </label>
+          <label class="radio-choice">
+            <input type="radio" name="captureMode" value="all">
+            All six screen sizes
+          </label>
+        </details>
+
+        <p class="capture-submit-status" data-capture-status aria-live="polite" hidden>
+          Capturing Dev and Live screenshots. Please keep this page open…
+        </p>
+        <button type="submit" data-create-review-button>Create review packet</button>
       </form>
+
+      <script>
+        (() => {
+          const form = document.querySelector('[data-auto-capture-form]');
+          if (!form) return;
+
+          form.addEventListener('submit', () => {
+            const shouldCapture = form.querySelector('[data-auto-capture-toggle]')?.checked;
+            if (!shouldCapture) return;
+
+            const button = form.querySelector('[data-create-review-button]');
+            const status = form.querySelector('[data-capture-status]');
+            if (button) {
+              button.disabled = true;
+              button.textContent = 'Capturing screenshots…';
+            }
+            if (status) status.hidden = false;
+          });
+        })();
+      </script>
 
       <details class="card admin-secondary-tools">
         <summary>Testing and fallbacks</summary>

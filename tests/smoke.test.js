@@ -116,6 +116,16 @@ test('server exposes the notes and per-size upload routes', () => {
   assert.match(server, /\/admin\/packets\/demo['"`]/, 'demo packet route missing');
 });
 
+test('new reviews support optional automatic URL screenshots', () => {
+  const server = read('server.js');
+  const admin = read('views/admin.ejs');
+
+  assert.match(admin, /name="autoCapture"/);
+  assert.match(admin, /name="captureMode" value="primary"/);
+  assert.match(server, /req\.body\.autoCapture === 'true'/);
+  assert.match(server, /\['desktop', 'mobile'\]/);
+});
+
 test('removeUploadFile only targets files inside data/uploads', () => {
   const server = read('server.js');
 

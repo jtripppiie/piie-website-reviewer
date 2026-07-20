@@ -494,6 +494,17 @@ app.post('/admin/packets', async (req, res) => {
   const packetId = makeId('packet');
   const title = req.body.title || 'Untitled Review Packet';
 
+  const comparePage = {
+    pageId: makeId('page'),
+    type: 'urlCompare',
+    title: req.body.pageTitle || 'Dev vs Live review',
+    instructions: req.body.instructions || '',
+    devUrl: (req.body.devUrl || DEFAULT_DEV_URL).trim(),
+    liveUrl: (req.body.liveUrl || DEFAULT_LIVE_URL).trim(),
+    screenSizes: DEFAULT_SCREEN_SIZES,
+    order: 1
+  };
+
   const packet = {
     packetId,
     shareToken: makeId('share'),
@@ -510,23 +521,56 @@ app.post('/admin/packets', async (req, res) => {
         body: 'Review the Dev and Live pages, leave notes by screen size, then export or start a new round when ready.',
         order: 0
       },
-      {
-        pageId: makeId('page'),
-        type: 'urlCompare',
-        title: req.body.pageTitle || 'Dev vs Live review',
-        instructions: req.body.instructions || '',
-        devUrl: (req.body.devUrl || DEFAULT_DEV_URL).trim(),
-        liveUrl: (req.body.liveUrl || DEFAULT_LIVE_URL).trim(),
-        screenSizes: DEFAULT_SCREEN_SIZES,
-        order: 1
-      }
+      comparePage
     ]
   };
 
-  packets.push(packet);
-  await savePackets(packets);
+  let captureError = '';
+  const capturedPaths = [];
+  if (req.body.autoCapture === 'true') {
+    const presetSizes = req.body.captureMode === 'all'
+      ? undefined
+      : ['desktop', 'mobile'];
 
-  res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
+    try {
+      comparePage.devShots = await captureUrlAllPresets(
+        resolveReviewUrl(req, comparePage.devUrl),
+        'dev',
+        presetSizes
+      );
+      capturedPaths.push(...Object.values(comparePage.devShots));
+
+      comparePage.liveShots = await captureUrlAllPresets(
+        resolveReviewUrl(req, comparePage.liveUrl),
+        'live',
+        presetSizes
+      );
+      capturedPaths.push(...Object.values(comparePage.liveShots));
+
+      comparePage.devScreenshotPath = comparePage.devShots.desktop || comparePage.devShots.mobile || '';
+      comparePage.liveScreenshotPath = comparePage.liveShots.desktop || comparePage.liveShots.mobile || '';
+      comparePage.capturedAt = new Date().toISOString();
+    } catch (error) {
+      capturedPaths.forEach(removeUploadFile);
+      delete comparePage.devShots;
+      delete comparePage.liveShots;
+      captureError = error.message;
+      console.error('Automatic screenshot capture failed:', error.message);
+    }
+  }
+
+  packets.push(packet);
+  try {
+    await savePackets(packets);
+  } catch (error) {
+    capturedPaths.forEach(removeUploadFile);
+    throw error;
+  }
+
+  const captureResult = captureError
+    ? `&captureError=${encodeURIComponent(captureError)}`
+    : (req.body.autoCapture === 'true' ? '&captured=1' : '');
+  res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}${captureResult}`);
 });
 
 app.post('/admin/packets/demo', async (req, res) => {
@@ -555,7 +599,9 @@ app.get('/admin/packets/:packetId/edit', async (req, res) => {
 
   res.render('edit-packet', {
     packet,
-    key: adminKey(req)
+    key: adminKey(req),
+    captured: req.query.captured === '1',
+    captureError: String(req.query.captureError || '')
   });
 });
 
