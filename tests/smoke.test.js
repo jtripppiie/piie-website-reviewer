@@ -245,12 +245,46 @@ test('static annotations can be edited, moved, deleted, and debug-seeded', () =>
   assert.match(demo, /document\.body\.classList\.add\('quick-edit-on'\)/);
 });
 
-test('removeUploadFile only targets files inside data/uploads', () => {
+test('upload deletion is constrained to managed upload names', () => {
+  const server = read('server.js');
+  const objectStorage = read('object-storage.js');
+
+  assert.match(server, /function removeUploadFile/, 'removeUploadFile helper missing');
+  assert.match(server, /objectStorage\.deleteUpload\(webPath\)/);
+  assert.match(objectStorage, /startsWith\('\/uploads\/'\)/, 'deleteUpload should guard the /uploads/ prefix');
+  assert.match(objectStorage, /path\.basename\(webPath\)/, 'deleteUpload should strip directories');
+});
+
+test('Google Cloud mode keeps local mode as the default', () => {
+  const storage = read('storage.js');
+  const objectStorage = read('object-storage.js');
   const server = read('server.js');
 
-  // The cleanup helper must refuse paths outside the uploads folder.
-  assert.match(server, /function removeUploadFile/, 'removeUploadFile helper missing');
-  assert.match(server, /startsWith\('\/uploads\/'\)/, 'removeUploadFile should guard the /uploads/ prefix');
+  assert.match(storage, /process\.env\.STORAGE_BACKEND === 'google'/);
+  assert.match(storage, /if \(cloudEnabled\) return getCloudCollection\('packets'\)/);
+  assert.match(objectStorage, /GCS_BUCKET is required/);
+  assert.match(objectStorage, /if \(!cloudEnabled\)/);
+  assert.match(server, /storage: objectStorage\.cloudEnabled \? 'google' : 'local'/);
+  assert.match(server, /await getPackets\(\);[\s\S]*res\.status\(503\)/);
+});
+
+test('Google Cloud deployment is guarded and resource-limited', () => {
+  const deploy = read('scripts/deploy-gcloud.sh');
+  const migrate = read('scripts/migrate-local-to-gcloud.js');
+  const ignore = read('.gcloudignore');
+
+  assert.match(deploy, /--concurrency=1/);
+  assert.match(deploy, /--max-instances=1/);
+  assert.match(deploy, /--execution-environment=gen2/);
+  assert.match(deploy, /--timeout=900/);
+  assert.match(deploy, /--set-secrets=/);
+  assert.match(deploy, /roles\/datastore\.user/);
+  assert.match(deploy, /roles\/storage\.objectAdmin/);
+  assert.match(migrate, /MIGRATE_CONFIRM !== 'yes'/);
+  assert.match(migrate, /savePackets\(packets\)/);
+  assert.match(migrate, /saveUploadBuffer/);
+  assert.match(ignore, /^data$/m);
+  assert.match(ignore, /^\.env$/m);
 });
 
 test('feedback coordinates are clamped before rendering in inline CSS', () => {

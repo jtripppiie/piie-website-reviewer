@@ -1,18 +1,21 @@
 {
   "name": "piie-website-reviewer",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "No-database web review tool for PIIE design and content QA",
   "main": "server.js",
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
     "share": "bash share.sh",
-    "test": "node tests/smoke.test.js"
+    "test": "node tests/smoke.test.js",
+    "migrate:gcloud": "node scripts/migrate-local-to-gcloud.js"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^8.6.0",
+    "@google-cloud/storage": "^7.21.0",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.19.2",

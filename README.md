@@ -294,6 +294,93 @@ is needed for data to survive. See `render.yaml` for the setup.
 
 For a free always-on URL, the Cloudflare tunnel above is usually the better fit.
 
+### Google Cloud Run deployment
+
+The app supports two storage modes:
+
+- `STORAGE_BACKEND=local` (the default) keeps using `data/packets.json`,
+  `data/responses.json`, and `data/uploads`. This is the normal local testing
+  mode and does not require a Google account or credentials.
+- `STORAGE_BACKEND=google` stores packets and notes in Firestore and stores
+  uploaded/captured images in a private Cloud Storage bucket. This is the mode
+  used by Cloud Run.
+
+The Google deployment intentionally starts with Cloud Run concurrency and
+maximum instances both set to `1`. The existing admin routes perform short
+read/modify/write operations, so this prevents two instances from overwriting
+one another while still giving the app durable Firestore and Cloud Storage
+persistence. Screenshot captures receive 2 CPUs, 2 GiB memory, a fifteen-minute
+request timeout, and the second-generation execution environment.
+
+Prerequisites:
+
+1. Install and authenticate the Google Cloud CLI.
+2. Create or select a billed Google Cloud project.
+3. Make sure your account can enable APIs, create Firestore/Storage resources,
+   create service accounts and secrets, and deploy Cloud Run services.
+
+From the repository root, run:
+
+```bash
+export PROJECT_ID="your-google-project-id"
+export REGION="us-east1"                 # optional
+export FIRESTORE_LOCATION="nam5"         # optional; choose carefully
+bash scripts/deploy-gcloud.sh
+```
+
+The setup script:
+
+- enables Cloud Run, Cloud Build, Firestore, Cloud Storage, Artifact Registry,
+  and Secret Manager APIs;
+- creates the default Firestore Native database with delete protection when
+  one does not exist;
+- creates a private, uniform-access Cloud Storage bucket;
+- creates a least-purpose Cloud Run service account;
+- grants that account Firestore and bucket object access;
+- adds new Secret Manager versions for the admin and reviewer credentials;
+- builds from the included Dockerfile and deploys the Cloud Run service; and
+- prints the deployed URL.
+
+The bucket name defaults to `<PROJECT_ID>-piie-reviewer-uploads`. Override it
+with `GCS_BUCKET` before running the script if that globally unique name is not
+available.
+
+#### Migrate existing local reviews
+
+Deployment starts with empty cloud collections. To copy the current local JSON
+files and uploads into the configured Google project, authenticate with
+Application Default Credentials and run:
+
+```bash
+gcloud auth application-default login
+export STORAGE_BACKEND=google
+export GOOGLE_CLOUD_PROJECT="your-google-project-id"
+export GCS_BUCKET="your-bucket-name"
+export MIGRATE_CONFIRM=yes
+npm run migrate:gcloud
+```
+
+Migration replaces the configured Firestore packet and response collections,
+so the explicit confirmation flag is required. It does not delete or change
+the local files. Set `FIRESTORE_COLLECTION_PREFIX` if multiple isolated app
+environments share one project.
+
+#### Continue testing locally
+
+Local mode remains the default:
+
+```bash
+cp .env.example .env
+npm install
+npm test
+npm run dev
+```
+
+Keep `STORAGE_BACKEND=local` in `.env`. Local packets, notes, screenshots, and
+uploads continue to behave exactly as before. The `/healthz` response reports
+`"storage":"local"` or `"storage":"google"` so you can confirm which backend
+the running instance is using.
+
 ---
 
 ## Handy URLs

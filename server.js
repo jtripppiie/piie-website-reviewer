@@ -4,7 +4,6 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
-const fs = require('fs');
 
 const {
   ensureDataFiles,
@@ -18,6 +17,7 @@ const {
 
 const { captureUrlAllPresets } = require('./screenshot');
 const { safeLocalRedirect } = require('./security');
+const objectStorage = require('./object-storage');
 
 const APP_VERSION = require('./package.json').version;
 
@@ -113,7 +113,17 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
 app.use('/public', express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads')));
+if (objectStorage.cloudEnabled) {
+  app.get('/uploads/:name', async (req, res, next) => {
+    try {
+      if (!await objectStorage.serveUpload(req.params.name, res)) return res.status(404).send('Upload not found.');
+    } catch (error) {
+      next(error);
+    }
+  });
+} else {
+  app.use('/uploads', express.static(objectStorage.LOCAL_UPLOADS_DIR));
+}
 
 // Packet storage is intentionally single-process. Serialize packet mutations so
 // their read-modify-write cycles cannot overwrite one another. Response writes
@@ -161,16 +171,8 @@ app.use((req, res, next) => {
   });
 });
 
-const uploadStorage = multer.diskStorage({
-  destination: path.join(__dirname, 'data', 'uploads'),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname || '').toLowerCase() || '.png';
-    cb(null, `${makeId('upload')}${ext}`);
-  }
-});
-
 const upload = multer({
-  storage: uploadStorage,
+  storage: objectStorage.multerStorage(makeId),
   limits: { fileSize: 12 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
@@ -197,7 +199,7 @@ function requireAdminBeforeUpload(req, res, next) {
 }
 
 function uploadPath(file) {
-  return file ? `/uploads/${file.filename}` : '';
+  return file ? objectStorage.uploadPath(file.filename) : '';
 }
 
 const DEFAULT_DEMO_URL = (process.env.DEFAULT_DEMO_URL || 'https://www.nelsonstructural.com/').trim();
@@ -400,20 +402,13 @@ function makeDemoPacket(titleOverride = '') {
   return { packet, responses };
 }
 
-// Safely delete a previously uploaded file when it is replaced or removed, so
-// the data/uploads folder does not fill up with orphans. Only touches files
-// inside data/uploads and never throws.
+// Safely delete a replaced upload from the active local or Google object store.
+// The adapter accepts only managed /uploads/ paths and failures are logged
+// without interrupting the user's save operation.
 function removeUploadFile(webPath) {
-  if (!webPath || typeof webPath !== 'string') return;
-  if (!webPath.startsWith('/uploads/')) return;
-
-  const name = path.basename(webPath);
-  const full = path.join(__dirname, 'data', 'uploads', name);
-  const base = path.join(__dirname, 'data', 'uploads');
-
-  if (!full.startsWith(base + path.sep)) return;
-
-  fs.promises.unlink(full).catch(() => {});
+  objectStorage.deleteUpload(webPath).catch(error => {
+    console.error(`Could not remove upload ${webPath}:`, error.message);
+  });
 }
 
 function cleanupRequestUploads(req, keepPaths = []) {
@@ -1815,14 +1810,26 @@ ensureDataFiles().then(() => {
   
 // PIIE_WEB_REVIEWER_DEBUG_ROUTES
 app.get('/healthz', async (req, res) => {
-  res.json({
-    ok: true,
-    app: 'PIIE Web Reviewer',
-    version: APP_VERSION,
-    time: new Date().toISOString(),
-    cwd: process.cwd(),
-    node: process.version
-  });
+  try {
+    await getPackets();
+    res.json({
+      ok: true,
+      app: 'PIIE Web Reviewer',
+      version: APP_VERSION,
+      time: new Date().toISOString(),
+      cwd: process.cwd(),
+      node: process.version,
+      storage: objectStorage.cloudEnabled ? 'google' : 'local'
+    });
+  } catch (error) {
+    console.error('Health check failed:', error.message);
+    res.status(503).json({
+      ok: false,
+      app: 'PIIE Web Reviewer',
+      version: APP_VERSION,
+      storage: objectStorage.cloudEnabled ? 'google' : 'local'
+    });
+  }
 });
 
 app.get('/admin/debug', async (req, res) => {

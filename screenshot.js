@@ -1,8 +1,5 @@
-const path = require('path');
-const fs = require('fs/promises');
 const puppeteer = require('puppeteer');
-
-const UPLOADS_DIR = path.join(__dirname, 'data', 'uploads');
+const objectStorage = require('./object-storage');
 
 // Honest viewport presets. These match the review page presets.
 const CAPTURE_PRESETS = [
@@ -168,10 +165,8 @@ async function captureUrlAllPresets(url, prefix, presetSizes) {
         await dismissCookieDialog(page);
 
         const fileName = `${baseName}_${preset.size}.png`;
-        const filePath = path.join(UPLOADS_DIR, fileName);
-
-        await page.screenshot({ path: filePath, fullPage: true });
-        shots[preset.size] = `/uploads/${fileName}`;
+        const buffer = await page.screenshot({ fullPage: true });
+        shots[preset.size] = await objectStorage.saveUploadBuffer(fileName, buffer, 'image/png');
       } finally {
         await page.close();
       }
@@ -179,7 +174,7 @@ async function captureUrlAllPresets(url, prefix, presetSizes) {
   } catch (error) {
     await Promise.all(
       Object.values(shots).map(webPath =>
-        fs.unlink(path.join(UPLOADS_DIR, path.basename(webPath))).catch(() => {})
+        objectStorage.deleteUpload(webPath).catch(() => {})
       )
     );
     throw error;
