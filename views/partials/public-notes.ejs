@@ -78,6 +78,7 @@
               <p class="muted">No comment added.</p>
             <% } %>
 
+            <% if (note.canManage) { %>
             <details class="note-editor">
               <summary>Edit note</summary>
 
@@ -123,6 +124,7 @@
                 <button type="submit" class="button danger">Delete note</button>
               </form>
             </details>
+            <% } %>
           </div>
         </li>
       <% }) %>

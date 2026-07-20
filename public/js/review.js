@@ -407,6 +407,8 @@ async function buildWebpageDiff(stage, modeGroup, diffButton, { silent = false }
     if (!silent) showReviewToast(`${boxes.length} visible differences highlighted.`);
   } catch (error) {
     clearWebpageDiff(stage, modeGroup);
+    diffButton.textContent = 'Highlight unavailable';
+    diffButton.title = error.message || 'These previews cannot be inspected from the review page.';
     if (!silent) showReviewToast(error.message || 'Could not inspect these previews.');
   } finally {
     diffButton.disabled = false;
@@ -742,10 +744,94 @@ function humanStatus(status) {
   return String(status || 'Review note').replace(/-/g, ' ').replace(/^\w/, char => char.toUpperCase());
 }
 
+let suppressPinClickUntil = 0;
+
+document.addEventListener('pointerdown', event => {
+  const dot = event.target.closest('.comment-dot[data-position-url]:not(.is-temp)');
+  if (!dot || event.button !== 0) return;
+  const stage = dot.closest('[data-webpage-preview], [data-webpage-compare], [data-compare]');
+  if (!stage) return;
+
+  const startX = event.clientX;
+  const startY = event.clientY;
+  const originalLeft = dot.style.left;
+  const originalTop = dot.style.top;
+  let moved = false;
+
+  function positionPin(clientX, clientY) {
+    const rect = stage.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const dotX = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+    const dotY = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
+    dot.style.left = `${dotX}%`;
+    dot.style.top = `${dotY}%`;
+    return { dotX, dotY };
+  }
+
+  function onMove(moveEvent) {
+    if (!moved && Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY) < 5) return;
+    if (!moved) {
+      moved = true;
+      dot.classList.add('is-dragging');
+      closeDotPopover();
+    }
+    moveEvent.preventDefault();
+    positionPin(moveEvent.clientX, moveEvent.clientY);
+  }
+
+  async function onEnd(endEvent) {
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onEnd);
+    document.removeEventListener('pointercancel', onCancel);
+    dot.classList.remove('is-dragging');
+    if (!moved) return;
+
+    suppressPinClickUntil = Date.now() + 400;
+    const position = positionPin(endEvent.clientX, endEvent.clientY);
+    if (!position) return;
+    try {
+      const response = await fetch(dot.dataset.positionUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(position)
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || 'Could not move this pin.');
+      }
+      showReviewToast('Pin moved.');
+    } catch (error) {
+      dot.style.left = originalLeft;
+      dot.style.top = originalTop;
+      showReviewToast(error.message || 'Could not move this pin.');
+    }
+  }
+
+  function onCancel() {
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onEnd);
+    document.removeEventListener('pointercancel', onCancel);
+    dot.classList.remove('is-dragging');
+    dot.style.left = originalLeft;
+    dot.style.top = originalTop;
+  }
+
+  document.addEventListener('pointermove', onMove, { passive: false });
+  document.addEventListener('pointerup', onEnd);
+  document.addEventListener('pointercancel', onCancel);
+});
+
 document.addEventListener('click', event => {
   const dot = event.target.closest('.comment-dot:not(.is-temp)');
   if (!dot) {
     if (!event.target.closest('.comment-popover')) closeDotPopover();
+    return;
+  }
+
+  if (Date.now() < suppressPinClickUntil) {
+    event.preventDefault();
+    event.stopPropagation();
     return;
   }
 

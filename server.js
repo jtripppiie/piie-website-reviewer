@@ -1106,6 +1106,46 @@ function reviewerCookieHeader() {
   return parts.join('; ');
 }
 
+function reviewerIdentitySignature(id) {
+  return crypto.createHmac('sha256', ADMIN_PASSWORD).update(`reviewer:${id}`).digest('hex');
+}
+
+function reviewerIdentityFromRequest(req) {
+  const value = parseCookies(req).piie_reviewer_id || '';
+  const [id, signature] = value.split('.');
+  if (!/^[a-f0-9]{32}$/.test(id || '') || !signature) return '';
+  return safeEqual(signature, reviewerIdentitySignature(id)) ? id : '';
+}
+
+function reviewerIdentityCookieHeader(id) {
+  const value = `${id}.${reviewerIdentitySignature(id)}`;
+  const parts = [
+    `piie_reviewer_id=${encodeURIComponent(value)}`,
+    'HttpOnly',
+    'SameSite=Lax',
+    'Path=/',
+    'Max-Age=31536000'
+  ];
+  if (process.env.NODE_ENV === 'production') parts.push('Secure');
+  return parts.join('; ');
+}
+
+function ensureReviewerIdentity(req, res) {
+  const existing = reviewerIdentityFromRequest(req);
+  if (existing) return existing;
+  const id = crypto.randomBytes(16).toString('hex');
+  res.append('Set-Cookie', reviewerIdentityCookieHeader(id));
+  return id;
+}
+
+function canManageResponse(req, response) {
+  if (isAdmin(req)) return true;
+  // Preserve editing for notes created before ownership tracking was added.
+  if (!response.ownerId) return true;
+  const reviewerId = reviewerIdentityFromRequest(req);
+  return Boolean(reviewerId) && safeEqual(reviewerId, response.ownerId);
+}
+
 function requireReviewer(req, res, next) {
   if (isAdmin(req) || isReviewer(req)) {
     return next();
@@ -1203,7 +1243,8 @@ app.post('/review-login', (req, res) => {
     return res.redirect(`/review-login?error=1&next=${encodeURIComponent(nextUrl)}`);
   }
 
-  res.setHeader('Set-Cookie', reviewerCookieHeader());
+  const reviewerId = reviewerIdentityFromRequest(req) || crypto.randomBytes(16).toString('hex');
+  res.setHeader('Set-Cookie', [reviewerCookieHeader(), reviewerIdentityCookieHeader(reviewerId)]);
   res.redirect(nextUrl);
 });
 
@@ -1215,7 +1256,9 @@ app.get('/r/:shareToken', requireReviewer, async (req, res) => {
   if (!packet) return res.status(404).send('Review packet not found or not published.');
 
   const responses = await getResponses();
-  const packetResponses = responses.filter(r => r.packetId === packet.packetId);
+  const packetResponses = responses
+    .filter(r => r.packetId === packet.packetId)
+    .map(response => ({ ...response, canManage: canManageResponse(req, response) }));
 
   res.render('review', {
     packet,
@@ -1295,7 +1338,9 @@ app.get('/r/:shareToken/notes', requireReviewer, async (req, res) => {
   const packetResponses = filterNotes(
     responses.filter(r => r.packetId === packet.packetId),
     req.query
-  ).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+  )
+    .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)))
+    .map(response => ({ ...response, canManage: canManageResponse(req, response) }));
 
   res.render('notes', {
     packet,
@@ -1368,6 +1413,8 @@ app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
     return res.status(400).send('Screen size not valid for this page.');
   }
 
+  const ownerId = isAdmin(req) ? 'admin' : ensureReviewerIdentity(req, res);
+
   await updateResponses(responses => {
     responses.push({
       responseId: makeId('response'),
@@ -1380,6 +1427,7 @@ app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
       comment: req.body.comment || '',
       dotX: normalizeNoteCoordinate(req.body.dotX),
       dotY: normalizeNoteCoordinate(req.body.dotY),
+      ownerId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });
@@ -1398,16 +1446,19 @@ app.post('/r/:shareToken/feedback/:responseId/update', requireReviewer, async (r
 
   let pageId = '';
   let found = false;
+  let allowed = false;
 
   await updateResponses(responses => {
     const response = responses.find(r => r.responseId === req.params.responseId && r.packetId === packet.packetId);
     if (!response) return responses;
+    found = true;
+    if (!canManageResponse(req, response)) return responses;
+    allowed = true;
 
     const page = packet.pages.find(p => p.pageId === response.pageId);
     if (!page || page.type === 'cover') return responses;
 
     pageId = page.pageId;
-    found = true;
     response.reviewerName = req.body.reviewerName || '';
     response.initials = req.body.reviewerName || '';
     response.status = req.body.status || 'needs-review';
@@ -1423,6 +1474,7 @@ app.post('/r/:shareToken/feedback/:responseId/update', requireReviewer, async (r
   });
 
   if (!found) return res.status(404).send('Review note not found.');
+  if (!allowed) return res.status(403).send('You can only edit notes created in this browser.');
 
   const next = req.body.next ? safeLocalRedirect(req.body.next) : reviewRedirect(packet, req, pageId);
   res.redirect(next);
@@ -1436,20 +1488,55 @@ app.post('/r/:shareToken/feedback/:responseId/delete', requireReviewer, async (r
 
   let pageId = '';
   let found = false;
+  let allowed = false;
 
   await updateResponses(responses => {
     const response = responses.find(r => r.responseId === req.params.responseId && r.packetId === packet.packetId);
     if (!response) return responses;
+    found = true;
+    if (!canManageResponse(req, response)) return responses;
+    allowed = true;
 
     pageId = response.pageId || '';
-    found = true;
     return responses.filter(r => r.responseId !== req.params.responseId);
   });
 
   if (!found) return res.status(404).send('Review note not found.');
+  if (!allowed) return res.status(403).send('You can only delete notes created in this browser.');
 
   const next = req.body.next ? safeLocalRedirect(req.body.next) : reviewRedirect(packet, req, pageId);
   res.redirect(next);
+});
+
+app.post('/r/:shareToken/feedback/:responseId/position', requireReviewer, async (req, res) => {
+  const packets = await getPackets();
+  const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
+  if (!packet) return res.status(404).json({ error: 'Review packet not found or not published.' });
+
+  let found = false;
+  let allowed = false;
+  let dotX = '';
+  let dotY = '';
+
+  await updateResponses(responses => {
+    const response = responses.find(r => r.responseId === req.params.responseId && r.packetId === packet.packetId);
+    if (!response) return responses;
+    found = true;
+    if (!canManageResponse(req, response)) return responses;
+    allowed = true;
+    dotX = normalizeNoteCoordinate(req.body.dotX);
+    dotY = normalizeNoteCoordinate(req.body.dotY);
+    if (dotX === '' || dotY === '') return responses;
+    response.dotX = dotX;
+    response.dotY = dotY;
+    response.updatedAt = new Date().toISOString();
+    return responses;
+  });
+
+  if (!found) return res.status(404).json({ error: 'Review note not found.' });
+  if (!allowed) return res.status(403).json({ error: 'You can only move pins created in this browser.' });
+  if (dotX === '' || dotY === '') return res.status(400).json({ error: 'Valid pin coordinates are required.' });
+  res.json({ ok: true, dotX, dotY });
 });
 
 app.post('/r/:shareToken/clear-notes', async (req, res) => {

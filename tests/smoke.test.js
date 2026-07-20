@@ -133,6 +133,24 @@ test('server exposes the notes and per-size upload routes', () => {
   assert.match(server, /app: 'PIIE Web Reviewer',[\s\S]*version: APP_VERSION/);
 });
 
+test('review notes use per-browser ownership and owned pins can be dragged', () => {
+  const server = read('server.js');
+  const review = read('views/review.ejs');
+  const notes = read('views/notes.ejs');
+  const publicNotes = read('views/partials/public-notes.ejs');
+  const reviewJs = read('public/js/review.js');
+
+  assert.match(server, /function reviewerIdentitySignature/);
+  assert.match(server, /ownerId,/);
+  assert.match(server, /canManage: canManageResponse/);
+  assert.match(server, /feedback\/:responseId\/position/);
+  assert.match(server, /You can only edit notes created in this browser/);
+  assert.match(notes, /if \(note\.canManage\)/);
+  assert.match(publicNotes, /if \(note\.canManage\)/);
+  assert.match(review, /data-position-url=/);
+  assert.match(reviewJs, /Pin moved\./);
+});
+
 test('new reviews support optional automatic URL screenshots', () => {
   const server = read('server.js');
   const admin = read('views/admin.ejs');
@@ -160,6 +178,7 @@ test('static demo includes interact and compare modes', () => {
   assert.match(demo, /data-annotation-layer/);
   assert.match(demo, /data-webpage-diff/);
   assert.match(demo, />Highlight differences<\/button>/);
+  assert.match(demo, /Highlight unavailable/);
   assert.doesNotMatch(demo, />Find differences<\/button>/);
   assert.match(realReview, />Highlight differences<\/button>/);
   assert.match(demo, /findVisibleDifferences/);
@@ -176,6 +195,7 @@ test('static demo includes interact and compare modes', () => {
   assert.match(realReview, /class="active" data-webpage-mode="compare"/);
   assert.match(realReview, /webpage-preview-stage is-slider/);
   assert.match(read('public/js/review.js'), /autoApplyWebpageDiff/);
+  assert.match(read('public/js/review.js'), /Highlight unavailable/);
   assert.match(read('public/js/review.js'), /classList\.toggle\('is-slider', mode === 'compare' \|\| mode === 'annotate'\)/);
   assert.match(index, /id="headerFeedback"/);
   assert.match(index, /id="headerPreviewStatus"/);

@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '1.1.9';
+const APP_VERSION = '1.2.0';
 
 const PRESETS = {
   desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
@@ -501,6 +501,8 @@ async function findVisibleDifferences(pageEl, { automatic = false } = {}) {
     if (!automatic) showDemoToast(differences.length ? `${differences.length} visible differences highlighted.` : 'No visible differences found in the current viewport.');
   } catch {
     clearDifferenceLayer(pageEl);
+    button.textContent = 'Highlight unavailable';
+    button.title = 'This website cannot be inspected from the GitHub demo. Use captured screenshots or the local app.';
     if (!automatic) showDemoToast('This external website cannot be inspected by GitHub Pages. Use the local app or captured screenshots for difference highlighting.');
   } finally {
     button.disabled = false;

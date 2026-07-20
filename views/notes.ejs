@@ -56,6 +56,10 @@
         <% } %>
       </form>
 
+      <% if (!isAdminView) { %>
+        <p class="muted">You can edit and delete notes added from this browser, and drag their pins to reposition them. Other reviewers' notes remain visible but read-only.</p>
+      <% } %>
+
       <% if (!responses.length) { %>
         <p class="notes-empty">No notes have been left yet. Once reviewers save notes, they show up here.</p>
       <% } else { %>
@@ -82,6 +86,7 @@
                       <%= note.createdAt ? new Date(note.createdAt).toLocaleString() : '' %>
                     </p>
 
+                    <% if (note.canManage) { %>
                     <details class="note-editor">
                       <summary>Edit note</summary>
 
@@ -129,6 +134,7 @@
                         <button type="submit" class="button danger">Delete note</button>
                       </form>
                     </details>
+                    <% } %>
                   </li>
                 <% }) %>
               </ol>

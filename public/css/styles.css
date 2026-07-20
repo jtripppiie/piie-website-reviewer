@@ -394,6 +394,16 @@ button.secondary {
   background: #111827;
 }
 
+.comment-dot[data-position-url] {
+  cursor: grab;
+  touch-action: none;
+}
+
+.comment-dot[data-position-url].is-dragging {
+  cursor: grabbing;
+  z-index: 12;
+}
+
 .comment-popover {
   position: fixed;
   z-index: 10001;

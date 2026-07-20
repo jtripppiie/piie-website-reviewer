@@ -168,7 +168,9 @@
                                 data-reviewer="<%= dot.reviewerName || dot.initials || 'Reviewer' %>"
                                 data-status="<%= dot.status || 'Review note' %>"
                                 data-screen="<%= screenSizeLabel(dot.screenSize) %>"
-                                data-comment="<%= dot.comment || '' %>">
+                                data-comment="<%= dot.comment || '' %>"
+                                data-note-id="<%= dot.responseId %>"
+                                <% if (dot.canManage) { %>data-position-url="/r/<%= packet.shareToken %>/feedback/<%= dot.responseId %>/position<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>"<% } %>>
                                 <%= dotIndex + 1 %>
                               </button>
                             <% }) %>
@@ -342,7 +344,9 @@
                         data-status="<%= dot.status || 'Review note' %>"
                         data-screen="<%= screenSizeLabel(dot.screenSize) %>"
                         data-dot-screen="<%= dot.screenSize || '' %>"
-                        data-comment="<%= dot.comment || '' %>">
+                        data-comment="<%= dot.comment || '' %>"
+                        data-note-id="<%= dot.responseId %>"
+                        <% if (dot.canManage) { %>data-position-url="/r/<%= packet.shareToken %>/feedback/<%= dot.responseId %>/position<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>"<% } %>>
                         <%= dotIndex + 1 %>
                       </button>
                     <% }) %>
@@ -419,7 +423,9 @@
                         data-reviewer="<%= dot.reviewerName || dot.initials || 'Reviewer' %>"
                         data-status="<%= dot.status || 'Review note' %>"
                         data-screen="<%= screenSizeLabel(dot.screenSize) %>"
-                        data-comment="<%= dot.comment || '' %>">
+                        data-comment="<%= dot.comment || '' %>"
+                        data-note-id="<%= dot.responseId %>"
+                        <% if (dot.canManage) { %>data-position-url="/r/<%= packet.shareToken %>/feedback/<%= dot.responseId %>/position<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>"<% } %>>
                         <%= dotIndex + 1 %>
                       </button>
                     <% }) %>
