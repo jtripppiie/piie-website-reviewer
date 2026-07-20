@@ -168,9 +168,12 @@ test('static demo includes interact and compare modes', () => {
   assert.match(realReview, /data-webpage-mode="interact" hidden disabled aria-hidden="true"/);
   assert.match(realReview, /data-webpage-mode="compare" title=.*data-tooltip=/);
   assert.match(demo, /compareMode = state\.compareModes\[page\.pageId\] \|\| 'compare'/);
+  assert.match(demo, /compareMode === 'compare' \|\| compareMode === 'annotate' \? ' is-slider'/);
+  assert.match(demo, /classList\.toggle\('is-slider', mode === 'compare' \|\| mode === 'annotate'\)/);
   assert.match(realReview, /class="active" data-webpage-mode="compare"/);
   assert.match(realReview, /webpage-preview-stage is-slider/);
   assert.match(read('public/js/review.js'), /autoApplyWebpageDiff/);
+  assert.match(read('public/js/review.js'), /classList\.toggle\('is-slider', mode === 'compare' \|\| mode === 'annotate'\)/);
   assert.match(index, /id="headerFeedback"/);
   assert.match(index, /id="headerPreviewStatus"/);
   assert.match(demo, /renderFeedbackPanel/);

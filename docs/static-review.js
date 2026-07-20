@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '1.1.5';
+const APP_VERSION = '1.1.6';
 
 const PRESETS = {
   desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
@@ -344,7 +344,7 @@ function renderPage(page, index) {
           </nav>
         </div>
 
-        <div class="preview-stage${compareMode === 'compare' ? ' is-slider' : ''}${compareMode === 'annotate' ? ' is-annotating' : ''}" data-webpage-compare>
+        <div class="preview-stage${compareMode === 'compare' || compareMode === 'annotate' ? ' is-slider' : ''}${compareMode === 'annotate' ? ' is-annotating' : ''}" data-webpage-compare>
           <article class="frame-card frame-card--dev">
             <div class="frame-card__header">
               <strong>Dev preview</strong>
@@ -857,7 +857,7 @@ document.addEventListener('click', event => {
     pageEl?.querySelectorAll('[data-webpage-mode]').forEach(button => {
       button.classList.toggle('active', button.dataset.webpageMode === 'annotate');
     });
-    stage?.classList.remove('is-slider');
+    stage?.classList.add('is-slider');
     stage?.classList.add('is-annotating');
     clearDifferenceLayer(pageEl);
     refreshPageNotesUi(note.pageId);
@@ -925,7 +925,7 @@ document.addEventListener('click', event => {
     pageEl.querySelectorAll('[data-webpage-mode]').forEach(button => {
       button.classList.toggle('active', button === modeButton);
     });
-    stage?.classList.toggle('is-slider', mode === 'compare');
+    stage?.classList.toggle('is-slider', mode === 'compare' || mode === 'annotate');
     stage?.classList.toggle('is-annotating', mode === 'annotate');
     applyLayout(pageEl);
     if (mode === 'compare') autoApplyVisibleDifferences(pageEl);

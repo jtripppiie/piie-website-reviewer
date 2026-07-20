@@ -461,7 +461,7 @@ document.querySelectorAll('[data-webpage-modes]').forEach(modeGroup => {
       modeButton.classList.toggle('active', modeButton === button);
     });
 
-    stage.classList.toggle('is-slider', mode === 'compare');
+    stage.classList.toggle('is-slider', mode === 'compare' || mode === 'annotate');
     stage.classList.toggle('is-annotating', mode === 'annotate');
     stage.style.setProperty('--reveal', 50);
 
