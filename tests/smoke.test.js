@@ -215,6 +215,11 @@ test('static annotations can be edited, moved, deleted, and debug-seeded', () =>
   assert.match(demo, /if \(debugLogoClicks < 3\) return;/);
   assert.match(demo, /function refreshPageNotesUi/);
   assert.match(index, /id="demoDebugLogo"/);
+  assert.match(index, /id="adminTools"/);
+  assert.match(index, /data-admin-quick-edit>Edit review URLs/);
+  assert.match(index, /Capture screenshots locally/);
+  assert.match(demo, /setAdminToolsOpen\(true\)/);
+  assert.match(demo, /document\.body\.classList\.add\('quick-edit-on'\)/);
 });
 
 test('removeUploadFile only targets files inside data/uploads', () => {

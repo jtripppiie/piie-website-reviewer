@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PIIE Web Reviewer Static Demo</title>
-  <link rel="stylesheet" href="static-review.css?v=1.1.7">
-  <link rel="stylesheet" href="static-demo-overrides.css?v=1.1.7">
+  <link rel="stylesheet" href="static-review.css?v=1.1.8">
+  <link rel="stylesheet" href="static-demo-overrides.css?v=1.1.8">
 </head>
 <body>
   <header class="app-header">
@@ -30,6 +30,23 @@
     <pre id="debugOutput">Loading...</pre>
   </aside>
 
-  <script src="static-review.js?v=1.1.7"></script>
+  <div class="admin-tools" id="adminTools" hidden>
+    <section class="admin-tools__panel" role="dialog" aria-modal="true" aria-labelledby="adminToolsTitle">
+      <div class="admin-tools__bar">
+        <h2 id="adminToolsTitle">Admin Tools</h2>
+        <button type="button" data-admin-tools-close>Close</button>
+      </div>
+      <p>Edit this browser demo here, or open the local app for backend tools.</p>
+      <div class="admin-tools__actions">
+        <button type="button" data-admin-quick-edit>Edit review URLs</button>
+        <button type="button" data-admin-debug-notes>Show debug notes</button>
+        <a class="button" href="http://localhost:3000/admin" target="_blank" rel="noopener">Open local admin</a>
+        <a class="button" href="http://localhost:3000/admin" target="_blank" rel="noopener">Capture screenshots locally</a>
+      </div>
+      <p class="muted">Screenshot capture and packet edit pages require the local backend and admin access.</p>
+    </section>
+  </div>
+
+  <script src="static-review.js?v=1.1.8"></script>
 </body>
 </html>

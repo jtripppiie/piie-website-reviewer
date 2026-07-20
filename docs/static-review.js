@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '1.1.7';
+const APP_VERSION = '1.1.8';
 
 const PRESETS = {
   desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
@@ -1242,10 +1242,26 @@ document.querySelector('#clearNotes').addEventListener('click', () => {
 
 {
   const debugLogo = document.querySelector('#demoDebugLogo');
+  const adminTools = document.querySelector('#adminTools');
+  const debugNotesButton = adminTools.querySelector('[data-admin-debug-notes]');
   let debugLogoClicks = 0;
   let debugLogoTimer = null;
 
-  debugLogo.addEventListener('click', event => {
+  function updateDebugNotesButton() {
+    debugNotesButton.textContent = state.debugMode ? 'Hide debug notes' : 'Show debug notes';
+  }
+
+  function setAdminToolsOpen(open) {
+    adminTools.hidden = !open;
+    if (open) {
+      updateDebugNotesButton();
+      adminTools.querySelector('[data-admin-tools-close]').focus();
+    } else {
+      debugLogo.focus();
+    }
+  }
+
+  debugLogo.addEventListener('click', () => {
     debugLogoClicks += 1;
     clearTimeout(debugLogoTimer);
     debugLogoTimer = setTimeout(() => { debugLogoClicks = 0; }, 700);
@@ -1253,11 +1269,35 @@ document.querySelector('#clearNotes').addEventListener('click', () => {
 
     debugLogoClicks = 0;
     clearTimeout(debugLogoTimer);
-    state.debugMode = !state.debugMode;
-    syncDebugNotes();
-    event.currentTarget.setAttribute('aria-pressed', state.debugMode ? 'true' : 'false');
-    render();
-    showDemoToast(state.debugMode ? 'Debug notes enabled.' : 'Debug notes hidden.');
+    setAdminToolsOpen(true);
+  });
+
+  adminTools.addEventListener('click', event => {
+    if (event.target === adminTools || event.target.closest('[data-admin-tools-close]')) {
+      setAdminToolsOpen(false);
+      return;
+    }
+
+    if (event.target.closest('[data-admin-quick-edit]')) {
+      document.body.classList.add('quick-edit-on');
+      setAdminToolsOpen(false);
+      document.querySelector('[data-quick-edit]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showDemoToast('Review URL editing enabled.');
+      return;
+    }
+
+    if (event.target.closest('[data-admin-debug-notes]')) {
+      state.debugMode = !state.debugMode;
+      syncDebugNotes();
+      debugLogo.setAttribute('aria-pressed', state.debugMode ? 'true' : 'false');
+      render();
+      updateDebugNotesButton();
+      showDemoToast(state.debugMode ? 'Debug notes enabled.' : 'Debug notes hidden.');
+    }
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !adminTools.hidden) setAdminToolsOpen(false);
   });
 }
 
