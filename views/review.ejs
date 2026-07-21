@@ -95,10 +95,10 @@
                   </nav>
                 </div>
 
-                <% if (isAdminView) { %>
+                <% if (canQuickEdit) { %>
                   <div class="quick-edit" data-quick-edit>
                     <div class="quick-edit__head">Quick edit</div>
-                    <form class="quick-edit__form" method="post" action="/r/<%= packet.shareToken %>/quick-update?key=<%= encodeURIComponent(adminKeyValue) %>" enctype="multipart/form-data">
+                    <form class="quick-edit__form" method="post" action="/r/<%= packet.shareToken %>/quick-update<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>" enctype="multipart/form-data">
                       <input type="hidden" name="pageId" value="<%= page.pageId %>">
                       <input type="hidden" name="key" value="<%= adminKeyValue %>">
                       <div class="quick-edit__row">
@@ -226,10 +226,10 @@
                     <a class="button" href="/admin/packets/<%= packet.packetId %>/edit?key=<%= adminKeyValue %>#page-<%= page.pageId %>">Edit this page</a>
                   </div>
                 <% } %>
-                <% if (isAdminView) { %>
+                <% if (canQuickEdit) { %>
                   <div class="quick-edit" data-quick-edit>
                     <div class="quick-edit__head">Quick edit</div>
-                    <form class="quick-edit__form" method="post" action="/r/<%= packet.shareToken %>/quick-update?key=<%= encodeURIComponent(adminKeyValue) %>" enctype="multipart/form-data">
+                    <form class="quick-edit__form" method="post" action="/r/<%= packet.shareToken %>/quick-update<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>" enctype="multipart/form-data">
                       <input type="hidden" name="pageId" value="<%= page.pageId %>">
                       <input type="hidden" name="key" value="<%= adminKeyValue %>">
                       <div class="quick-edit__row">

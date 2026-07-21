@@ -1277,6 +1277,7 @@ app.get('/r/:shareToken', requireReviewer, async (req, res) => {
     responses: packetResponses,
     isAdminView: isAdmin(req),
     adminKeyValue: isAdmin(req) ? adminKey(req) : '',
+    canQuickEdit: isAdmin(req) || isReviewer(req),
     quickEditGated: quickEditEnabled() && !isAdmin(req),
     quickEditUnlocked: isQuickEditUnlocked(req),
     quickEditError: Boolean(req.query.quickEditError)
@@ -1662,13 +1663,16 @@ app.post('/r/:shareToken/quick-unlock', rateLimitQuickUpdate, requireReviewer, (
 // present in the query string). Sets Dev/Live URLs and drops in screenshots or
 // before/after images. URLs are limited to http(s) or root-relative same-origin
 // paths, so a javascript: URL cannot be stored and run later.
-app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireAdminBeforeUpload, requireReviewer, upload.fields([
+app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireReviewer, upload.fields([
   { name: 'beforeImage', maxCount: 1 },
   { name: 'afterImage', maxCount: 1 },
   { name: 'devScreenshot', maxCount: 1 },
   { name: 'liveScreenshot', maxCount: 1 }
 ]), async (req, res) => {
-  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+  // Quick edit is open to any authenticated reviewer (not just admins) so it can
+  // be used from a plain share link. requireReviewer (above) authenticates via
+  // cookie before Multer writes any upload, and isQuickEditUnlocked below is the
+  // remaining gate when a separate QUICK_EDIT_PASSWORD is configured.
 
   const packets = await getPackets();
   const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);

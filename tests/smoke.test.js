@@ -116,7 +116,7 @@ test('multipart routes authorize before writing uploads', () => {
   assert.match(server, /upload-shots', requireAdminBeforeUpload, upload\.fields/);
   assert.match(server, /image-compare', requireAdminBeforeUpload, upload\.fields/);
   assert.match(server, /url-compare', requireAdminBeforeUpload, upload\.fields/);
-  assert.match(server, /quick-update', rateLimitQuickUpdate, requireAdminBeforeUpload, requireReviewer, upload\.fields/);
+  assert.match(server, /quick-update', rateLimitQuickUpdate, requireReviewer, upload\.fields/);
 });
 
 test('server exposes the notes and per-size upload routes', () => {
