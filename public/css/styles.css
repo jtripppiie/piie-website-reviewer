@@ -998,8 +998,7 @@ button.secondary {
 
 .webpage-preview-stage.is-placing-dot,
 .webpage-preview-stage.is-annotating {
-  outline: 3px solid var(--blue);
-  outline-offset: 3px;
+  outline: none;
 }
 
 .webpage-frame-card__header {
