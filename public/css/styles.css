@@ -399,7 +399,7 @@ button.secondary {
 }
 
 .comment-dot.is-temp {
-  background: #111827;
+  background: var(--blue);
 }
 
 .comment-dot[data-position-url] {
