@@ -1032,7 +1032,12 @@ document.addEventListener('click', event => {
 // not cover the review work while scrolling.
 (function () {
   document.addEventListener('click', event => {
-    const toggle = event.target.closest('[data-feedback-toggle]');
+    let toggle = event.target.closest('[data-feedback-toggle]');
+    // When collapsed to a pill, let a click anywhere on the bar expand it.
+    if (!toggle) {
+      const collapsedBar = event.target.closest('.feedback-panel.is-collapsed .feedback-panel__bar');
+      if (collapsedBar) toggle = collapsedBar.querySelector('[data-feedback-toggle]');
+    }
     if (!toggle) return;
 
     const panel = toggle.closest('[data-feedback-panel]');
@@ -1040,6 +1045,7 @@ document.addEventListener('click', event => {
 
     const collapsed = panel.classList.toggle('is-collapsed');
     toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-    toggle.textContent = collapsed ? 'Expand' : 'Collapse';
+    toggle.setAttribute('aria-label', collapsed ? 'Expand notes' : 'Collapse notes');
+    toggle.textContent = collapsed ? '+' : '\u2013';
   });
 })();

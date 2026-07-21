@@ -3097,3 +3097,21 @@ button:disabled {
   box-shadow: none;
   background: #fff;
 }
+
+/* Compact icon-only toggle on the Add Notes panel (no "Expand"/"Collapse" word) */
+.review-body .feedback-panel__toggle {
+  min-width: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  line-height: 1;
+  border-radius: 8px;
+}
+
+/* Whole collapsed pill is clickable to expand */
+.review-body .feedback-panel.is-collapsed .feedback-panel__bar {
+  cursor: pointer;
+}
