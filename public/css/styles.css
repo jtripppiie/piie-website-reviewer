@@ -107,6 +107,14 @@ textarea {
   min-height: 110px;
 }
 
+/* The generic `button { display: inline-block }` rule below is an author style
+   and therefore overrides the user-agent `[hidden] { display: none }` rule
+   (cascade origin beats specificity), which would leave hidden buttons like the
+   disabled "Interact" mode visible. Restore the intended behavior. */
+[hidden] {
+  display: none !important;
+}
+
 button,
 .button {
   display: inline-block;
@@ -813,6 +821,14 @@ button.secondary {
   border-radius: 0;
   padding: 0;
   cursor: crosshair;
+  background: rgba(64, 124, 167, .08);
+}
+
+/* The generic `.review-body button` rule (specificity 0,2,1) sets a solid
+   white background that would otherwise beat the class above and paint an
+   opaque overlay over the whole preview, blanking it in Annotate mode. Keep
+   the annotate overlay translucent. */
+.review-body button.webpage-mark-layer {
   background: rgba(64, 124, 167, .08);
 }
 
