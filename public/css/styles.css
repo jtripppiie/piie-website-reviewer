@@ -849,6 +849,25 @@ button.secondary {
   background: rgba(64, 124, 167, .08);
 }
 
+/* Note pins are <button>s, so the generic `.review-body button` rule (border,
+   radius, padding, colour, box-shadow) clobbers them. Restore EVERY property in
+   one place so a pin renders exactly like the demo's `.demo-comment-dot`: a
+   28px circle, white 2px ring, centred white bold glyph, soft drop shadow.
+   Background is intentionally NOT set here so per-reviewer inline colours and
+   the pending `.is-temp` blue keep working. */
+.review-body button.comment-dot {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(16, 35, 51, .35);
+}
+
 .webpage-preview-stage.is-annotating .handle {
   z-index: 8;
 }
