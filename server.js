@@ -4,6 +4,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
+const ejs = require('ejs');
 
 const {
   ensureDataFiles,
@@ -1445,6 +1446,28 @@ app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
 
     return responses;
   });
+
+  const wantsJson = (req.get('accept') || '').includes('application/json')
+    || req.get('x-requested-with') === 'fetch';
+
+  if (wantsJson) {
+    const freshResponses = (await getResponses())
+      .filter(r => r.packetId === packet.packetId)
+      .map(r => ({ ...r, canManage: canManageResponse(req, r) }));
+
+    const notesHtml = await ejs.renderFile(
+      path.join(__dirname, 'views', 'partials', 'public-notes.ejs'),
+      {
+        responses: freshResponses,
+        page,
+        screenSize,
+        packet,
+        adminKeyValue: isAdmin(req) ? adminKey(req) : ''
+      }
+    );
+
+    return res.json({ ok: true, notesHtml });
+  }
 
   res.redirect(reviewRedirect(packet, req, page.pageId));
 });

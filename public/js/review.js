@@ -1046,3 +1046,66 @@ document.addEventListener('click', event => {
     toggle.textContent = collapsed ? '+' : '\u2013';
   });
 })();
+
+// Instant note saving: submit the Add Notes form in the background (like the
+// static demo) so the page never reloads or jumps. The visible notes list is
+// swapped in place and the form is reset for the next note.
+(function () {
+  document.addEventListener('submit', async event => {
+    const form = event.target.closest('form.feedback');
+    if (!form) return;
+
+    event.preventDefault();
+
+    const nameField = form.querySelector('[name="reviewerName"]');
+    if (nameField && !nameField.value.trim()) {
+      nameField.reportValidity ? nameField.reportValidity() : nameField.focus();
+      return;
+    }
+
+    const submitBtn = form.querySelector('[type="submit"]');
+    const originalLabel = submitBtn ? submitBtn.textContent : '';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving\u2026';
+    }
+
+    // Keep any pending pin visible by promoting it from a temporary marker.
+    const stage = activeMarkTargetForForm(form);
+    const pendingDot = stage ? stage.querySelector('.comment-dot.is-temp') : null;
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+        body: new URLSearchParams(new FormData(form))
+      });
+
+      if (!response.ok) throw new Error('save-failed');
+
+      const data = await response.json();
+      const panel = form.closest('.screen-feedback') || form.closest('[data-feedback-size]');
+      const notesHost = panel ? panel.querySelector('.public-notes') : null;
+
+      if (notesHost && data.notesHtml) {
+        notesHost.outerHTML = data.notesHtml;
+      }
+
+      if (pendingDot) pendingDot.classList.remove('is-temp');
+
+      form.reset();
+      if (typeof clearFormDot === 'function') clearFormDot(form);
+      showReviewToast('Note saved.');
+    } catch (error) {
+      // Fall back to a normal submit so the reviewer never loses their note.
+      showReviewToast('Saving\u2026');
+      form.submit();
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalLabel;
+      }
+    }
+  });
+})();
+
