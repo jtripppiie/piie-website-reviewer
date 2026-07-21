@@ -202,8 +202,33 @@
       scaler.style.setProperty('max-width', '100%', 'important');
     });
 
+    syncAnnotationOverlay(stage);
     updateStatus(slide, preset, scale);
   }
+
+  // Keep the pin overlay aligned to the actual rendered iframe content box so
+  // note pins stay anchored to the same spot on the page at any width/scale.
+  function syncAnnotationOverlay(stage) {
+    const overlay = stage.querySelector('[data-annotation-overlay]');
+    if (!overlay) return;
+
+    const iframe = stage.querySelector('.webpage-frame-card iframe');
+    if (!iframe) return;
+
+    const stageRect = stage.getBoundingClientRect();
+    const frameRect = iframe.getBoundingClientRect();
+    if (!frameRect.width || !frameRect.height) return;
+
+    overlay.style.left = `${frameRect.left - stageRect.left}px`;
+    overlay.style.top = `${frameRect.top - stageRect.top}px`;
+    overlay.style.width = `${frameRect.width}px`;
+    overlay.style.height = `${frameRect.height}px`;
+  }
+
+  // Allow other scripts (mode toggles) to re-align overlays after DOM changes.
+  window.syncAnnotationOverlays = function () {
+    document.querySelectorAll('.webpage-preview-stage').forEach(syncAnnotationOverlay);
+  };
 
   function cardsFitSideBySide(stage, scaledWidth) {
     const cardCount = stage.querySelectorAll('.webpage-frame-card').length;

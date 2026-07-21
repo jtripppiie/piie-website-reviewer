@@ -322,22 +322,24 @@
                       </button>
                     <% }) %>
 
-                    <% webpageDots.forEach((dot, dotIndex) => { %>
-                      <button
-                        class="comment-dot"
-                        type="button"
-                        style="left: <%= dot.dotX %>%; top: <%= dot.dotY %>%"
-                        title="<%= (dot.reviewerName || dot.initials || 'Reviewer') + ': ' + dot.status + (dot.comment ? ' - ' + dot.comment : '') %>"
-                        data-reviewer="<%= dot.reviewerName || dot.initials || 'Reviewer' %>"
-                        data-status="<%= dot.status || 'Review note' %>"
-                        data-screen="<%= screenSizeLabel(dot.screenSize) %>"
-                        data-dot-screen="<%= dot.screenSize || '' %>"
-                        data-comment="<%= dot.comment || '' %>"
-                        data-note-id="<%= dot.responseId %>"
-                        <% if (dot.canManage) { %>data-position-url="/r/<%= packet.shareToken %>/feedback/<%= dot.responseId %>/position<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>"<% } %>>
-                        <%= dotIndex + 1 %>
-                      </button>
-                    <% }) %>
+                    <div class="webpage-annotation-overlay" data-annotation-overlay>
+                      <% webpageDots.forEach((dot, dotIndex) => { %>
+                        <button
+                          class="comment-dot"
+                          type="button"
+                          style="left: <%= dot.dotX %>%; top: <%= dot.dotY %>%"
+                          title="<%= (dot.reviewerName || dot.initials || 'Reviewer') + ': ' + dot.status + (dot.comment ? ' - ' + dot.comment : '') %>"
+                          data-reviewer="<%= dot.reviewerName || dot.initials || 'Reviewer' %>"
+                          data-status="<%= dot.status || 'Review note' %>"
+                          data-screen="<%= screenSizeLabel(dot.screenSize) %>"
+                          data-dot-screen="<%= dot.screenSize || '' %>"
+                          data-comment="<%= dot.comment || '' %>"
+                          data-note-id="<%= dot.responseId %>"
+                          <% if (dot.canManage) { %>data-position-url="/r/<%= packet.shareToken %>/feedback/<%= dot.responseId %>/position<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>"<% } %>>
+                          <%= dotIndex + 1 %>
+                        </button>
+                      <% }) %>
+                    </div>
                   </div>
 
                 <% } else if (page.devShots || page.liveShots) { %>

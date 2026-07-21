@@ -757,6 +757,23 @@ button.secondary {
   overflow: hidden;
 }
 
+/* Overlay that holds note pins. JS keeps it aligned to the rendered iframe
+   content box (not the clipped stage) so pins stay glued to the same spot on
+   the page regardless of preview width or scale. */
+.webpage-annotation-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.webpage-annotation-overlay .comment-dot {
+  pointer-events: auto;
+}
+
 .webpage-preview-stage.is-slider {
   display: block;
   height: var(--webpage-height);

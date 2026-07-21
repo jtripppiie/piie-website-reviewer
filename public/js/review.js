@@ -467,6 +467,10 @@ document.querySelectorAll('[data-webpage-modes]').forEach(modeGroup => {
     stage.classList.toggle('is-annotating', mode === 'annotate');
     stage.style.setProperty('--reveal', 50);
 
+    if (typeof window.syncAnnotationOverlays === 'function') {
+      requestAnimationFrame(window.syncAnnotationOverlays);
+    }
+
     if (mode === 'annotate') {
       ensureWebpageMarkLayer(stage);
       showReviewToast('Click the preview to mark a spot for the active note form.');
@@ -658,11 +662,14 @@ function placeDot(target, clientX, clientY, formOverride = null, disarmAfter = t
   const form = formOverride || armedDotForm;
   if (!form) return;
 
-  const rect = target.getBoundingClientRect();
+  // Pins are anchored to the rendered content box (the pin overlay) rather than
+  // the clipped stage, so they stay locked to the same spot at any width/scale.
+  const box = target.querySelector('[data-annotation-overlay]') || target;
+  const rect = box.getBoundingClientRect();
   const x = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
   const y = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
 
-  clearTempDot(target);
+  clearTempDot(box);
   setFormDot(form, x, y);
 
   const dot = document.createElement('button');
@@ -672,7 +679,7 @@ function placeDot(target, clientX, clientY, formOverride = null, disarmAfter = t
   dot.style.top = `${y}%`;
   dot.textContent = '+';
   dot.setAttribute('aria-label', 'Pending note spot');
-  target.appendChild(dot);
+  box.appendChild(dot);
 
   if (disarmAfter) disarmDotPlacement();
   showReviewToast('Spot marked. Add your note, then save.');
@@ -772,6 +779,10 @@ document.addEventListener('pointerdown', event => {
   const stage = dot.closest('[data-webpage-preview], [data-webpage-compare], [data-compare]');
   if (!stage) return;
 
+  // Move the pin within the same content-anchored overlay it is rendered in, so
+  // dragged coordinates match the placement coordinate space.
+  const box = stage.querySelector('[data-annotation-overlay]') || stage;
+
   const startX = event.clientX;
   const startY = event.clientY;
   const originalLeft = dot.style.left;
@@ -779,7 +790,7 @@ document.addEventListener('pointerdown', event => {
   let moved = false;
 
   function positionPin(clientX, clientY) {
-    const rect = stage.getBoundingClientRect();
+    const rect = box.getBoundingClientRect();
     if (!rect.width || !rect.height) return null;
     const dotX = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
     const dotY = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
