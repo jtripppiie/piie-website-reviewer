@@ -1407,6 +1407,28 @@ app.get('/r/:shareToken/notes/download', requireReviewer, async (req, res) => {
   res.send('\ufeff' + csv);
 });
 
+function wantsJsonResponse(req) {
+  return (req.get('accept') || '').includes('application/json')
+    || req.get('x-requested-with') === 'fetch';
+}
+
+async function renderNotesPartial(req, packet, page, screenSize) {
+  const freshResponses = (await getResponses())
+    .filter(r => r.packetId === packet.packetId)
+    .map(r => ({ ...r, canManage: canManageResponse(req, r) }));
+
+  return ejs.renderFile(
+    path.join(__dirname, 'views', 'partials', 'public-notes.ejs'),
+    {
+      responses: freshResponses,
+      page,
+      screenSize,
+      packet,
+      adminKeyValue: isAdmin(req) ? adminKey(req) : ''
+    }
+  );
+}
+
 app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
   const packets = await getPackets();
   const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
@@ -1447,25 +1469,8 @@ app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
     return responses;
   });
 
-  const wantsJson = (req.get('accept') || '').includes('application/json')
-    || req.get('x-requested-with') === 'fetch';
-
-  if (wantsJson) {
-    const freshResponses = (await getResponses())
-      .filter(r => r.packetId === packet.packetId)
-      .map(r => ({ ...r, canManage: canManageResponse(req, r) }));
-
-    const notesHtml = await ejs.renderFile(
-      path.join(__dirname, 'views', 'partials', 'public-notes.ejs'),
-      {
-        responses: freshResponses,
-        page,
-        screenSize,
-        packet,
-        adminKeyValue: isAdmin(req) ? adminKey(req) : ''
-      }
-    );
-
+  if (wantsJsonResponse(req)) {
+    const notesHtml = await renderNotesPartial(req, packet, page, screenSize);
     return res.json({ ok: true, notesHtml });
   }
 
@@ -1479,6 +1484,7 @@ app.post('/r/:shareToken/feedback/:responseId/update', requireReviewer, async (r
   if (!packet) return res.status(404).send('Review packet not found or not published.');
 
   let pageId = '';
+  let screenSize = '';
   let found = false;
   let allowed = false;
 
@@ -1493,6 +1499,7 @@ app.post('/r/:shareToken/feedback/:responseId/update', requireReviewer, async (r
     if (!page || page.type === 'cover') return responses;
 
     pageId = page.pageId;
+    screenSize = response.screenSize || '';
     response.reviewerName = req.body.reviewerName || '';
     response.initials = req.body.reviewerName || '';
     response.status = req.body.status || 'needs-review';
@@ -1510,6 +1517,12 @@ app.post('/r/:shareToken/feedback/:responseId/update', requireReviewer, async (r
   if (!found) return res.status(404).send('Review note not found.');
   if (!allowed) return res.status(403).send('You can only edit notes created in this browser.');
 
+  if (wantsJsonResponse(req)) {
+    const page = packet.pages.find(p => p.pageId === pageId);
+    const notesHtml = await renderNotesPartial(req, packet, page, screenSize);
+    return res.json({ ok: true, notesHtml });
+  }
+
   const next = req.body.next ? safeLocalRedirect(req.body.next) : reviewRedirect(packet, req, pageId);
   res.redirect(next);
 });
@@ -1521,6 +1534,7 @@ app.post('/r/:shareToken/feedback/:responseId/delete', requireReviewer, async (r
   if (!packet) return res.status(404).send('Review packet not found or not published.');
 
   let pageId = '';
+  let screenSize = '';
   let found = false;
   let allowed = false;
 
@@ -1532,11 +1546,18 @@ app.post('/r/:shareToken/feedback/:responseId/delete', requireReviewer, async (r
     allowed = true;
 
     pageId = response.pageId || '';
+    screenSize = response.screenSize || '';
     return responses.filter(r => r.responseId !== req.params.responseId);
   });
 
   if (!found) return res.status(404).send('Review note not found.');
   if (!allowed) return res.status(403).send('You can only delete notes created in this browser.');
+
+  if (wantsJsonResponse(req)) {
+    const page = packet.pages.find(p => p.pageId === pageId);
+    const notesHtml = await renderNotesPartial(req, packet, page, screenSize);
+    return res.json({ ok: true, notesHtml });
+  }
 
   const next = req.body.next ? safeLocalRedirect(req.body.next) : reviewRedirect(packet, req, pageId);
   res.redirect(next);

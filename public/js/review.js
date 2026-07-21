@@ -1109,3 +1109,49 @@ document.addEventListener('click', event => {
   });
 })();
 
+// Instant edit + delete: match the Add flow so managing existing notes never
+// reloads the page or resets the reviewer's screen size / scroll position.
+(function () {
+  document.addEventListener('submit', async event => {
+    // A cancelled delete confirm() sets defaultPrevented; respect it so we
+    // never delete a note the reviewer chose to keep.
+    if (event.defaultPrevented) return;
+
+    const form = event.target.closest('form[action*="/feedback/"]');
+    if (!form) return;
+
+    const action = form.getAttribute('action') || '';
+    const isUpdate = /\/update(\?|$)/.test(action);
+    const isDelete = /\/delete(\?|$)/.test(action);
+    if (!isUpdate && !isDelete) return;
+
+    event.preventDefault();
+
+    const notesHost = form.closest('.public-notes');
+    const submitBtn = form.querySelector('[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+        body: new URLSearchParams(new FormData(form))
+      });
+
+      if (!response.ok) throw new Error('request-failed');
+
+      const data = await response.json();
+
+      if (notesHost && data.notesHtml) {
+        notesHost.outerHTML = data.notesHtml;
+      }
+
+      showReviewToast(isDelete ? 'Note deleted.' : 'Note updated.');
+    } catch (error) {
+      // Fall back to a normal submit so the action still completes.
+      if (submitBtn) submitBtn.disabled = false;
+      form.submit();
+    }
+  });
+})();
+
