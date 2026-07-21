@@ -98,12 +98,15 @@
       stage.parentNode.insertBefore(controls, stage);
     }
 
-    let status = slide.querySelector('.preview-status');
+    let status = document.querySelector('[data-header-preview-status]');
     if (!status) {
-      status = document.createElement('div');
-      status.className = 'preview-status';
-      status.setAttribute('aria-live', 'polite');
-      stage.parentNode.insertBefore(status, stage);
+      status = slide.querySelector('.preview-status');
+      if (!status) {
+        status = document.createElement('div');
+        status.className = 'preview-status';
+        status.setAttribute('aria-live', 'polite');
+        stage.parentNode.insertBefore(status, stage);
+      }
     }
 
     return { controls, status };
@@ -211,7 +214,7 @@
   }
 
   function updateStatus(slide, preset, scale) {
-    const status = slide.querySelector('.preview-status');
+    const status = document.querySelector('[data-header-preview-status]') || slide.querySelector('.preview-status');
     if (!status) return;
 
     const state = slideState(slide);

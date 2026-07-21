@@ -755,8 +755,8 @@ button.secondary {
   min-height: var(--webpage-height);
   overflow: hidden;
   background: #eef1f4;
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  border: 0;
+  border-radius: 0;
 }
 
 .webpage-preview-stage.is-slider .webpage-frame-card {
@@ -2914,8 +2914,10 @@ button:disabled {
 .review-body .review-controls {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   padding-bottom: 4px;
 }
 
@@ -3051,9 +3053,14 @@ button:disabled {
     max-width: 100%;
   }
 
-  /* Wrap the tab groups so they never overflow the viewport. */
+  /* Keep the tab groups on one line; scroll horizontally if needed. */
+  .review-body .review-controls {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
   .review-body .review-controls .screen-tabs {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
   .review-body .screen-tabs button {
@@ -3143,4 +3150,29 @@ button:disabled {
 /* Whole collapsed pill is clickable to expand */
 .review-body .feedback-panel.is-collapsed .feedback-panel__bar {
   cursor: pointer;
+}
+
+/* Test viewport readout sits inline in the header, right of Clear Local Notes */
+.review-body .header-preview-status {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 7px 10px;
+  min-height: 35px;
+  line-height: 1.2;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f9fafb;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.review-body .header-preview-status p {
+  margin: 0;
+}
+
+.review-body .header-preview-status:empty {
+  display: none;
 }
