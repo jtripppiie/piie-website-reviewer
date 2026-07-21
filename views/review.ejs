@@ -4,7 +4,7 @@
   <body class="review-body">
     <header class="review-topbar">
       <div class="review-topbar__left">
-        <div class="review-brand" title="Triple-click to toggle quick edit / debug tools">
+        <div class="review-brand" title="Triple-click to toggle quick edit">
           <span class="review-brand__logo">
             <img src="/public/assets/logo.png?v=<%= appVersion %>" alt="PIIE Web Reviewer" onerror="this.hidden=true">
             <span class="review-brand__fallback">PIIE</span>
@@ -111,7 +111,6 @@
                       </div>
                       <button type="submit">Save to this page</button>
                     </form>
-                    <button type="button" class="quick-edit__fill" data-fill-sample>Fill a sample review note</button>
                   </div>
                 <% } %>
 
@@ -251,7 +250,6 @@
                       </div>
                       <button type="submit">Save to this page</button>
                     </form>
-                    <button type="button" class="quick-edit__fill" data-fill-sample>Fill a sample review note</button>
                   </div>
                 <% } %>
 
@@ -477,9 +475,8 @@
     </main>
 
     <script src="/public/js/review.js?v=<%= appVersion %>"></script>
-    <script src="/public/js/debug-layout.js?v=<%= appVersion %>"></script>
       <script src="/public/js/force-preview-layout.js?v=<%= appVersion %>"></script>
-    <script src="/public/js/demo-fill.js?v=<%= appVersion %>"></script>
+    <script src="/public/js/review-tools.js?v=<%= appVersion %>"></script>
     <script src="/public/js/default-screen-size.js?v=<%= appVersion %>"></script>
   </body>
 </html>
