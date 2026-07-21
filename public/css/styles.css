@@ -2668,7 +2668,7 @@ button:disabled {
 .review-body .review-topbar__left {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 12px;
   min-width: 0;
 }
@@ -2985,10 +2985,38 @@ button:disabled {
    the screen-size / review-mode tabs wrap, and the floating notes panel stops
    overlaying the preview and instead stacks below it in normal flow. */
 @media (max-width: 760px) {
+  /* Keep the whole header on a single line, even on phones. */
   .review-body .review-topbar {
-    flex-wrap: wrap;
-    gap: 8px 12px;
-    padding: 10px 14px;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .review-body .review-topbar__left {
+    gap: 8px;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+
+  .review-body .review-topbar__left .button {
+    padding: 6px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .review-body .review-topbar .review-brand__logo img {
+    max-height: 26px;
+  }
+
+  .review-body .review-nav {
+    flex: 0 0 auto;
+  }
+
+  /* Keep the admin flag inline instead of dropping to its own row. */
+  .review-body .review-nav__admin {
+    width: auto;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
   }
 
   .review-body .review-deck {

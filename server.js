@@ -218,7 +218,7 @@ function uploadPath(file) {
   return file ? objectStorage.uploadPath(file.filename) : '';
 }
 
-const DEFAULT_DEMO_URL = (process.env.DEFAULT_DEMO_URL || 'https://www.nelsonstructural.com/').trim();
+const DEFAULT_DEMO_URL = (process.env.DEFAULT_DEMO_URL || 'https://nelsonengineeringalaska.com/').trim();
 const DEFAULT_DEV_URL = DEFAULT_DEMO_URL;
 const DEFAULT_LIVE_URL = DEFAULT_DEMO_URL;
 const TEST_DEV_URL = '/public/demo/dev-home.html';
