@@ -2829,15 +2829,13 @@ button:disabled {
 
 /* Zero-height sticky dock keeps the panel following scroll without letting its
    height grow the grid row (so expanding never pushes the page down). */
+/* The panel is position:fixed and self-positioning, so the dock must NOT create
+   a stacking context (a sticky/z-index dock would trap the fixed panel beneath
+   the sticky header). Keep it inert so the panel floats above everything. */
 .review-body .feedback-dock {
-  grid-column: 1;
-  grid-row: 1;
-  justify-self: end;
-  align-self: start;
-  position: sticky;
-  top: 70px;
+  position: static;
   height: 0;
-  z-index: 6;
+  z-index: auto;
 }
 
 .review-body .feedback-panel {
