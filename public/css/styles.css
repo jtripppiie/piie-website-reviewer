@@ -2669,6 +2669,8 @@ button:disabled {
   align-items: center;
   gap: 14px;
   min-width: 0;
+  cursor: pointer;
+  user-select: none;
 }
 
 .review-brand__logo {
@@ -2966,5 +2968,59 @@ button:disabled {
     margin-left: 0;
     width: 100%;
     flex-wrap: wrap;
+  }
+}
+
+/* --- Mobile friendliness for the review page ---
+   The tool is desktop-first, but on phones we keep it usable: the header wraps,
+   the screen-size / review-mode tabs wrap, and the floating notes panel stops
+   overlaying the preview and instead stacks below it in normal flow. */
+@media (max-width: 760px) {
+  .review-body .review-topbar {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 10px 14px;
+  }
+
+  .review-body .review-deck {
+    width: min(100%, calc(100% - 16px));
+    padding: 8px 0 24px;
+  }
+
+  .review-body .review-page--work {
+    padding: 10px;
+  }
+
+  /* Let the notes panel flow below the preview instead of covering it. */
+  .review-body .feedback-dock {
+    position: static;
+    height: auto;
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: stretch;
+    margin-top: 12px;
+  }
+
+  .review-body .feedback-panel {
+    position: static;
+    width: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  /* Keep the collapsed pill compact and left-aligned when stacked. */
+  .review-body .feedback-panel.is-collapsed {
+    width: max-content;
+    max-width: 100%;
+  }
+
+  /* Wrap the tab groups so they never overflow the viewport. */
+  .review-body .review-controls .screen-tabs {
+    flex-wrap: wrap;
+  }
+
+  .review-body .screen-tabs button {
+    font-size: 12px;
+    padding: 6px 10px;
   }
 }

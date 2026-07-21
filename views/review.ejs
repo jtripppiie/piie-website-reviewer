@@ -3,7 +3,7 @@
   <%- include('partials/head', { title: packet.title }) %>
   <body class="review-body">
     <header class="review-topbar">
-      <div class="review-brand">
+      <div class="review-brand" title="Triple-click to toggle quick edit / debug tools">
         <span class="review-brand__logo">
           <img src="/public/assets/logo.png?v=<%= appVersion %>" alt="PIIE Web Reviewer" onerror="this.hidden=true">
           <span class="review-brand__fallback">PIIE</span>
@@ -14,12 +14,6 @@
         <% if (isAdminView) { %>
           <div class="review-nav__admin" role="group" aria-label="Admin controls">
             <span class="review-admin-flag">Admin view</span>
-            <a class="button ghost" href="/admin?key=<%= adminKeyValue %>">Back to admin</a>
-            <form method="post" action="/admin/packets/<%= packet.packetId %>/start-round" onsubmit="return confirm('Start a new review round by deleting all notes for this packet? This cannot be undone.');">
-              <input type="hidden" name="key" value="<%= adminKeyValue %>">
-              <input type="hidden" name="next" value="/r/<%= packet.shareToken %>?key=<%= adminKeyValue %>">
-              <button type="submit" class="button ghost danger">Start new round</button>
-            </form>
           </div>
         <% } %>
       </div>

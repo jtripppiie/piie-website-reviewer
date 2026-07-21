@@ -62,7 +62,7 @@
       return;
     }
 
-    if (!event.target.closest('.page-heading') && !event.target.closest('.cover-slide')) return;
+    if (!event.target.closest('.page-heading') && !event.target.closest('.cover-slide') && !event.target.closest('.review-brand')) return;
     clicks += 1;
     clearTimeout(timer);
     timer = setTimeout(() => { clicks = 0; }, 600);
