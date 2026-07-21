@@ -1642,11 +1642,9 @@ app.post('/r/:shareToken/clear-notes', async (req, res) => {
   res.redirect(`/r/${packet.shareToken}${keyPart}${hash}`);
 });
 
-// Admin only. Clears EVERY note in the packet (all pages, all screen sizes).
-// Exposed in the header while quick edit mode is on.
-app.post('/r/:shareToken/clear-all', async (req, res) => {
-  if (!isAdmin(req)) return res.status(403).send('Forbidden');
-
+// Clears EVERY note in the packet (all pages, all screen sizes). Available to
+// any authenticated reviewer from the header while quick edit mode is on.
+app.post('/r/:shareToken/clear-all', requireReviewer, async (req, res) => {
   const packets = await getPackets();
   const packet = packets.find(p => p.shareToken === req.params.shareToken);
   if (!packet) return res.status(404).send('Review packet not found.');
@@ -1660,7 +1658,7 @@ app.post('/r/:shareToken/clear-all', async (req, res) => {
 
   if (wantsJsonResponse(req)) return res.json({ ok: true, removed });
 
-  const keyPart = `?key=${encodeURIComponent(adminKey(req))}`;
+  const keyPart = adminKey(req) ? `?key=${encodeURIComponent(adminKey(req))}` : '';
   res.redirect(`/r/${packet.shareToken}${keyPart}`);
 });
 

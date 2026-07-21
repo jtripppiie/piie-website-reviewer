@@ -12,8 +12,8 @@
         </div>
         <a class="button" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>"><%= isAdminView ? 'Manage notes' : 'View all notes' %></a>
         <button type="button" class="button" data-clear-local-notes data-clear-mine-url="/r/<%= packet.shareToken %>/clear-mine<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">Clear My Notes</button>
-        <% if (isAdminView) { %>
-          <button type="button" class="button danger quick-edit-only" data-clear-all-notes data-clear-all-url="/r/<%= packet.shareToken %>/clear-all?key=<%= encodeURIComponent(adminKeyValue) %>">Clear All Notes (admin)</button>
+        <% if (canQuickEdit) { %>
+          <button type="button" class="button danger quick-edit-only" data-clear-all-notes data-clear-all-url="/r/<%= packet.shareToken %>/clear-all<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">Clear All Notes</button>
         <% } %>
         <div class="preview-status header-preview-status" data-header-preview-status aria-live="polite"></div>
       </div>
