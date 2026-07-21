@@ -2952,6 +2952,19 @@ button:disabled {
   box-shadow: 0 2px 10px rgba(16, 35, 51, .4);
 }
 
+/* Keep the slider handle locked to the horizontal centerline: the generic
+   button hover/active rules apply transform: translateY(-1px), which would
+   wipe out the handle's translate(-50%,-50%) centering and make it jump up/
+   down (diagonally). Pin the transform so it only slides left/right. */
+.review-body .handle,
+.review-body .handle:hover,
+.review-body .handle:active,
+.review-body .handle:focus,
+.review-body .handle:focus-visible {
+  transform: translate(-50%, -50%);
+  transition: box-shadow .12s ease, background .12s ease, border-color .12s ease;
+}
+
 .review-body .handle::before {
   content: "\2194";
   display: grid;
