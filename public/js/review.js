@@ -449,7 +449,6 @@ document.querySelectorAll('[data-webpage-modes]').forEach(modeGroup => {
       stage.classList.remove('is-annotating');
       removeWebpageMarkLayer(stage);
       stage.style.setProperty('--reveal', 50);
-      stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
       buildWebpageDiff(stage, modeGroup, diffButton);
       return;
     }
@@ -470,12 +469,10 @@ document.querySelectorAll('[data-webpage-modes]').forEach(modeGroup => {
 
     if (mode === 'annotate') {
       ensureWebpageMarkLayer(stage);
-      stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
       showReviewToast('Click the preview to mark a spot for the active note form.');
     } else {
       removeWebpageMarkLayer(stage);
       if (mode === 'compare') {
-        stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
         autoApplyWebpageDiff(stage, modeGroup);
       }
     }
