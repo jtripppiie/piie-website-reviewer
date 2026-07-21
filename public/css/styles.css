@@ -1469,6 +1469,25 @@ button.secondary {
   margin: 8px 0;
 }
 
+/* Open editor mimics the demo's blue "Edit selected pin" panel. */
+.note-editor[open] {
+  border: 1px solid rgba(23, 92, 211, .35);
+  border-top: 1px solid rgba(23, 92, 211, .35);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(23, 92, 211, .06), rgba(255, 255, 255, 0) 60%), #fff;
+  padding: 10px 12px 4px;
+  margin-top: 12px;
+}
+
+.note-editor[open] summary {
+  margin-bottom: 6px;
+}
+
+.note-editor.is-selected {
+  box-shadow: 0 0 0 3px rgba(23, 92, 211, .3);
+  transition: box-shadow .2s ease;
+}
+
 .dot-location {
   margin: 0;
   color: var(--blue);

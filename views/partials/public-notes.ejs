@@ -62,7 +62,7 @@
   <% if (visibleNotes.length) { %>
     <ol class="public-notes__list">
       <% visibleNotes.forEach(note => { %>
-        <li class="public-note <%= statusClass(note.status) %>">
+        <li class="public-note <%= statusClass(note.status) %>" data-note-id="<%= note.responseId %>">
           <span class="public-note__icon" aria-hidden="true"><%= statusIcon(note.status) %></span>
 
           <div class="public-note__body">
@@ -79,8 +79,8 @@
             <% } %>
 
             <% if (note.canManage) { %>
-            <details class="note-editor">
-              <summary>Edit note</summary>
+            <details class="note-editor" data-note-editor data-note-id="<%= note.responseId %>">
+              <summary>Edit selected pin</summary>
 
               <form method="post" action="/r/<%= packet.shareToken %>/feedback/<%= note.responseId %>/update">
                 <% if (typeof adminKeyValue !== 'undefined' && adminKeyValue) { %>
@@ -114,14 +114,18 @@
 
                 <div class="note-editor__actions">
                   <button type="submit">Save changes</button>
+                  <% if (note.dotX && note.dotY) { %>
+                    <button type="button" class="button ghost" data-move-pin>Move pin</button>
+                  <% } %>
+                  <button type="submit" form="delete-note-<%= note.responseId %>" class="button danger">Delete note</button>
+                  <button type="button" class="button ghost" data-cancel-edit>Cancel</button>
                 </div>
               </form>
 
-              <form method="post" action="/r/<%= packet.shareToken %>/feedback/<%= note.responseId %>/delete" onsubmit="return confirm('Delete this review note? This cannot be undone.');">
+              <form id="delete-note-<%= note.responseId %>" method="post" action="/r/<%= packet.shareToken %>/feedback/<%= note.responseId %>/delete" onsubmit="return confirm('Delete this review note? This cannot be undone.');" hidden>
                 <% if (typeof adminKeyValue !== 'undefined' && adminKeyValue) { %>
                   <input type="hidden" name="key" value="<%= adminKeyValue %>">
                 <% } %>
-                <button type="submit" class="button danger">Delete note</button>
               </form>
             </details>
             <% } %>

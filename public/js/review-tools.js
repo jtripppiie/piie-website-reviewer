@@ -1,6 +1,6 @@
 // Review-page tools:
-//  - "Clear Local Notes" wipes note drafts typed in this browser but not yet
-//    saved. Saved notes are never affected.
+//  - "Clear My Notes" deletes every note this browser saved (server-side) and
+//    wipes any unsaved draft text. Other reviewers' notes are never affected.
 //  - Triple-click the title, a page heading, or the cover toggles quick-edit
 //    mode, revealing the per-page panels for setting Dev/Live URLs and dropping
 //    in images.
@@ -24,18 +24,45 @@
   }
 
   function clearLocalDrafts() {
-    if (!confirm('Clear notes typed in this browser but not yet saved? Saved notes are not affected.')) return;
-    const forms = document.querySelectorAll('form.feedback');
-    let cleared = 0;
-    forms.forEach(form => {
+    const button = document.querySelector('[data-clear-local-notes]');
+    const clearUrl = button ? button.getAttribute('data-clear-mine-url') : '';
+
+    if (!confirm('Delete every note you saved from this browser? Other reviewers\u2019 notes are not affected. This cannot be undone.')) return;
+
+    // Always wipe any unsaved draft text in the open forms first.
+    document.querySelectorAll('form.feedback').forEach(form => {
       const name = form.querySelector('[name="reviewerName"]');
       const status = form.querySelector('[name="status"]');
       const comment = form.querySelector('[name="comment"]');
-      if (name && name.value) { name.value = ''; cleared += 1; }
-      if (comment && comment.value) { comment.value = ''; cleared += 1; }
+      if (name) name.value = '';
+      if (comment) comment.value = '';
       if (status) status.selectedIndex = 0;
     });
-    showToast(cleared ? 'Cleared unsaved note drafts in this browser.' : 'No unsaved drafts to clear.');
+
+    if (!clearUrl) {
+      showToast('Cleared unsaved note drafts in this browser.');
+      return;
+    }
+
+    if (button) button.disabled = true;
+    fetch(clearUrl, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' }
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('clear-failed');
+        return response.json();
+      })
+      .then(data => {
+        showToast(data.removed ? `Removed ${data.removed} of your saved note${data.removed === 1 ? '' : 's'}.` : 'No saved notes from this browser to remove.');
+        // Reload so pins and note lists for every screen size refresh.
+        setTimeout(() => window.location.reload(), 500);
+      })
+      .catch(() => {
+        if (button) button.disabled = false;
+        showToast('Could not clear your saved notes. Please try again.');
+      });
   }
 
   let clicks = 0;

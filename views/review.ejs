@@ -11,7 +11,7 @@
           </span>
         </div>
         <a class="button" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>"><%= isAdminView ? 'Manage notes' : 'View all notes' %></a>
-        <button type="button" class="button" data-clear-local-notes>Clear Local Notes</button>
+        <button type="button" class="button" data-clear-local-notes data-clear-mine-url="/r/<%= packet.shareToken %>/clear-mine<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">Clear My Notes</button>
         <div class="preview-status header-preview-status" data-header-preview-status aria-live="polite"></div>
       </div>
       <div class="review-nav">

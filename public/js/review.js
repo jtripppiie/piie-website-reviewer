@@ -741,6 +741,29 @@ function humanStatus(status) {
   return String(status || 'Review note').replace(/-/g, ' ').replace(/^\w/, char => char.toUpperCase());
 }
 
+// Give each reviewer a distinct pin colour (matches the static demo palette) so
+// notes from different people are easy to tell apart on the preview.
+const REVIEWER_DOT_PALETTE = ['#b42318', '#175cd3', '#067647', '#7a5af8', '#c11574', '#b54708', '#026aa2', '#4e5ba6'];
+const reviewerDotColors = new Map();
+
+function reviewerDotColor(reviewerName) {
+  const key = String(reviewerName || 'Reviewer').trim().toLowerCase() || 'reviewer';
+  if (!reviewerDotColors.has(key)) {
+    const used = new Set(reviewerDotColors.values());
+    const available = REVIEWER_DOT_PALETTE.find(color => !used.has(color));
+    reviewerDotColors.set(key, available || REVIEWER_DOT_PALETTE[reviewerDotColors.size % REVIEWER_DOT_PALETTE.length]);
+  }
+  return reviewerDotColors.get(key);
+}
+
+function colorReviewPins() {
+  document.querySelectorAll('.comment-dot:not(.is-temp)').forEach(dot => {
+    dot.style.background = reviewerDotColor(dot.dataset.reviewer);
+  });
+}
+
+colorReviewPins();
+
 let suppressPinClickUntil = 0;
 
 document.addEventListener('pointerdown', event => {
@@ -836,6 +859,22 @@ document.addEventListener('click', event => {
   event.stopPropagation();
   closeDotPopover();
 
+  // If this pin belongs to a note this browser can manage, open its inline
+  // "Edit selected pin" editor instead of the read-only popover.
+  const noteId = dot.dataset.noteId;
+  const scope = dot.closest('.review-page') || document;
+  const editor = noteId
+    ? scope.querySelector('.note-editor[data-note-id="' + (window.CSS && CSS.escape ? CSS.escape(noteId) : noteId) + '"]')
+    : null;
+
+  if (editor) {
+    editor.open = true;
+    editor.classList.add('is-selected');
+    editor.scrollIntoView({ block: 'nearest' });
+    setTimeout(() => editor.classList.remove('is-selected'), 1800);
+    return;
+  }
+
   const popover = document.createElement('aside');
   popover.className = 'comment-popover';
   popover.setAttribute('role', 'dialog');
@@ -863,6 +902,24 @@ document.addEventListener('click', event => {
   const top = Math.min(window.innerHeight - 180, Math.max(12, rect.top));
   popover.style.left = `${left}px`;
   popover.style.top = `${top}px`;
+});
+
+// "Edit selected pin" panel actions: Cancel closes the editor; Move pin hints
+// the reviewer to drag the pin (dragging is already wired on the preview).
+document.addEventListener('click', event => {
+  const cancel = event.target.closest('[data-cancel-edit]');
+  if (cancel) {
+    event.preventDefault();
+    const editor = cancel.closest('.note-editor');
+    if (editor) editor.open = false;
+    return;
+  }
+
+  const move = event.target.closest('[data-move-pin]');
+  if (move) {
+    event.preventDefault();
+    showReviewToast('Drag the numbered pin on the preview to move it.');
+  }
 });
 
 /**
@@ -1091,7 +1148,11 @@ document.addEventListener('click', event => {
         notesHost.outerHTML = data.notesHtml;
       }
 
-      if (pendingDot) pendingDot.classList.remove('is-temp');
+      if (pendingDot) {
+        pendingDot.classList.remove('is-temp');
+        const savedName = form.querySelector('[name="reviewerName"]');
+        pendingDot.style.background = reviewerDotColor(savedName ? savedName.value : '');
+      }
 
       form.reset();
       if (typeof clearFormDot === 'function') clearFormDot(form);

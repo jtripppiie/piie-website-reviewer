@@ -1594,6 +1594,27 @@ app.post('/r/:shareToken/feedback/:responseId/position', requireReviewer, async 
   res.json({ ok: true, dotX, dotY });
 });
 
+// Delete every note this browser (or admin) created for the packet. Notes made
+// by other reviewers are never touched.
+app.post('/r/:shareToken/clear-mine', requireReviewer, async (req, res) => {
+  const packets = await getPackets();
+  const packet = packets.find(p => p.shareToken === req.params.shareToken && p.published);
+  if (!packet) return res.status(404).json({ error: 'Review packet not found or not published.' });
+
+  let removed = 0;
+  await updateResponses(responses => responses.filter(response => {
+    if (response.packetId !== packet.packetId) return true;
+    if (!canManageResponse(req, response)) return true;
+    removed += 1;
+    return false;
+  }));
+
+  if (wantsJsonResponse(req)) return res.json({ ok: true, removed });
+
+  const keyPart = isAdmin(req) ? `?key=${encodeURIComponent(adminKey(req))}` : '';
+  res.redirect(`/r/${packet.shareToken}${keyPart}`);
+});
+
 app.post('/r/:shareToken/clear-notes', async (req, res) => {
   // Admin only. Normal reviewers cannot clear notes.
   if (!isAdmin(req)) return res.status(403).send('Forbidden');
