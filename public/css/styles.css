@@ -2645,3 +2645,326 @@ button:disabled {
   border-color: #e0a4a4;
   background: #fff1f1;
 }
+
+/* ============================================================
+   Polished reviewer layout — scoped to the review page only.
+   Adopts the GitHub Pages demo's look on the Cloud Run backend
+   without altering admin pages or any backend/JS wiring.
+   Remove this block (and the header markup in views/review.ejs)
+   to revert to the previous styling.
+   ============================================================ */
+.review-body {
+  background: var(--bg);
+}
+
+/* Branded, solid sticky header */
+.review-body .review-topbar {
+  padding: 12px 20px;
+  background: #fff;
+  backdrop-filter: none;
+}
+
+.review-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.review-brand__logo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 40px;
+  min-width: 96px;
+  flex: 0 0 auto;
+}
+
+.review-brand__logo img {
+  max-width: 160px;
+  max-height: 40px;
+  object-fit: contain;
+}
+
+.review-brand__fallback {
+  display: none;
+  color: var(--blue);
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: .06em;
+}
+
+.review-brand__logo img[hidden] + .review-brand__fallback {
+  display: inline;
+}
+
+.review-body .review-topbar h1 {
+  font-size: 19px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: min(50vw, 560px);
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+}
+
+/* Light pill buttons like the polished demo */
+.review-body button,
+.review-body .button {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  padding: 8px 11px;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: none;
+}
+
+.review-body button:hover,
+.review-body .button:hover {
+  border-color: var(--blue);
+}
+
+.review-body button.active,
+.review-body .button.primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+/* Grouped, de-emphasized admin controls in the header */
+.review-nav__admin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 10px;
+  margin-left: 4px;
+  border-left: 1px solid var(--border);
+}
+
+.review-nav__admin form {
+  margin: 0;
+}
+
+.review-admin-flag {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.review-body .button.ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6px 9px;
+}
+
+.review-body .button.ghost:hover {
+  color: var(--ink);
+  border-color: var(--muted);
+}
+
+.review-body .button.ghost.danger {
+  color: #b91c1c;
+  border-color: #e6bcbc;
+}
+
+.review-body .button.ghost.danger:hover {
+  border-color: #b91c1c;
+  background: #fff5f5;
+}
+
+/* Keep destructive admin buttons visibly red, just subtler */
+.review-body .clear-notes-form button {
+  background: #fff;
+  border: 1px solid #e6bcbc;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+/* Compact stacked cards instead of full-viewport slides */
+.review-body .review-page {
+  min-height: 0;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  scroll-margin-top: 96px;
+  box-shadow: 0 1px 3px rgba(16, 35, 51, .05);
+}
+
+.review-body .review-page--work {
+  padding: 12px;
+}
+
+/* Match the demo: single-column canvas with the notes panel floating over the
+   top-right, instead of a permanent 360px right column. */
+.review-body .review-workspace {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  position: relative;
+}
+
+.review-body .review-canvas {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* Zero-height sticky dock keeps the panel following scroll without letting its
+   height grow the grid row (so expanding never pushes the page down). */
+.review-body .feedback-dock {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  align-self: start;
+  position: sticky;
+  top: 70px;
+  height: 0;
+  z-index: 6;
+}
+
+.review-body .feedback-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(420px, calc(100vw - 40px));
+  max-height: min(80vh, 640px);
+  overflow: auto;
+  box-shadow: 0 8px 24px rgba(16, 35, 51, .12);
+}
+
+/* Collapsed pill hugs the corner and stops reserving panel height/width */
+.review-body .feedback-panel.is-collapsed {
+  max-height: none;
+  overflow: visible;
+  width: auto;
+  box-shadow: 0 4px 12px rgba(16, 35, 51, .18);
+}
+
+/* Bordered page heading card, matching the demo */
+.review-body .page-heading {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.review-body .page-heading h2 {
+  font-size: 18px;
+}
+
+/* Feedback panel + screen tabs polish */
+.review-body .feedback-panel {
+  border-radius: 12px;
+}
+
+/* Collapsed notes panel becomes a blue "Add Notes" pill, like the demo */
+.review-body .feedback-panel.is-collapsed {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #fff;
+}
+
+.review-body .feedback-panel.is-collapsed .feedback-panel__bar h3 {
+  color: #fff;
+}
+
+.review-body .feedback-panel.is-collapsed .feedback-panel__toggle {
+  border-color: rgba(255, 255, 255, .75);
+  background: transparent;
+  color: #fff;
+}
+
+.review-body .feedback-panel.is-collapsed .feedback-panel__toggle:hover {
+  background: rgba(255, 255, 255, .14);
+}
+
+.review-body .screen-tabs button {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.review-body .screen-tabs button.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+/* Demo-style controls row: labeled Screen size / Review mode groups */
+.review-body .review-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 4px;
+}
+
+.review-body .review-control-label {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.review-body .review-controls .screen-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+/* Demo had no preview-scale controls; hide them to match */
+.review-body .preview-scale-controls {
+  display: none;
+}
+
+/* Demo-style compare slider handle + divider */
+.review-body .handle {
+  background: var(--blue);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 10px rgba(16, 35, 51, .4);
+}
+
+.review-body .handle::before {
+  content: "\2194";
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.review-body .divider {
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(16, 35, 51, .3);
+}
+
+.review-body .badge {
+  background: rgba(16, 35, 51, .82);
+}
+
+@media (max-width: 900px) {
+  .review-nav__admin {
+    border-left: 0;
+    padding-left: 0;
+    margin-left: 0;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}

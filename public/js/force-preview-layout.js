@@ -229,13 +229,8 @@
     status.innerHTML = '';
 
     const lines = [
-      ['Test viewport', `${preset.w} x ${preset.h} CSS px`],
-      ['Preview scale', scaleText]
+      ['Test viewport', `${preset.w} x ${preset.h} CSS px`]
     ];
-
-    if (verifyText) {
-      lines.push(['Frame check', verifyText]);
-    }
 
     lines.forEach(([key, value]) => {
       const row = document.createElement('p');

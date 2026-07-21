@@ -70,9 +70,20 @@ app.use((req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+// When true, all admin and reviewer authentication is bypassed and the app is
+// fully public. Intended ONLY as a local "no login" preview mode. It is
+// hard-disabled whenever NODE_ENV=production so it can never weaken auth on a
+// deployed (Cloud Run) instance, regardless of how the env var is set.
+const DISABLE_AUTH = process.env.DISABLE_AUTH === 'true' && process.env.NODE_ENV !== 'production';
+
+if (process.env.DISABLE_AUTH === 'true' && process.env.NODE_ENV === 'production') {
+  console.warn('[SECURITY] DISABLE_AUTH=true was ignored because NODE_ENV=production; authentication remains enforced.');
+}
+
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || (process.env.NODE_ENV === 'production' ? '' : 'change-me');
 
-if (!ADMIN_PASSWORD) {
+if (!DISABLE_AUTH && !ADMIN_PASSWORD) {
   throw new Error('ADMIN_PASSWORD is required when NODE_ENV=production.');
 }
 
@@ -80,8 +91,12 @@ if (!ADMIN_PASSWORD) {
 const REVIEW_USERNAME = process.env.REVIEW_USERNAME || (process.env.NODE_ENV === 'production' ? '' : 'PIIE');
 const REVIEW_PASSWORD = process.env.REVIEW_PASSWORD || (process.env.NODE_ENV === 'production' ? '' : 'review-local-only');
 
-if (process.env.NODE_ENV === 'production' && (!REVIEW_USERNAME || !REVIEW_PASSWORD)) {
+if (!DISABLE_AUTH && process.env.NODE_ENV === 'production' && (!REVIEW_USERNAME || !REVIEW_PASSWORD)) {
   throw new Error('REVIEW_USERNAME and REVIEW_PASSWORD are required when NODE_ENV=production.');
+}
+
+if (DISABLE_AUTH) {
+  console.warn('[SECURITY] DISABLE_AUTH=true \u2014 all admin/reviewer authentication is bypassed; the app is fully public.');
 }
 
 // Optional second password specifically for quick edit. Empty = gate disabled.
@@ -184,6 +199,7 @@ const upload = multer({
 });
 
 function isAdmin(req) {
+  if (DISABLE_AUTH) return true;
   return safeEqual(req.query.key, ADMIN_PASSWORD) || safeEqual(req.body.key, ADMIN_PASSWORD);
 }
 
@@ -194,7 +210,7 @@ function adminKey(req) {
 function requireAdminBeforeUpload(req, res, next) {
   // Multipart bodies have not been parsed yet, so authorization must come
   // from the query string before Multer is allowed to write anything.
-  if (!safeEqual(req.query.key, ADMIN_PASSWORD)) return res.status(403).send('Forbidden');
+  if (!DISABLE_AUTH && !safeEqual(req.query.key, ADMIN_PASSWORD)) return res.status(403).send('Forbidden');
   next();
 }
 
