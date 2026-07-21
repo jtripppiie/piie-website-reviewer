@@ -1043,7 +1043,7 @@ document.addEventListener('click', event => {
     const collapsed = panel.classList.toggle('is-collapsed');
     toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     toggle.setAttribute('aria-label', collapsed ? 'Expand notes' : 'Collapse notes');
-    toggle.textContent = collapsed ? '+' : '\u2013';
+    toggle.textContent = collapsed ? 'Expand' : 'Collapse';
   });
 })();
 
