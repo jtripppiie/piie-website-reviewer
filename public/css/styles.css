@@ -2841,13 +2841,14 @@ button:disabled {
 }
 
 .review-body .feedback-panel {
-  position: absolute;
-  top: 0;
-  right: 0;
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 100;
   width: min(420px, calc(100vw - 40px));
-  max-height: min(80vh, 640px);
+  max-height: calc(100vh - 24px);
   overflow: auto;
-  box-shadow: 0 8px 24px rgba(16, 35, 51, .12);
+  box-shadow: 0 12px 32px rgba(16, 35, 51, .2);
 }
 
 /* Collapsed pill hugs the corner and stops reserving panel height/width */
