@@ -3,14 +3,17 @@
   <%- include('partials/head', { title: packet.title }) %>
   <body class="review-body">
     <header class="review-topbar">
-      <div class="review-brand" title="Triple-click to toggle quick edit / debug tools">
-        <span class="review-brand__logo">
-          <img src="/public/assets/logo.png?v=<%= appVersion %>" alt="PIIE Web Reviewer" onerror="this.hidden=true">
-          <span class="review-brand__fallback">PIIE</span>
-        </span>
+      <div class="review-topbar__left">
+        <div class="review-brand" title="Triple-click to toggle quick edit / debug tools">
+          <span class="review-brand__logo">
+            <img src="/public/assets/logo.png?v=<%= appVersion %>" alt="PIIE Web Reviewer" onerror="this.hidden=true">
+            <span class="review-brand__fallback">PIIE</span>
+          </span>
+        </div>
+        <a class="button" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>"><%= isAdminView ? 'Manage notes' : 'View all notes' %></a>
+        <button type="button" class="button" data-clear-local-notes>Clear Local Notes</button>
       </div>
       <div class="review-nav">
-        <a class="button" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>"><%= isAdminView ? 'Manage notes' : 'View all notes' %></a>
         <% if (isAdminView) { %>
           <div class="review-nav__admin" role="group" aria-label="Admin controls">
             <span class="review-admin-flag">Admin view</span>

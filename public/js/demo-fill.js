@@ -53,9 +53,29 @@
     showToast(on ? 'Quick edit on. Set URLs or drop in images, then Save.' : 'Quick edit off.');
   }
 
+  function clearLocalDrafts() {
+    if (!confirm('Clear notes typed in this browser but not yet saved? Saved notes are not affected.')) return;
+    const forms = document.querySelectorAll('form.feedback');
+    let cleared = 0;
+    forms.forEach(form => {
+      const name = form.querySelector('[name="reviewerName"]');
+      const status = form.querySelector('[name="status"]');
+      const comment = form.querySelector('[name="comment"]');
+      if (name && name.value) { name.value = ''; cleared += 1; }
+      if (comment && comment.value) { comment.value = ''; cleared += 1; }
+      if (status) status.selectedIndex = 0;
+    });
+    showToast(cleared ? 'Cleared unsaved note drafts in this browser.' : 'No unsaved drafts to clear.');
+  }
+
   let clicks = 0;
   let timer = null;
   document.addEventListener('click', event => {
+    if (event.target.closest('[data-clear-local-notes]')) {
+      clearLocalDrafts();
+      return;
+    }
+
     const fillButton = event.target.closest('[data-fill-sample]');
     if (fillButton) {
       fillForms(fillButton.closest('.review-page') || document);

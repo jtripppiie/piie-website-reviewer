@@ -2664,6 +2664,15 @@ button:disabled {
   backdrop-filter: none;
 }
 
+/* Left cluster: logo + notes buttons together, like the demo header-actions */
+.review-body .review-topbar__left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+}
+
 .review-brand {
   display: flex;
   align-items: center;
@@ -3023,4 +3032,68 @@ button:disabled {
     font-size: 12px;
     padding: 6px 10px;
   }
+}
+
+/* ============================================================
+   Match the GitHub Pages demo look: flat, light cards with thin
+   borders and minimal shadow (the app was glossier/heavier).
+   Scoped to .review-body so admin/login/edit pages are untouched.
+   ============================================================ */
+.review-body {
+  background: #f5f7fa;
+}
+
+/* Lighter sticky header, like the demo */
+.review-body .review-topbar {
+  box-shadow: none;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Flat page cards: 1px border, 10px radius, no drop shadow */
+.review-body .review-page {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: none;
+  padding: 8px;
+  margin-bottom: 14px;
+}
+
+.review-body .review-page--work {
+  padding: 8px;
+}
+
+.review-body .page-heading,
+.review-body .url-note {
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+/* Notes panel: flat light card matching the demo */
+.review-body .feedback-panel {
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(16, 35, 51, .12);
+}
+
+/* Dev / Live preview frame cards: flat with a light grey header bar */
+.review-body .webpage-frame-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.review-body .webpage-frame-card__header {
+  background: #f9fafb;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 10px;
+}
+
+/* Note items: flat white cards like the demo's .note */
+.review-body .public-note {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  box-shadow: none;
+  background: #fff;
 }
