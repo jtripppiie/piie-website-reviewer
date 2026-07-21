@@ -65,11 +65,42 @@
       });
   }
 
+  function clearAllNotes(button) {
+    const clearUrl = button ? button.getAttribute('data-clear-all-url') : '';
+    if (!clearUrl) return;
+
+    if (!confirm('Delete ALL notes in this review from EVERY reviewer, across all pages and screen sizes? This cannot be undone.')) return;
+
+    button.disabled = true;
+    fetch(clearUrl, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' }
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('clear-failed');
+        return response.json();
+      })
+      .then(data => {
+        showToast(data.removed ? `Deleted all ${data.removed} note${data.removed === 1 ? '' : 's'}.` : 'There were no notes to delete.');
+        setTimeout(() => window.location.reload(), 500);
+      })
+      .catch(() => {
+        button.disabled = false;
+        showToast('Could not clear all notes. Please try again.');
+      });
+  }
+
   let clicks = 0;
   let timer = null;
   document.addEventListener('click', event => {
     if (event.target.closest('[data-clear-local-notes]')) {
       clearLocalDrafts();
+      return;
+    }
+
+    if (event.target.closest('[data-clear-all-notes]')) {
+      clearAllNotes(event.target.closest('[data-clear-all-notes]'));
       return;
     }
 

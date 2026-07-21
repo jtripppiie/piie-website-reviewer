@@ -1642,6 +1642,28 @@ app.post('/r/:shareToken/clear-notes', async (req, res) => {
   res.redirect(`/r/${packet.shareToken}${keyPart}${hash}`);
 });
 
+// Admin only. Clears EVERY note in the packet (all pages, all screen sizes).
+// Exposed in the header while quick edit mode is on.
+app.post('/r/:shareToken/clear-all', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).send('Forbidden');
+
+  const packets = await getPackets();
+  const packet = packets.find(p => p.shareToken === req.params.shareToken);
+  if (!packet) return res.status(404).send('Review packet not found.');
+
+  let removed = 0;
+  await updateResponses(responses => responses.filter(response => {
+    if (response.packetId !== packet.packetId) return true;
+    removed += 1;
+    return false;
+  }));
+
+  if (wantsJsonResponse(req)) return res.json({ ok: true, removed });
+
+  const keyPart = `?key=${encodeURIComponent(adminKey(req))}`;
+  res.redirect(`/r/${packet.shareToken}${keyPart}`);
+});
+
 // Optional unlock step for quick edit. When QUICK_EDIT_PASSWORD is set, a
 // reviewer must enter it once per browser session before they can save edits.
 app.post('/r/:shareToken/quick-unlock', rateLimitQuickUpdate, requireReviewer, (req, res) => {
