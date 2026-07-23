@@ -151,6 +151,17 @@ test('review notes use per-browser ownership and owned pins can be dragged', () 
   assert.match(reviewJs, /Pin moved\./);
 });
 
+test('annotate mode remains ready for multiple notes', () => {
+  const server = read('server.js');
+  const reviewJs = read('public/js/review.js');
+
+  assert.match(server, /res\.json\(\{ ok: true, notesHtml, note: savedResponse \}\)/);
+  assert.match(reviewJs, /pendingDot\.dataset\.noteId = note\.responseId/);
+  assert.match(reviewJs, /if \(nameField\) nameField\.value = reviewerName/);
+  assert.match(reviewJs, /ensureWebpageMarkLayer\(stage\)/);
+  assert.match(reviewJs, /Note saved\. Click the preview to add another\./);
+});
+
 test('new reviews support optional automatic URL screenshots', () => {
   const server = read('server.js');
   const admin = read('views/admin.ejs');

@@ -1449,9 +1449,10 @@ app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
   }
 
   const ownerId = isAdmin(req) ? 'admin' : ensureReviewerIdentity(req, res);
+  let savedResponse;
 
   await updateResponses(responses => {
-    responses.push({
+    savedResponse = {
       responseId: makeId('response'),
       packetId: packet.packetId,
       pageId: page.pageId,
@@ -1465,14 +1466,15 @@ app.post('/r/:shareToken/feedback', requireReviewer, async (req, res) => {
       ownerId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    });
+    };
+    responses.push(savedResponse);
 
     return responses;
   });
 
   if (wantsJsonResponse(req)) {
     const notesHtml = await renderNotesPartial(req, packet, page, screenSize);
-    return res.json({ ok: true, notesHtml });
+    return res.json({ ok: true, notesHtml, note: savedResponse });
   }
 
   res.redirect(reviewRedirect(packet, req, page.pageId));

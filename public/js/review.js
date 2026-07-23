@@ -1160,14 +1160,31 @@ document.addEventListener('click', event => {
       }
 
       if (pendingDot) {
+        const note = data.note || {};
+        const savedName = note.reviewerName || note.initials || form.querySelector('[name="reviewerName"]')?.value || '';
         pendingDot.classList.remove('is-temp');
-        const savedName = form.querySelector('[name="reviewerName"]');
-        pendingDot.style.background = reviewerDotColor(savedName ? savedName.value : '');
+        pendingDot.textContent = String(stage.querySelectorAll('.comment-dot:not(.is-temp)').length);
+        pendingDot.dataset.noteId = note.responseId || '';
+        pendingDot.dataset.reviewer = savedName || 'Reviewer';
+        pendingDot.dataset.status = note.status || 'Review note';
+        pendingDot.dataset.screen = note.screenSize || '';
+        pendingDot.dataset.dotScreen = note.screenSize || '';
+        pendingDot.dataset.comment = note.comment || '';
+        pendingDot.style.background = reviewerDotColor(savedName);
       }
 
+      const reviewerName = nameField ? nameField.value : '';
       form.reset();
+      // A reviewer commonly leaves several annotations in one pass. Keep their
+      // identity filled in and leave Annotate mode ready for the next click.
+      if (nameField) nameField.value = reviewerName;
       if (typeof clearFormDot === 'function') clearFormDot(form);
-      showReviewToast('Note saved.');
+      if (stage?.classList.contains('is-annotating')) {
+        ensureWebpageMarkLayer(stage);
+        showReviewToast('Note saved. Click the preview to add another.');
+      } else {
+        showReviewToast('Note saved.');
+      }
     } catch (error) {
       // Fall back to a normal submit so the reviewer never loses their note.
       showReviewToast('Saving\u2026');
@@ -1226,4 +1243,3 @@ document.addEventListener('click', event => {
     }
   });
 })();
-
