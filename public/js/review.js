@@ -485,6 +485,44 @@ document.querySelectorAll('[data-webpage-modes]').forEach(modeGroup => {
   autoApplyWebpageDiff(stage, modeGroup);
 });
 
+// Screenshot review keeps the same visible mode bar as URL review. Static
+// images cannot be interacted with or DOM-diffed, but they can be compared and
+// annotated using the existing pin workflow.
+document.querySelectorAll('[data-screenshot-modes]').forEach(modeGroup => {
+  modeGroup.addEventListener('click', event => {
+    const diffButton = event.target.closest('[data-webpage-diff]');
+    if (diffButton) {
+      showReviewToast('Highlight differences is only available for URL previews.');
+      return;
+    }
+
+    const button = event.target.closest('[data-webpage-mode]');
+    if (!button || button.disabled) return;
+
+    const mode = button.dataset.webpageMode;
+    modeGroup.querySelectorAll('[data-webpage-mode]').forEach(modeButton => {
+      modeButton.classList.toggle('active', modeButton === button);
+    });
+
+    if (mode === 'compare') {
+      disarmDotPlacement();
+      showReviewToast('Compare mode on. Drag the slider to inspect both screenshots.');
+      return;
+    }
+
+    if (mode === 'annotate') {
+      const slide = modeGroup.closest('.review-page');
+      const activeForm = slide?.querySelector('.screen-feedback.active form.feedback');
+      const markButton = activeForm?.querySelector('[data-start-dot]');
+      if (!markButton) {
+        showReviewToast('Pick a screen size before annotating.');
+        return;
+      }
+      markButton.click();
+    }
+  });
+});
+
 document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {
   const slide = tabGroup.closest('.review-page');
   const feedbackPanels = slide.querySelectorAll("[data-feedback-size]");

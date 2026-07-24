@@ -114,9 +114,11 @@ test('quick edit exposes admin settings without replacing website review modes',
   assert.match(review, /name="previewSource" value="url"/);
   assert.match(review, /name="previewSource" value="screenshots"/);
   assert.match(review, /hasUrlPreview && !useScreenshotPreview/);
+  assert.match(review, /data-screenshot-modes/);
   assert.match(review, />View uploaded screenshots<\/summary>/);
   assert.match(review, /else if \(page\.devScreenshotPath && page\.liveScreenshotPath\)/);
   assert.match(server, /requestedPreviewSource === 'screenshots'/);
+  assert.match(read('public/js/review.js'), /Highlight differences is only available for URL previews/);
 });
 
 test('review login redirects only to local paths', () => {

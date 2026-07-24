@@ -278,12 +278,12 @@
                       <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= screenSizeLabel(size) %></button>
                     <% }) %>
                   </nav>
-                  <% if (hasUrlPreview && !useScreenshotPreview) { %>
+                  <% if (hasUrlPreview || hasScreenshotPreview) { %>
                     <span class="review-control-label">Review mode</span>
-                    <nav class="screen-tabs review-mode-tabs" data-webpage-modes aria-label="Review mode">
-                      <button type="button" data-webpage-mode="interact" title="Use the Dev and Live previews normally so you can click links, buttons, and other controls." data-tooltip="Use the Dev and Live previews normally so you can click links, buttons, and other controls.">Interact</button>
+                    <nav class="screen-tabs review-mode-tabs" <%= useScreenshotPreview ? 'data-screenshot-modes' : 'data-webpage-modes' %> aria-label="Review mode">
+                      <button type="button" data-webpage-mode="interact" title="<%= useScreenshotPreview ? 'Switch to URL above to interact with the website.' : 'Use the Dev and Live previews normally so you can click links, buttons, and other controls.' %>" data-tooltip="<%= useScreenshotPreview ? 'Switch to URL above to interact with the website.' : 'Use the Dev and Live previews normally so you can click links, buttons, and other controls.' %>" <%= useScreenshotPreview ? 'disabled' : '' %>>Interact</button>
                       <button type="button" class="active" data-webpage-mode="compare" title="Stack Dev and Live together and drag the slider to compare visual differences." data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences.">Compare</button>
-                      <button type="button" data-webpage-mode="annotate">Annotate</button>
+                      <button type="button" data-webpage-mode="annotate" title="Mark a spot on the active screenshot and attach a note." data-tooltip="Mark a spot on the active screenshot and attach a note.">Annotate</button>
                       <button type="button" data-webpage-diff>Highlight differences</button>
                     </nav>
                   <% } %>
