@@ -223,6 +223,11 @@
         <% } %>
 
         <% if (page.type === 'urlCompare') { %>
+          <%
+            const hasUrlPreview = Boolean(page.devUrl || page.liveUrl);
+            const hasScreenshotPreview = Boolean(page.devScreenshotPath || page.liveScreenshotPath || page.devShots || page.liveShots);
+            const useScreenshotPreview = page.previewSource === 'screenshots' && hasScreenshotPreview;
+          %>
           <section class="review-page review-page--work" id="<%= page.pageId %>" data-page-title="<%= page.title %>">
             <div class="review-workspace">
               <div class="review-canvas">
@@ -254,7 +259,14 @@
                           <input type="file" name="liveScreenshot" accept="image/*">
                         </label>
                       </div>
-                      <button type="submit">Save to this page</button>
+                      <div class="quick-edit__actions">
+                        <% if (hasUrlPreview && hasScreenshotPreview) { %>
+                          <button type="submit" name="previewSource" value="url" class="<%= !useScreenshotPreview ? 'is-selected' : '' %>">Save &amp; use URL</button>
+                          <button type="submit" name="previewSource" value="screenshots" class="<%= useScreenshotPreview ? 'is-selected' : '' %>">Save &amp; use screenshots</button>
+                        <% } else { %>
+                          <button type="submit">Save to this page</button>
+                        <% } %>
+                      </div>
                     </form>
                   </div>
                 <% } %>
@@ -266,7 +278,7 @@
                       <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= screenSizeLabel(size) %></button>
                     <% }) %>
                   </nav>
-                  <% if (page.devUrl || page.liveUrl) { %>
+                  <% if (hasUrlPreview && !useScreenshotPreview) { %>
                     <span class="review-control-label">Review mode</span>
                     <nav class="screen-tabs review-mode-tabs" data-webpage-modes aria-label="Review mode">
                       <button type="button" data-webpage-mode="interact" title="Use the Dev and Live previews normally so you can click links, buttons, and other controls." data-tooltip="Use the Dev and Live previews normally so you can click links, buttons, and other controls.">Interact</button>
@@ -277,7 +289,7 @@
                   <% } %>
                 </div>
 
-                <% if (page.devUrl || page.liveUrl) { %>
+                <% if (hasUrlPreview && !useScreenshotPreview) { %>
                   <% const webpageDots = responses.filter(response => response.pageId === page.pageId && response.dotX && response.dotY); %>
                   <% const webpageHighlights = page.highlights || []; %>
                   <div class="webpage-preview-stage is-slider" data-webpage-preview data-webpage-compare>

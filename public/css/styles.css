@@ -1967,6 +1967,17 @@ body.quick-edit-on .quick-edit-only {
   cursor: pointer;
 }
 
+.quick-edit__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-edit__form button[type="submit"].is-selected {
+  outline: 3px solid rgba(37, 99, 235, .2);
+  outline-offset: 2px;
+}
+
 /* View all notes page */
 .notes-page {
   max-width: 880px;

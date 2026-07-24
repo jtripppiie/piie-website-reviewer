@@ -1737,6 +1737,20 @@ app.post('/r/:shareToken/quick-update', rateLimitQuickUpdate, requireReviewer, u
       page.liveScreenshotPath = uploadPath(liveScreenshot);
       delete page.liveShots;
     }
+
+    const requestedPreviewSource = (req.body.previewSource || '').trim();
+    const hasUrlPreview = Boolean(page.devUrl || page.liveUrl);
+    const hasScreenshotPreview = Boolean(
+      page.devScreenshotPath ||
+      page.liveScreenshotPath ||
+      page.devShots ||
+      page.liveShots
+    );
+    if (requestedPreviewSource === 'url' && hasUrlPreview) {
+      page.previewSource = 'url';
+    } else if (requestedPreviewSource === 'screenshots' && hasScreenshotPreview) {
+      page.previewSource = 'screenshots';
+    }
   }
 
   if (page.type === 'imageCompare') {

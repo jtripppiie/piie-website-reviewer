@@ -105,14 +105,18 @@ test('quick-update URL contract accepts http(s), same-origin paths, and rejects 
 
 test('quick edit exposes admin settings without replacing website review modes', () => {
   const review = read('views/review.ejs');
+  const server = read('server.js');
 
   assert.ok(
     review.includes('class="button quick-edit-only"') && review.includes('>Project settings</a>'),
     'triple-click admin mode should link back to project settings'
   );
-  assert.match(review, /if \(page\.devUrl \|\| page\.liveUrl\)/);
+  assert.match(review, /name="previewSource" value="url"/);
+  assert.match(review, /name="previewSource" value="screenshots"/);
+  assert.match(review, /hasUrlPreview && !useScreenshotPreview/);
   assert.match(review, />View uploaded screenshots<\/summary>/);
   assert.match(review, /else if \(page\.devScreenshotPath && page\.liveScreenshotPath\)/);
+  assert.match(server, /requestedPreviewSource === 'screenshots'/);
 });
 
 test('review login redirects only to local paths', () => {
