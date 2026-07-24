@@ -103,6 +103,18 @@ test('quick-update URL contract accepts http(s), same-origin paths, and rejects 
   assert.ok(!isAllowedReviewUrl('example.com'));
 });
 
+test('quick edit exposes admin settings without replacing website review modes', () => {
+  const review = read('views/review.ejs');
+
+  assert.ok(
+    review.includes('class="button quick-edit-only"') && review.includes('>Project settings</a>'),
+    'triple-click admin mode should link back to project settings'
+  );
+  assert.match(review, /if \(page\.devUrl \|\| page\.liveUrl\)/);
+  assert.match(review, />View uploaded screenshots<\/summary>/);
+  assert.match(review, /else if \(page\.devScreenshotPath && page\.liveScreenshotPath\)/);
+});
+
 test('review login redirects only to local paths', () => {
   assert.strictEqual(safeLocalRedirect('/r/share_123?screen=mobile#page'), '/r/share_123?screen=mobile#page');
   assert.strictEqual(safeLocalRedirect('https://attacker.example'), '/');
@@ -181,7 +193,8 @@ test('static demo includes interact and compare modes', () => {
   assert.match(demo, /data-webpage-mode="compare"/);
   assert.match(demo, /data-webpage-compare/);
   assert.match(demo, /setCompareReveal/);
-  assert.match(demo, /data-webpage-mode="interact" hidden disabled aria-hidden="true"/);
+  assert.match(demo, /data-webpage-mode="interact" title=.*data-tooltip=/);
+  assert.doesNotMatch(demo, /data-webpage-mode="interact" hidden disabled/);
   assert.match(demo, /data-webpage-mode="compare" title=.*data-tooltip=/);
   assert.match(demo, /data-webpage-mode="annotate" title=.*data-tooltip=/);
   assert.match(demo, />Annotate<\/button>/);
@@ -198,7 +211,8 @@ test('static demo includes interact and compare modes', () => {
   assert.match(demo, /difference-box/);
   assert.match(demo, /reviewerDotColor/);
   assert.match(demo, /data-pin-tooltip/);
-  assert.match(realReview, /data-webpage-mode="interact" hidden disabled aria-hidden="true"/);
+  assert.match(realReview, /data-webpage-mode="interact" title=.*data-tooltip=/);
+  assert.doesNotMatch(realReview, /data-webpage-mode="interact" hidden disabled/);
   assert.match(realReview, /data-webpage-mode="compare" title=.*data-tooltip=/);
   assert.match(demo, /compareMode = state\.compareModes\[page\.pageId\] \|\| 'compare'/);
   assert.match(demo, /compareMode === 'compare' \|\| compareMode === 'annotate' \? ' is-slider'/);

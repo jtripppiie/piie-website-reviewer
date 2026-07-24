@@ -20,7 +20,7 @@
 
   function toggleQuickEdit() {
     const on = document.body.classList.toggle('quick-edit-on');
-    showToast(on ? 'Quick edit on. Set URLs or drop in images, then Save.' : 'Quick edit off.');
+    showToast(on ? 'Quick edit on. Upload images here or open Project settings.' : 'Quick edit off.');
   }
 
   function clearLocalDrafts() {

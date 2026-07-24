@@ -1735,6 +1735,15 @@ button.secondary {
   min-width: 0;
 }
 
+.screenshot-reference {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.screenshot-reference .shots-pair {
+  margin-top: 12px;
+}
+
 .shots-size {
   display: none;
 }

@@ -34,7 +34,7 @@ const debugOutput = document.querySelector('#debugOutput');
 document.addEventListener('DOMContentLoaded', function () {
   var badge = document.createElement('div');
   badge.className = 'app-version-badge';
-  badge.textContent = 'PIIE Reviewer v' + APP_VERSION + ' (demo)';
+  badge.textContent = 'Web Reviewer v' + APP_VERSION + ' (demo)';
   document.body.appendChild(badge);
 });
 
@@ -337,7 +337,7 @@ function renderPage(page, index) {
           </nav>
           <span class="review-control-label">Review mode</span>
           <nav class="screen-tabs review-mode-tabs" aria-label="Review mode">
-            <button type="button" data-webpage-mode="interact" hidden disabled aria-hidden="true">Interact</button>
+            <button type="button" data-webpage-mode="interact" title="Use the Dev and Live previews normally so you can click links, buttons, and other controls." data-tooltip="Use the Dev and Live previews normally so you can click links, buttons, and other controls." class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
             <button type="button" data-webpage-mode="compare" title="Stack Dev and Live together and drag the slider to compare visual differences." data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences." class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
             <button type="button" data-webpage-mode="annotate" title="Click a spot on the preview, then save a note pinned to that location." data-tooltip="Click a spot on the preview, then save a note pinned to that location." class="${compareMode === 'annotate' ? 'active' : ''}">Annotate</button>
             <button type="button" data-webpage-diff title="Highlight visible differences when both previews can be inspected by this page." data-tooltip="Highlight visible differences when both previews can be inspected by this page.">Highlight differences</button>
