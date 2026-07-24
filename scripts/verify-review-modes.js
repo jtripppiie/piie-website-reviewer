@@ -1,0 +1,190 @@
+'use strict';
+
+const path = require('path');
+const express = require('express');
+const ejs = require('ejs');
+const puppeteer = require('puppeteer');
+
+const root = path.join(__dirname, '..');
+
+async function main() {
+  const app = express();
+  app.use('/public', express.static(path.join(root, 'public')));
+  app.get('/test', async (req, res, next) => {
+    try {
+      const html = await ejs.renderFile(path.join(root, 'views', 'review.ejs'), {
+        appVersion: 'browser-test',
+        packet: {
+          packetId: 'packet_test',
+          shareToken: 'share_test',
+          title: 'Screenshot controls test',
+          published: true,
+          pages: [{
+            pageId: 'page_test',
+            type: 'urlCompare',
+            title: 'Screenshot test',
+            devUrl: '/public/demo/dev-home.html',
+            liveUrl: '/public/demo/live-home.html',
+            devScreenshotPath: '/public/demo/photo-after.svg',
+            liveScreenshotPath: '/public/demo/photo-before.svg',
+            previewSource: req.query.source === 'url' ? 'url' : 'screenshots',
+            screenSizes: ['desktop', 'mobile']
+          }]
+        },
+        responses: [],
+        isAdminView: true,
+        adminKeyValue: 'test',
+        canQuickEdit: true,
+        quickEditGated: false,
+        quickEditUnlocked: true,
+        quickEditError: false
+      });
+      res.send(html);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  const server = await new Promise(resolve => {
+    const listening = app.listen(0, '127.0.0.1', () => resolve(listening));
+  });
+  const address = server.address();
+  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+
+  try {
+    const page = await browser.newPage();
+    page.on('pageerror', error => console.error('PAGE ERROR:', error.message));
+    page.on('console', message => {
+      if (message.type() === 'error') console.error('BROWSER ERROR:', message.text());
+    });
+    await page.goto(`http://127.0.0.1:${address.port}/test`, { waitUntil: 'networkidle0' });
+
+    await page.$eval('[data-webpage-mode="annotate"]', element => {
+      element.scrollIntoView({ block: 'center' });
+    });
+    const initial = await page.evaluate(() => ({
+      screenshotModes: Boolean(document.querySelector('[data-screenshot-modes]')),
+      interactDisabled: document.querySelector('[data-webpage-mode="interact"]')?.disabled,
+      compareActive: document.querySelector('[data-webpage-mode="compare"]')?.classList.contains('active'),
+      compareVisible: Boolean(document.querySelector('[data-compare]')?.getClientRects().length),
+      compareReveal: document.querySelector('[data-compare]')?.style.getPropertyValue('--reveal'),
+      scripts: Array.from(document.scripts).map(script => script.src)
+    }));
+    initial.loadedScreenshotHandler = await page.evaluate(async () => {
+      const source = await fetch('/public/js/review.js?v=inspect').then(response => response.text());
+      return source.includes("event.target.closest('[data-screenshot-modes]')");
+    });
+    initial.annotateHitTarget = await page.evaluate(() => {
+      const button = document.querySelector('[data-webpage-mode="annotate"]');
+      const rect = button.getBoundingClientRect();
+      const target = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      const controls = button.closest('.review-controls');
+      const panel = document.querySelector('.feedback-panel');
+      return {
+        target: target?.outerHTML?.slice(0, 160) || '',
+        controlsZ: getComputedStyle(controls).zIndex,
+        controlsPosition: getComputedStyle(controls).position,
+        panelZ: getComputedStyle(panel).zIndex,
+        buttonRect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
+      };
+    });
+
+    await page.click('[data-webpage-mode="annotate"]');
+    const armed = await page.evaluate(() => ({
+      annotateActive: document.querySelector('[data-webpage-mode="annotate"]')?.classList.contains('active'),
+      pinTarget: document.querySelector('[data-compare]')?.dataset.pinTarget,
+      toast: document.querySelector('.app-fill-toast')?.textContent
+    }));
+
+    await page.locator('[data-compare]').click({ offset: { x: 220, y: 160 } });
+    const annotated = await page.evaluate(() => ({
+      dotX: document.querySelector('.screen-feedback.active form.feedback [name="dotX"]')?.value,
+      dotY: document.querySelector('.screen-feedback.active form.feedback [name="dotY"]')?.value,
+      tempDot: Boolean(document.querySelector('[data-compare] .comment-dot.is-temp'))
+    }));
+
+    await page.click('[data-webpage-diff]');
+    const diffToast = await page.$eval(
+      'body',
+      element => element.querySelector('.app-fill-toast')?.textContent || ''
+    );
+
+    await page.click('[data-webpage-mode="compare"]');
+    const compareRestored = await page.$eval(
+      '[data-webpage-mode="compare"]',
+      element => element.classList.contains('active')
+    );
+
+    const result = { initial, armed, annotated, diffToast, compareRestored };
+    const screenshotPassed =
+      initial.screenshotModes &&
+      initial.interactDisabled &&
+      initial.compareActive &&
+      initial.compareVisible &&
+      armed.annotateActive &&
+      armed.pinTarget === 'true' &&
+      Boolean(annotated.dotX) &&
+      Boolean(annotated.dotY) &&
+      annotated.tempDot &&
+      /only available for URL previews/.test(diffToast) &&
+      compareRestored;
+
+    console.log(JSON.stringify(result, null, 2));
+
+    await page.goto(`http://127.0.0.1:${address.port}/test?source=url`, { waitUntil: 'networkidle0' });
+    await page.$eval('[data-webpage-mode="interact"]', element => {
+      element.scrollIntoView({ block: 'center' });
+    });
+    await page.click('[data-webpage-mode="interact"]');
+    const urlInteract = await page.evaluate(() => ({
+      active: document.querySelector('[data-webpage-mode="interact"]')?.classList.contains('active'),
+      slider: document.querySelector('[data-webpage-preview]')?.classList.contains('is-slider')
+    }));
+
+    await page.click('[data-webpage-mode="compare"]');
+    const urlCompare = await page.evaluate(() => ({
+      active: document.querySelector('[data-webpage-mode="compare"]')?.classList.contains('active'),
+      slider: document.querySelector('[data-webpage-preview]')?.classList.contains('is-slider')
+    }));
+
+    await page.click('[data-webpage-mode="annotate"]');
+    const urlAnnotate = await page.evaluate(() => ({
+      active: document.querySelector('[data-webpage-mode="annotate"]')?.classList.contains('active'),
+      annotating: document.querySelector('[data-webpage-preview]')?.classList.contains('is-annotating'),
+      markLayer: Boolean(document.querySelector('[data-webpage-preview] .webpage-mark-layer'))
+    }));
+
+    await page.click('[data-webpage-diff]');
+    await new Promise(resolve => setTimeout(resolve, 700));
+    const urlDiff = await page.evaluate(() => {
+      const button = document.querySelector('[data-webpage-diff]');
+      return {
+        text: button?.textContent || '',
+        active: button?.classList.contains('active') || false,
+        unavailable: button?.disabled && /unavailable/i.test(button?.textContent || '')
+      };
+    });
+
+    const urlResult = { urlInteract, urlCompare, urlAnnotate, urlDiff };
+    const urlPassed =
+      urlInteract.active &&
+      !urlInteract.slider &&
+      urlCompare.active &&
+      urlCompare.slider &&
+      urlAnnotate.active &&
+      urlAnnotate.annotating &&
+      urlAnnotate.markLayer &&
+      (urlDiff.active || urlDiff.unavailable || /Hide differences/.test(urlDiff.text));
+
+    console.log(JSON.stringify(urlResult, null, 2));
+    if (!screenshotPassed || !urlPassed) process.exitCode = 1;
+  } finally {
+    await browser.close();
+    await new Promise(resolve => server.close(resolve));
+  }
+}
+
+main().catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+});

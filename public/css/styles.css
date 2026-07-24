@@ -2877,6 +2877,8 @@ button:disabled {
 /* Demo-style controls row: labeled Screen size / Review mode groups */
 .review-body .review-controls {
   display: flex;
+  position: relative;
+  z-index: 110;
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
