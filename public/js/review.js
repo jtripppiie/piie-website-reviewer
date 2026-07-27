@@ -54,6 +54,21 @@ document.querySelectorAll('[data-compare]').forEach(compare => {
   });
 });
 
+// Keep the sticky review controls directly below the sticky top bar. Measuring
+// the real header avoids overlap when its buttons or logo change height.
+(function syncReviewTopbarOffset() {
+  const topbar = document.querySelector('.review-topbar');
+  if (!topbar) return;
+
+  const update = () => {
+    document.documentElement.style.setProperty('--review-topbar-offset', `${topbar.offsetHeight}px`);
+  };
+
+  update();
+  window.addEventListener('resize', update);
+  if ('ResizeObserver' in window) new ResizeObserver(update).observe(topbar);
+})();
+
 document.querySelectorAll('[data-webpage-compare]').forEach(stage => {
   let dragging = false;
 

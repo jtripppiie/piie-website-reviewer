@@ -79,6 +79,17 @@ async function main() {
       compareReveal: document.querySelector('.shots-size.active [data-compare]')?.style.getPropertyValue('--reveal'),
       scripts: Array.from(document.scripts).map(script => script.src)
     }));
+    await page.evaluate(() => window.scrollTo(0, 500));
+    await new Promise(resolve => setTimeout(resolve, 100));
+    initial.stickyRows = await page.evaluate(() => {
+      const topbar = document.querySelector('.review-topbar')?.getBoundingClientRect();
+      const controls = document.querySelector('.review-controls')?.getBoundingClientRect();
+      return {
+        topbarBottom: topbar?.bottom || 0,
+        controlsTop: controls?.top || 0,
+        separated: Boolean(topbar && controls && controls.top >= topbar.bottom - 1)
+      };
+    });
     initial.loadedScreenshotHandler = await page.evaluate(async () => {
       const source = await fetch('/public/js/review.js?v=inspect').then(response => response.text());
       return source.includes("event.target.closest('[data-screenshot-modes]')");
@@ -139,6 +150,7 @@ async function main() {
       initial.compareActive &&
       initial.compareVisible &&
       initial.perSizeComparisons === 2 &&
+      initial.stickyRows.separated &&
       armed.annotateActive &&
       armed.pinTarget === 'true' &&
       Boolean(annotated.dotX) &&

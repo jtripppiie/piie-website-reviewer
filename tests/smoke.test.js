@@ -217,6 +217,16 @@ test('per-size URL screenshots use the comparison and annotation surface', () =>
   assert.match(reviewJs, /activeScreenshotCompare/);
 });
 
+test('sticky review menus use measured non-overlapping offsets', () => {
+  const styles = read('public/css/styles.css');
+  const reviewJs = read('public/js/review.js');
+
+  assert.match(styles, /\.review-body \.review-topbar \{[\s\S]*?z-index: 200;/);
+  assert.match(styles, /top: var\(--review-topbar-offset, 72px\);/);
+  assert.match(reviewJs, /function syncReviewTopbarOffset/);
+  assert.match(reviewJs, /--review-topbar-offset/);
+});
+
 test('static demo includes interact and compare modes', () => {
   const demo = read('docs/static-review.js');
   const index = read('docs/index.html');
