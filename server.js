@@ -475,9 +475,20 @@ app.get('/', (req, res) => {
   res.redirect('/admin');
 });
 
+function safeAdminReturn(value) {
+  const target = safeLocalRedirect(value, '/admin');
+  return /^\/admin\/packets\/[^/?#]+\/edit(?:[?#]|$)/.test(target) ? target : '/admin';
+}
+
+function adminReturnWithKey(value, key) {
+  const parsed = new URL(safeAdminReturn(value), 'http://local.invalid');
+  parsed.searchParams.set('key', key);
+  return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+}
+
 app.get('/admin', async (req, res) => {
   if (!isAdmin(req)) {
-    return res.render('login', { error: null });
+    return res.render('login', { error: null, next: safeAdminReturn(req.query.next) });
   }
 
   const packets = await getPackets();
@@ -489,10 +500,10 @@ app.get('/admin', async (req, res) => {
 
 app.post('/admin/login', (req, res) => {
   if (!safeEqual(req.body.password, ADMIN_PASSWORD)) {
-    return res.render('login', { error: 'Wrong password.' });
+    return res.render('login', { error: 'Wrong password.', next: safeAdminReturn(req.body.next) });
   }
 
-  res.redirect(`/admin?key=${encodeURIComponent(req.body.password)}`);
+  res.redirect(adminReturnWithKey(req.body.next, req.body.password));
 });
 
 app.post('/admin/packets', async (req, res) => {

@@ -10,13 +10,12 @@
             <span class="review-brand__fallback">PIIE</span>
           </span>
         </div>
-        <a class="button" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>"><%= isAdminView ? 'Manage notes' : 'View all notes' %></a>
-        <button type="button" class="button" data-clear-local-notes data-clear-mine-url="/r/<%= packet.shareToken %>/clear-mine<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">Clear My Notes</button>
+        <a class="button review-header-action" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>"><%= isAdminView ? 'Manage notes' : 'View all notes' %></a>
+        <button type="button" class="button review-header-action" data-clear-local-notes data-clear-mine-url="/r/<%= packet.shareToken %>/clear-mine<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">Clear My Notes</button>
         <% if (canQuickEdit) { %>
-          <button type="button" class="button danger quick-edit-only" data-clear-all-notes data-clear-all-url="/r/<%= packet.shareToken %>/clear-all<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">Clear All Notes</button>
-        <% } %>
-        <% if (isAdminView) { %>
-          <a class="button quick-edit-only" href="/admin/packets/<%= packet.packetId %>/edit?key=<%= encodeURIComponent(adminKeyValue) %>">Project settings</a>
+          <button type="button" class="button danger quick-edit-only review-header-action" data-clear-all-notes data-clear-all-url="/r/<%= packet.shareToken %>/clear-all<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">Clear All Notes</button>
+          <% const packetEditPath = `/admin/packets/${packet.packetId}/edit`; %>
+          <a class="button quick-edit-only review-header-action" href="<%= isAdminView ? packetEditPath + '?key=' + encodeURIComponent(adminKeyValue) : '/admin?next=' + encodeURIComponent(packetEditPath) %>">Edit packet</a>
         <% } %>
         <div class="preview-status header-preview-status" data-header-preview-status aria-live="polite"></div>
       </div>

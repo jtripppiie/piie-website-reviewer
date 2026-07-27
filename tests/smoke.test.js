@@ -108,7 +108,7 @@ test('quick edit exposes admin settings without replacing website review modes',
   const server = read('server.js');
 
   assert.ok(
-    review.includes('class="button quick-edit-only"') && review.includes('>Project settings</a>'),
+    review.includes('class="button quick-edit-only review-header-action"') && review.includes('>Edit packet</a>'),
     'triple-click admin mode should link back to project settings'
   );
   assert.match(review, /name="previewSource" value="url"/);
@@ -119,6 +119,19 @@ test('quick edit exposes admin settings without replacing website review modes',
   assert.match(review, /else if \(page\.devScreenshotPath && page\.liveScreenshotPath\)/);
   assert.match(server, /requestedPreviewSource === 'screenshots'/);
   assert.match(read('public/js/review.js'), /Highlight differences is only available for URL previews/);
+});
+
+test('admin login safely returns quick edit users to the packet edit page', () => {
+  const server = read('server.js');
+  const login = read('views/login.ejs');
+  const review = read('views/review.ejs');
+  const styles = read('public/css/styles.css');
+
+  assert.match(server, /function safeAdminReturn/);
+  assert.match(server, /adminReturnWithKey\(req\.body\.next, req\.body\.password\)/);
+  assert.match(login, /name="next"/);
+  assert.match(review, /'\/admin\?next=' \+ encodeURIComponent\(packetEditPath\)/);
+  assert.match(styles, /\.review-body \.review-header-action \{[\s\S]*?font-size: 13px;/);
 });
 
 test('review login redirects only to local paths', () => {

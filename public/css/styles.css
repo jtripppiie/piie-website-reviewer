@@ -2710,6 +2710,12 @@ button:disabled {
   box-shadow: none;
 }
 
+.review-body .review-header-action {
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
 .review-body button:hover,
 .review-body .button:hover {
   border-color: var(--blue);
