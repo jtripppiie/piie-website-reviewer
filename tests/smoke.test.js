@@ -204,6 +204,19 @@ test('published packets expose separate webpage and screenshot review links', ()
   assert.match(review, /!reviewSourceOverride && page\.previewSource === 'screenshots'/);
 });
 
+test('per-size URL screenshots use the comparison and annotation surface', () => {
+  const review = read('views/review.ejs');
+  const reviewJs = read('public/js/review.js');
+
+  assert.match(review, /class="compare wide-compare screenshot-compare" data-compare data-annotatable/);
+  assert.match(review, /const sizeDots = responses\.filter/);
+  assert.match(review, /Both screenshots are required for slider comparison and annotation/);
+  assert.match(review, /const capturedShotSizes = normalizedPageSizes\.filter/);
+  assert.match(review, /const reviewScreenSizes = useScreenshotPreview/);
+  assert.match(reviewJs, /function activateScreenshotAnnotation/);
+  assert.match(reviewJs, /activeScreenshotCompare/);
+});
+
 test('static demo includes interact and compare modes', () => {
   const demo = read('docs/static-review.js');
   const index = read('docs/index.html');

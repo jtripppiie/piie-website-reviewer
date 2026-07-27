@@ -231,6 +231,13 @@
               reviewSourceOverride === 'screenshots' ||
               (!reviewSourceOverride && page.previewSource === 'screenshots')
             );
+            const normalizedPageSizes = normalizedScreenSizes(page.screenSizes);
+            const capturedShotSizes = normalizedPageSizes.filter(size =>
+              (page.devShots && page.devShots[size]) || (page.liveShots && page.liveShots[size])
+            );
+            const reviewScreenSizes = useScreenshotPreview && capturedShotSizes.length
+              ? capturedShotSizes
+              : normalizedPageSizes;
           %>
           <section class="review-page review-page--work" id="<%= page.pageId %>" data-page-title="<%= page.title %>">
             <div class="review-workspace">
@@ -278,7 +285,7 @@
                 <div class="review-controls">
                   <span class="review-control-label">Screen size</span>
                   <nav class="screen-tabs screen-size-tabs" data-url-tabs aria-label="Screen size">
-                    <% normalizedScreenSizes(page.screenSizes).forEach((size, sizeIndex) => { %>
+                    <% reviewScreenSizes.forEach((size, sizeIndex) => { %>
                       <button type="button" class="<%= sizeIndex === 0 ? 'active' : '' %>" data-size="<%= size %>"><%= screenSizeLabel(size) %></button>
                     <% }) %>
                   </nav>
@@ -392,7 +399,7 @@
 
                 <% } else if (page.devShots || page.liveShots) { %>
                   <%
-                    const shotSizes = normalizedScreenSizes(page.screenSizes);
+                    const shotSizes = reviewScreenSizes;
                     const cssDims = {
                       desktop: 'available width x 900',
                       'desktop-1440': '1440 x 900',
@@ -404,28 +411,74 @@
                   %>
                   <div class="shots-stage" data-shots-stage>
                     <% shotSizes.forEach((size, shotIndex) => { %>
+                      <% const devShot = page.devShots && page.devShots[size]; %>
+                      <% const liveShot = page.liveShots && page.liveShots[size]; %>
+                      <% const sizeDots = responses.filter(response => response.pageId === page.pageId && response.screenSize === size && response.dotX && response.dotY); %>
+                      <% const sizeHighlights = (page.highlights || []).filter(highlight => !highlight.screenSize || highlight.screenSize === size); %>
                       <div class="shots-size <%= shotIndex === 0 ? 'active' : '' %>" data-shots-size="<%= size %>">
                         <p class="shots-size__caption"><%= screenSizeLabel(size) %> (<%= cssDims[size] || '' %>), full page</p>
-                        <div class="shots-pair shots-pair--<%= size === 'mobile' ? 'row' : 'col' %>">
-                          <figure class="shot-card">
-                            <figcaption>Dev: <%= screenSizeLabel(size) %></figcaption>
-                            <% if (page.devShots && page.devShots[size]) { %>
-                              <img src="<%= page.devShots[size] %>" alt="Dev screenshot at <%= screenSizeLabel(size) %>">
-                              <a class="shot-fullsize" href="<%= page.devShots[size] %>" target="_blank" rel="noopener">View at 100%</a>
-                            <% } else { %>
-                              <div class="shot-empty">No Dev shot for this size yet.</div>
-                            <% } %>
-                          </figure>
-                          <figure class="shot-card">
-                            <figcaption>Live: <%= screenSizeLabel(size) %></figcaption>
-                            <% if (page.liveShots && page.liveShots[size]) { %>
-                              <img src="<%= page.liveShots[size] %>" alt="Live screenshot at <%= screenSizeLabel(size) %>">
-                              <a class="shot-fullsize" href="<%= page.liveShots[size] %>" target="_blank" rel="noopener">View at 100%</a>
-                            <% } else { %>
-                              <div class="shot-empty">No Live shot for this size yet.</div>
-                            <% } %>
-                          </figure>
-                        </div>
+                        <% if (devShot && liveShot) { %>
+                          <div class="compare wide-compare screenshot-compare" data-compare data-annotatable>
+                            <img class="before" src="<%= liveShot %>" alt="Live screenshot at <%= screenSizeLabel(size) %>">
+                            <img class="after" src="<%= devShot %>" alt="Dev screenshot at <%= screenSizeLabel(size) %>">
+                            <span class="badge before-label">Live</span>
+                            <span class="badge after-label">Dev</span>
+                            <div class="divider"></div>
+                            <button class="handle" type="button" aria-label="Drag Dev and Live comparison handle"></button>
+
+                            <% sizeHighlights.forEach((highlight, highlightIndex) => { %>
+                              <button
+                                class="admin-highlight admin-highlight--<%= highlight.type || 'box' %> admin-highlight--<%= highlight.direction || 'right' %>"
+                                type="button"
+                                style="<%= highlightStyle(highlight) %>"
+                                data-highlight-label="<%= highlight.label || '' %>"
+                                aria-label="<%= highlight.label || `Admin highlight ${highlightIndex + 1}` %>">
+                                <% if (highlight.label) { %><span><%= highlight.label %></span><% } %>
+                              </button>
+                            <% }) %>
+
+                            <% sizeDots.forEach((dot, dotIndex) => { %>
+                              <button
+                                class="comment-dot"
+                                type="button"
+                                style="left: <%= dot.dotX %>%; top: <%= dot.dotY %>%"
+                                title="<%= (dot.reviewerName || dot.initials || 'Reviewer') + ': ' + dot.status + (dot.comment ? ' - ' + dot.comment : '') %>"
+                                data-reviewer="<%= dot.reviewerName || dot.initials || 'Reviewer' %>"
+                                data-status="<%= dot.status || 'Review note' %>"
+                                data-screen="<%= screenSizeLabel(dot.screenSize) %>"
+                                data-dot-screen="<%= dot.screenSize || size %>"
+                                data-comment="<%= dot.comment || '' %>"
+                                data-note-id="<%= dot.responseId %>"
+                                <% if (dot.canManage) { %>data-position-url="/r/<%= packet.shareToken %>/feedback/<%= dot.responseId %>/position<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>"<% } %>>
+                                <%= dotIndex + 1 %>
+                              </button>
+                            <% }) %>
+                          </div>
+                          <p class="muted shot-fullsize-links">View at 100%:
+                            <a href="<%= liveShot %>" target="_blank" rel="noopener">Live</a>
+                            <a href="<%= devShot %>" target="_blank" rel="noopener">Dev</a>
+                          </p>
+                        <% } else { %>
+                          <div class="shots-pair shots-pair--<%= size === 'mobile' ? 'row' : 'col' %>">
+                            <figure class="shot-card">
+                              <figcaption>Dev: <%= screenSizeLabel(size) %></figcaption>
+                              <% if (devShot) { %>
+                                <img src="<%= devShot %>" alt="Dev screenshot at <%= screenSizeLabel(size) %>">
+                              <% } else { %>
+                                <div class="shot-empty">No Dev shot for this size yet.</div>
+                              <% } %>
+                            </figure>
+                            <figure class="shot-card">
+                              <figcaption>Live: <%= screenSizeLabel(size) %></figcaption>
+                              <% if (liveShot) { %>
+                                <img src="<%= liveShot %>" alt="Live screenshot at <%= screenSizeLabel(size) %>">
+                              <% } else { %>
+                                <div class="shot-empty">No Live shot for this size yet.</div>
+                              <% } %>
+                            </figure>
+                          </div>
+                          <p class="muted">Both screenshots are required for slider comparison and annotation.</p>
+                        <% } %>
                       </div>
                     <% }) %>
                   </div>
@@ -501,7 +554,7 @@
                 </div>
                 <p class="muted">Pick a screen size, then leave your notes for it.</p>
 
-                <% normalizedScreenSizes(page.screenSizes).forEach((size, sizeIndex) => { %>
+                <% reviewScreenSizes.forEach((size, sizeIndex) => { %>
                   <div class="screen-feedback <%= sizeIndex === 0 ? 'active' : '' %>" data-feedback-size="<%= size %>">
                     <h4><%= screenSizeLabel(size) %></h4>
                     <%- include('partials/public-notes', { responses, page, screenSize: size }) %>

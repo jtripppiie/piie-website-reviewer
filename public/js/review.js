@@ -488,9 +488,30 @@ document.querySelectorAll('[data-webpage-modes]').forEach(modeGroup => {
 // Screenshot review keeps the same visible mode bar as URL review. Static
 // images cannot be interacted with or DOM-diffed, but they can be compared and
 // annotated using the existing pin workflow.
+function activeScreenshotCompare(slide) {
+  return slide?.querySelector('.shots-size.active [data-compare]') || slide?.querySelector('[data-compare]');
+}
+
+function activateScreenshotAnnotation(slide) {
+  const activeCompare = activeScreenshotCompare(slide);
+  slide?.querySelectorAll('.shots-size [data-compare]').forEach(compare => {
+    compare.classList.toggle('is-annotating', compare === activeCompare);
+    if (compare !== activeCompare) removeWebpageMarkLayer(compare);
+  });
+
+  const activeForm = slide?.querySelector('.screen-feedback.active form.feedback');
+  const markButton = activeForm?.querySelector('[data-start-dot]');
+  if (!activeCompare || !markButton) {
+    showReviewToast('This screen size needs both screenshots before it can be annotated.');
+    return;
+  }
+  markButton.click();
+}
+
 document.addEventListener('click', event => {
   const modeGroup = event.target.closest('[data-screenshot-modes]');
   if (!modeGroup) return;
+  const slide = modeGroup.closest('.review-page');
 
   const diffButton = event.target.closest('[data-webpage-diff]');
   if (diffButton) {
@@ -508,19 +529,16 @@ document.addEventListener('click', event => {
 
   if (mode === 'compare') {
     disarmDotPlacement();
+    slide?.querySelectorAll('.shots-size [data-compare]').forEach(compare => {
+      compare.classList.remove('is-annotating');
+      removeWebpageMarkLayer(compare);
+    });
     showReviewToast('Compare mode on. Drag the slider to inspect both screenshots.');
     return;
   }
 
   if (mode === 'annotate') {
-    const slide = modeGroup.closest('.review-page');
-    const activeForm = slide?.querySelector('.screen-feedback.active form.feedback');
-    const markButton = activeForm?.querySelector('[data-start-dot]');
-    if (!markButton) {
-      showReviewToast('Pick a screen size before annotating.');
-      return;
-    }
-    markButton.click();
+    activateScreenshotAnnotation(slide);
   }
 });
 
@@ -562,6 +580,12 @@ document.querySelectorAll('[data-url-tabs]').forEach(tabGroup => {
     });
 
     showSize(size);
+    const screenshotModes = slide.querySelector('[data-screenshot-modes]');
+    const screenshotAnnotate = screenshotModes?.querySelector('[data-webpage-mode="annotate"].active');
+    if (screenshotAnnotate) {
+      disarmDotPlacement();
+      activateScreenshotAnnotation(slide);
+    }
     const modeGroup = slide.querySelector('[data-webpage-modes]');
     const stage = slide.querySelector('[data-webpage-preview]');
     if (modeGroup && stage) autoApplyWebpageDiff(stage, modeGroup);

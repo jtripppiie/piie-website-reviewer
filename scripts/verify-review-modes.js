@@ -27,6 +27,14 @@ async function main() {
             liveUrl: '/public/demo/live-home.html',
             devScreenshotPath: '/public/demo/photo-after.svg',
             liveScreenshotPath: '/public/demo/photo-before.svg',
+            devShots: {
+              desktop: '/public/demo/photo-after.svg',
+              mobile: '/public/demo/photo-after-mobile.svg'
+            },
+            liveShots: {
+              desktop: '/public/demo/photo-before.svg',
+              mobile: '/public/demo/photo-before-mobile.svg'
+            },
             previewSource: req.query.source === 'url' ? 'url' : 'screenshots',
             screenSizes: ['desktop', 'mobile']
           }]
@@ -66,8 +74,9 @@ async function main() {
       screenshotModes: Boolean(document.querySelector('[data-screenshot-modes]')),
       interactDisabled: document.querySelector('[data-webpage-mode="interact"]')?.disabled,
       compareActive: document.querySelector('[data-webpage-mode="compare"]')?.classList.contains('active'),
-      compareVisible: Boolean(document.querySelector('[data-compare]')?.getClientRects().length),
-      compareReveal: document.querySelector('[data-compare]')?.style.getPropertyValue('--reveal'),
+      compareVisible: Boolean(document.querySelector('.shots-size.active [data-compare]')?.getClientRects().length),
+      perSizeComparisons: document.querySelectorAll('.shots-size [data-compare]').length,
+      compareReveal: document.querySelector('.shots-size.active [data-compare]')?.style.getPropertyValue('--reveal'),
       scripts: Array.from(document.scripts).map(script => script.src)
     }));
     initial.loadedScreenshotHandler = await page.evaluate(async () => {
@@ -92,15 +101,23 @@ async function main() {
     await page.click('[data-webpage-mode="annotate"]');
     const armed = await page.evaluate(() => ({
       annotateActive: document.querySelector('[data-webpage-mode="annotate"]')?.classList.contains('active'),
-      pinTarget: document.querySelector('[data-compare]')?.dataset.pinTarget,
+      pinTarget: document.querySelector('.shots-size.active [data-compare]')?.dataset.pinTarget,
       toast: document.querySelector('.app-fill-toast')?.textContent
     }));
 
-    await page.locator('[data-compare]').click({ offset: { x: 220, y: 160 } });
+    await page.$eval('.shots-size.active [data-compare]', element => element.scrollIntoView({ block: 'start' }));
+    const compareBox = await page.$eval('.shots-size.active [data-compare]', element => {
+      const rect = element.getBoundingClientRect();
+      return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+    });
+    await page.mouse.click(
+      compareBox.left + Math.min(220, compareBox.width * 0.4),
+      compareBox.top + Math.min(160, compareBox.height * 0.3)
+    );
     const annotated = await page.evaluate(() => ({
       dotX: document.querySelector('.screen-feedback.active form.feedback [name="dotX"]')?.value,
       dotY: document.querySelector('.screen-feedback.active form.feedback [name="dotY"]')?.value,
-      tempDot: Boolean(document.querySelector('[data-compare] .comment-dot.is-temp'))
+      tempDot: Boolean(document.querySelector('.shots-size.active [data-compare] .comment-dot.is-temp'))
     }));
 
     await page.click('[data-webpage-diff]');
@@ -121,6 +138,7 @@ async function main() {
       initial.interactDisabled &&
       initial.compareActive &&
       initial.compareVisible &&
+      initial.perSizeComparisons === 2 &&
       armed.annotateActive &&
       armed.pinTarget === 'true' &&
       Boolean(annotated.dotX) &&

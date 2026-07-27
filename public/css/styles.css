@@ -1758,6 +1758,18 @@ button.secondary {
   color: #475569;
 }
 
+.shots-size .screenshot-compare {
+  width: min(100%, var(--preview-width, 1440px));
+}
+
+.shots-size .screenshot-compare.is-annotating {
+  cursor: crosshair;
+}
+
+.shot-fullsize-links {
+  width: min(100%, var(--preview-width, 1440px));
+}
+
 .shots-pair {
   display: grid;
   gap: 16px;
