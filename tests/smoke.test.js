@@ -225,6 +225,7 @@ test('sticky review menus use measured non-overlapping offsets', () => {
   assert.match(styles, /top: var\(--review-topbar-offset, 72px\);/);
   assert.match(reviewJs, /function syncReviewTopbarOffset/);
   assert.match(reviewJs, /--review-topbar-offset/);
+  assert.match(styles, /\.review-body \.feedback-panel \{[\s\S]*?z-index: 999;/);
 });
 
 test('static demo includes interact and compare modes', () => {

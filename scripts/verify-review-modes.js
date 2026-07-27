@@ -100,15 +100,22 @@ async function main() {
       const target = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
       const controls = button.closest('.review-controls');
       const panel = document.querySelector('.feedback-panel');
+      const topbar = document.querySelector('.review-topbar');
+      const controlsZ = Number.parseInt(getComputedStyle(controls).zIndex, 10) || 0;
+      const panelZ = Number.parseInt(getComputedStyle(panel).zIndex, 10) || 0;
+      const topbarZ = Number.parseInt(getComputedStyle(topbar).zIndex, 10) || 0;
       return {
         target: target?.outerHTML?.slice(0, 160) || '',
-        controlsZ: getComputedStyle(controls).zIndex,
+        controlsZ: String(controlsZ),
         controlsPosition: getComputedStyle(controls).position,
-        panelZ: getComputedStyle(panel).zIndex,
+        panelZ: String(panelZ),
+        topbarZ: String(topbarZ),
+        panelAboveMenus: panelZ > controlsZ && panelZ > topbarZ,
         buttonRect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
       };
     });
 
+    await page.click('[data-feedback-toggle]');
     await page.click('[data-webpage-mode="annotate"]');
     const armed = await page.evaluate(() => ({
       annotateActive: document.querySelector('[data-webpage-mode="annotate"]')?.classList.contains('active'),
@@ -151,6 +158,7 @@ async function main() {
       initial.compareVisible &&
       initial.perSizeComparisons === 2 &&
       initial.stickyRows.separated &&
+      initial.annotateHitTarget.panelAboveMenus &&
       armed.annotateActive &&
       armed.pinTarget === 'true' &&
       Boolean(annotated.dotX) &&
@@ -162,6 +170,7 @@ async function main() {
     console.log(JSON.stringify(result, null, 2));
 
     await page.goto(`http://127.0.0.1:${address.port}/test?source=url`, { waitUntil: 'networkidle0' });
+    await page.click('[data-feedback-toggle]');
     await page.$eval('[data-webpage-mode="interact"]', element => {
       element.scrollIntoView({ block: 'center' });
     });

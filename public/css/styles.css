@@ -2819,7 +2819,7 @@ button:disabled {
   position: fixed;
   top: 12px;
   right: 16px;
-  z-index: 100;
+  z-index: 999;
   width: min(420px, calc(100vw - 40px));
   max-height: calc(100vh - 24px);
   overflow: auto;
