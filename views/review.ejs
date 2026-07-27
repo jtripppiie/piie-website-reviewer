@@ -226,7 +226,11 @@
           <%
             const hasUrlPreview = Boolean(page.devUrl || page.liveUrl);
             const hasScreenshotPreview = Boolean(page.devScreenshotPath || page.liveScreenshotPath || page.devShots || page.liveShots);
-            const useScreenshotPreview = page.previewSource === 'screenshots' && hasScreenshotPreview;
+            const reviewSourceOverride = typeof requestedReviewSource === 'string' ? requestedReviewSource : '';
+            const useScreenshotPreview = hasScreenshotPreview && (
+              reviewSourceOverride === 'screenshots' ||
+              (!reviewSourceOverride && page.previewSource === 'screenshots')
+            );
           %>
           <section class="review-page review-page--work" id="<%= page.pageId %>" data-page-title="<%= page.title %>">
             <div class="review-workspace">

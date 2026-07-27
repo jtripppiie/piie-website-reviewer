@@ -22,13 +22,6 @@
         </div>
       <% } %>
 
-      <section class="card admin-simple-flow">
-        <p class="eyebrow">1.0 workflow</p>
-        <h2>One normal path</h2>
-        <p>Create or edit a Dev vs Live page, publish the packet, then manage notes from the review link.</p>
-        <p>Use screenshot fallbacks only when a site blocks embedding or capture is more reliable for review.</p>
-      </section>
-
       <section class="card">
         <h2>Packet Details</h2>
 
@@ -48,17 +41,50 @@
         <h2>Review Status</h2>
         <p>Status: <span class="status-pill <%= packet.published ? 'is-open' : 'is-draft' %>"><%= packet.published ? 'Open for review' : 'Draft' %></span></p>
 
-        <form method="post" action="/admin/packets/<%= packet.packetId %>/publish">
+        <% if (packet.published) { %>
+          <%
+            const urlReviewPages = packet.pages.filter(page => page.type === 'urlCompare');
+            const hasWebpageReview = urlReviewPages.some(page => page.devUrl || page.liveUrl);
+            const hasScreenshotReview = urlReviewPages.some(page =>
+              page.devShots || page.liveShots || page.devScreenshotPath || page.liveScreenshotPath
+            );
+            const baseReviewPath = `/r/${packet.shareToken}`;
+          %>
+          <p class="muted">Choose which version reviewers should open. Both links use this packet's same notes and screen sizes.</p>
+          <div class="review-share-grid">
+            <% if (hasWebpageReview) { %>
+              <article class="review-share-option">
+                <h3>Live webpage review</h3>
+                <p>Reviewers interact with the Dev and Live webpage URLs.</p>
+                <div class="review-share-actions">
+                  <a class="button" href="<%= baseReviewPath %>?source=url" target="_blank" rel="noopener">Open webpage review</a>
+                  <button type="button" class="secondary" data-copy-review-link="<%= baseReviewPath %>?source=url">Copy link</button>
+                </div>
+              </article>
+            <% } %>
+            <% if (hasScreenshotReview) { %>
+              <article class="review-share-option">
+                <h3>Captured screenshot review</h3>
+                <p>Reviewers see the matching Dev and Live captures for each screen size.</p>
+                <div class="review-share-actions">
+                  <a class="button" href="<%= baseReviewPath %>?source=screenshots" target="_blank" rel="noopener">Open screenshot review</a>
+                  <button type="button" class="secondary" data-copy-review-link="<%= baseReviewPath %>?source=screenshots">Copy link</button>
+                </div>
+              </article>
+            <% } %>
+          </div>
+          <% if (!hasScreenshotReview) { %>
+            <p class="muted">Capture screenshots from a Dev vs Live page to create a screenshot review link.</p>
+          <% } %>
+        <% } else { %>
+          <p class="muted">Open the review when it is ready for reviewers.</p>
+        <% } %>
+
+        <form class="review-status-action" method="post" action="/admin/packets/<%= packet.packetId %>/publish">
           <input type="hidden" name="key" value="<%= key %>">
           <input type="hidden" name="published" value="<%= packet.published ? 'false' : 'true' %>">
           <button type="submit"><%= packet.published ? 'Close review' : 'Open for review' %></button>
         </form>
-
-        <% if (packet.published) { %>
-          <p>Review link: <a href="/r/<%= packet.shareToken %>?key=<%= key %>">/r/<%= packet.shareToken %></a></p>
-        <% } else { %>
-          <p class="muted">Open the review when it is ready for reviewers.</p>
-        <% } %>
       </section>
 
       <h2>Add Review Work</h2>
@@ -411,6 +437,42 @@
         margin: 0.4rem 0;
       }
 
+      .review-share-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+      }
+
+      .review-share-option {
+        padding: 1rem;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-radius: 12px;
+        background: #f8fafc;
+      }
+
+      .review-share-option h3,
+      .review-share-option p {
+        margin-top: 0;
+      }
+
+      .review-share-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        align-items: center;
+      }
+
+      .review-share-actions .button,
+      .review-share-actions button,
+      .review-status-action button {
+        width: auto;
+      }
+
+      .review-status-action {
+        margin-top: 1rem;
+      }
+
       .advanced-tools {
         margin-top: 1rem;
         border: 1px solid rgba(15, 23, 42, 0.12);
@@ -468,5 +530,21 @@
         align-self: end;
       }
     </style>
+    <script>
+      document.addEventListener('click', async event => {
+        const button = event.target.closest('[data-copy-review-link]');
+        if (!button) return;
+
+        const originalLabel = button.textContent;
+        const url = new URL(button.dataset.copyReviewLink, window.location.origin).toString();
+        try {
+          await navigator.clipboard.writeText(url);
+          button.textContent = 'Copied';
+        } catch {
+          window.prompt('Copy this review link:', url);
+        }
+        window.setTimeout(() => { button.textContent = originalLabel; }, 1600);
+      });
+    </script>
   </body>
 </html>

@@ -558,6 +558,7 @@ app.post('/admin/packets', async (req, res) => {
 
       comparePage.devScreenshotPath = comparePage.devShots.desktop || comparePage.devShots.mobile || '';
       comparePage.liveScreenshotPath = comparePage.liveShots.desktop || comparePage.liveShots.mobile || '';
+      comparePage.previewSource = 'screenshots';
       comparePage.capturedAt = new Date().toISOString();
     } catch (error) {
       capturedPaths.forEach(removeUploadFile);
@@ -940,6 +941,7 @@ app.post('/admin/packets/:packetId/pages/:pageId/capture', async (req, res) => {
       }
 
       freshPage.capturedAt = new Date().toISOString();
+      freshPage.previewSource = 'screenshots';
       freshPage.updatedAt = new Date().toISOString();
       freshPacket.updatedAt = new Date().toISOString();
 
@@ -1271,6 +1273,9 @@ app.get('/r/:shareToken', requireReviewer, async (req, res) => {
   const packetResponses = responses
     .filter(r => r.packetId === packet.packetId)
     .map(response => ({ ...response, canManage: canManageResponse(req, response) }));
+  const requestedReviewSource = ['url', 'screenshots'].includes(req.query.source)
+    ? req.query.source
+    : '';
 
   res.render('review', {
     packet,
@@ -1280,7 +1285,8 @@ app.get('/r/:shareToken', requireReviewer, async (req, res) => {
     canQuickEdit: isAdmin(req) || isReviewer(req),
     quickEditGated: quickEditEnabled() && !isAdmin(req),
     quickEditUnlocked: isQuickEditUnlocked(req),
-    quickEditError: Boolean(req.query.quickEditError)
+    quickEditError: Boolean(req.query.quickEditError),
+    requestedReviewSource
   });
 });
 

@@ -188,6 +188,20 @@ test('new reviews support optional automatic URL screenshots', () => {
   assert.match(admin, /name="captureMode" value="primary"/);
   assert.match(server, /req\.body\.autoCapture === 'true'/);
   assert.match(server, /\['desktop', 'mobile'\]/);
+  assert.match(server, /comparePage\.previewSource = 'screenshots'/);
+});
+
+test('published packets expose separate webpage and screenshot review links', () => {
+  const server = read('server.js');
+  const editPacket = read('views/edit-packet.ejs');
+  const review = read('views/review.ejs');
+
+  assert.match(server, /\['url', 'screenshots'\]\.includes\(req\.query\.source\)/);
+  assert.match(editPacket, /\?source=url/);
+  assert.match(editPacket, /\?source=screenshots/);
+  assert.match(editPacket, /data-copy-review-link/);
+  assert.match(review, /reviewSourceOverride === 'screenshots'/);
+  assert.match(review, /!reviewSourceOverride && page\.previewSource === 'screenshots'/);
 });
 
 test('static demo includes interact and compare modes', () => {
