@@ -1318,6 +1318,16 @@ button.secondary {
   font-size: 12px;
 }
 
+.required-field {
+  display: inline-block;
+  margin-left: 4px;
+  color: #b42318;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
 .feedback textarea {
   min-height: 56px;
   height: 56px;

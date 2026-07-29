@@ -9,7 +9,7 @@
 
   <div class="feedback-grid">
     <label>
-      Reviewer name or initials
+      <span>Reviewer name or initials <span class="required-field" aria-hidden="true">Required</span></span>
       <input type="text" name="reviewerName" maxlength="60" required>
     </label>
 
@@ -25,8 +25,8 @@
   </div>
 
   <label>
-    Comment
-    <textarea name="comment"></textarea>
+    <span>Comment <span class="required-field" aria-hidden="true">Required</span></span>
+    <textarea name="comment" required></textarea>
   </label>
 
   <p class="dot-location" data-dot-location hidden></p>

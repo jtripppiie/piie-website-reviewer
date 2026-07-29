@@ -32,6 +32,7 @@
     if (!preset.dynamicWidth) return preset;
 
     const availableWidth = Math.max(1024, Math.floor(stage.clientWidth || preset.w));
+
     return {
       ...preset,
       w: availableWidth
@@ -139,6 +140,23 @@
     return `Set frame element size: ${preset.w} x ${preset.h} CSS px (cross-origin, cannot read inside)`;
   }
 
+  function sameOriginPageHeight(iframe, fallbackHeight) {
+    try {
+      const doc = iframe.contentDocument;
+      if (!doc?.documentElement || !doc.body) return fallbackHeight;
+      return Math.max(
+        fallbackHeight,
+        doc.documentElement.scrollHeight,
+        doc.documentElement.offsetHeight,
+        doc.body.scrollHeight,
+        doc.body.offsetHeight
+      );
+    } catch (error) {
+      // Cross-origin iframe documents cannot be measured by the parent page.
+      return fallbackHeight;
+    }
+  }
+
   function applyLayout(slide) {
     const state = slideState(slide);
     const stage = slide.querySelector('.webpage-preview-stage');
@@ -187,8 +205,9 @@
 
       const iframe = scaler.querySelector('iframe');
       if (iframe) {
+        const frameHeight = sameOriginPageHeight(iframe, preset.h);
         iframe.style.setProperty('width', `${preset.w}px`, 'important');
-        iframe.style.setProperty('height', `${preset.h}px`, 'important');
+        iframe.style.setProperty('height', `${frameHeight}px`, 'important');
         iframe.style.setProperty('max-width', 'none', 'important');
         iframe.style.setProperty('border', '0', 'important');
         iframe.style.setProperty('transform', `scale(${scale})`, 'important');
@@ -197,7 +216,8 @@
       }
 
       scaler.style.setProperty('width', `${scaledWidth}px`, 'important');
-      scaler.style.setProperty('height', `${Math.round(preset.h * scale)}px`, 'important');
+      const contentHeight = iframe ? sameOriginPageHeight(iframe, preset.h) : preset.h;
+      scaler.style.setProperty('height', `${Math.round(contentHeight * scale)}px`, 'important');
       scaler.style.setProperty('overflow', 'hidden', 'important');
       scaler.style.setProperty('max-width', '100%', 'important');
     });
@@ -319,7 +339,18 @@
 
       // Verify same-origin frames once they load.
       slide.querySelectorAll('.webpage-frame-card iframe').forEach(iframe => {
-        iframe.addEventListener('load', () => applyLayout(slide));
+        iframe.addEventListener('load', () => {
+          applyLayout(slide);
+          try {
+            const body = iframe.contentDocument?.body;
+            if (body && 'ResizeObserver' in window) {
+              const observer = new ResizeObserver(() => applyLayout(slide));
+              observer.observe(body);
+            }
+          } catch (error) {
+            // Cross-origin pages keep the selected viewport preset height.
+          }
+        });
       });
     });
   }

@@ -193,6 +193,23 @@ test('annotate mode remains ready for multiple notes', () => {
   assert.match(reviewJs, /Note saved\. Click the preview to add another\./);
 });
 
+test('annotation opens the notes panel and identifies required note fields', () => {
+  const reviewJs = read('public/js/review.js');
+  const form = read('views/partials/feedback-form.ejs');
+
+  assert.match(reviewJs, /expandFeedbackPanelForForm\(activeFeedbackFormForStage\(stage\)\)/);
+  assert.match(reviewJs, /focusComment: true/);
+  assert.match(form, /Reviewer name or initials[\s\S]*Required[\s\S]*name="reviewerName"[\s\S]*required/);
+  assert.match(form, /Comment[\s\S]*Required[\s\S]*textarea name="comment" required/);
+});
+
+test('same-origin URL previews grow to the embedded document height', () => {
+  const layout = read('public/js/force-preview-layout.js');
+  assert.match(layout, /function sameOriginPageHeight/);
+  assert.match(layout, /documentElement\.scrollHeight/);
+  assert.match(layout, /new ResizeObserver/);
+});
+
 test('new reviews support optional automatic URL screenshots', () => {
   const server = read('server.js');
   const admin = read('views/admin.ejs');

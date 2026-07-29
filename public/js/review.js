@@ -487,6 +487,7 @@ document.querySelectorAll('[data-webpage-modes]').forEach(modeGroup => {
     }
 
     if (mode === 'annotate') {
+      expandFeedbackPanelForForm(activeFeedbackFormForStage(stage));
       ensureWebpageMarkLayer(stage);
       showReviewToast('Click the preview to mark a spot for the active note form.');
     } else {
@@ -520,6 +521,7 @@ function activateScreenshotAnnotation(slide) {
     showReviewToast('This screen size needs both screenshots before it can be annotated.');
     return;
   }
+  expandFeedbackPanelForForm(activeForm);
   markButton.click();
 }
 
@@ -672,6 +674,23 @@ function showReviewToast(message) {
 let armedDotForm = null;
 let armedDotTarget = null;
 
+function expandFeedbackPanelForForm(form, { focusComment = false } = {}) {
+  const panel = form?.closest('[data-feedback-panel]');
+  if (!panel) return;
+
+  panel.classList.remove('is-collapsed');
+  const toggle = panel.querySelector('[data-feedback-toggle]');
+  if (toggle) {
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-label', 'Collapse notes');
+    toggle.textContent = 'Collapse';
+  }
+
+  if (focusComment) {
+    requestAnimationFrame(() => form.querySelector('[name="comment"]')?.focus({ preventScroll: true }));
+  }
+}
+
 function activeMarkTargetForForm(form) {
   if (!form) return null;
 
@@ -740,6 +759,8 @@ function placeDot(target, clientX, clientY, formOverride = null, disarmAfter = t
   const form = formOverride || armedDotForm;
   if (!form) return;
 
+  expandFeedbackPanelForForm(form);
+
   // Pins are anchored to the rendered content box (the pin overlay) rather than
   // the clipped stage, so they stay locked to the same spot at any width/scale.
   const box = target.querySelector('[data-annotation-overlay]') || target;
@@ -760,6 +781,7 @@ function placeDot(target, clientX, clientY, formOverride = null, disarmAfter = t
   box.appendChild(dot);
 
   if (disarmAfter) disarmDotPlacement();
+  expandFeedbackPanelForForm(form, { focusComment: true });
   showReviewToast('Spot marked. Add your note, then save.');
 }
 
@@ -788,6 +810,7 @@ document.addEventListener('click', event => {
       return;
     }
 
+    expandFeedbackPanelForForm(form);
     disarmDotPlacement();
     armedDotForm = form;
     armedDotTarget = target;
