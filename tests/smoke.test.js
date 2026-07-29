@@ -247,6 +247,15 @@ test('per-size URL screenshots use the comparison and annotation surface', () =>
   assert.match(reviewJs, /activeScreenshotCompare/);
 });
 
+test('URL compare mode keeps webpages interactive while annotate captures clicks', () => {
+  const styles = read('public/css/styles.css');
+  const review = read('views/review.ejs');
+
+  assert.match(styles, /\.webpage-preview-stage\.is-slider:not\(\.is-annotating\) iframe \{\s+pointer-events: auto;/);
+  assert.match(styles, /\.webpage-preview-stage\.is-annotating iframe \{\s+pointer-events: none;/);
+  assert.match(review, /Interact with the visible Dev and Live previews; drag the handle/);
+});
+
 test('sticky review menus use measured non-overlapping offsets', () => {
   const styles = read('public/css/styles.css');
   const reviewJs = read('public/js/review.js');

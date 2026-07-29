@@ -806,6 +806,13 @@ button.secondary {
   pointer-events: none;
 }
 
+/* Compare still exposes the visible portions of both webpages as real,
+   interactive previews. The dedicated handle remains the slider drag target;
+   Annotate overrides this rule so preview clicks can place pins. */
+.webpage-preview-stage.is-slider:not(.is-annotating) iframe {
+  pointer-events: auto;
+}
+
 .webpage-preview-stage.is-annotating iframe {
   pointer-events: none;
 }
