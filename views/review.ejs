@@ -295,7 +295,7 @@
                       </div>
 
                       <% if (page.devUrl) { %>
-                        <iframe src="<%= page.devUrl %>" title="Dev webpage preview"></iframe>
+                        <iframe src="<%= page.devUrl %>" title="Dev webpage preview" loading="lazy"></iframe>
                       <% } else { %>
                         <div class="webpage-frame-empty">No Dev URL entered.</div>
                       <% } %>
@@ -310,7 +310,7 @@
                       </div>
 
                       <% if (page.liveUrl) { %>
-                        <iframe src="<%= page.liveUrl %>" title="Live webpage preview"></iframe>
+                        <iframe src="<%= page.liveUrl %>" title="Live webpage preview" loading="lazy"></iframe>
                       <% } else { %>
                         <div class="webpage-frame-empty">No Live URL entered.</div>
                       <% } %>

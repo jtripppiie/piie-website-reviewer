@@ -14,6 +14,12 @@ function read(relPath) {
   return fs.readFileSync(path.join(root, relPath), 'utf8');
 }
 
+test('review webpage previews are lazy loaded', () => {
+  const review = read('views/review.ejs');
+  assert.match(review, /title="Dev webpage preview" loading="lazy"/);
+  assert.match(review, /title="Live webpage preview" loading="lazy"/);
+});
+
 test('package.json version matches the demo APP_VERSION', () => {
   const pkg = JSON.parse(read('package.json'));
   const demoJs = read('docs/static-review.js');
