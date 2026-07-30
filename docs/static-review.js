@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '1.3.36';
+const APP_VERSION = '1.3.37';
 
 const PRESETS = {
   desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
@@ -337,7 +337,6 @@ function renderPage(page, index) {
           </nav>
           <span class="review-control-label">Review mode</span>
           <nav class="screen-tabs review-mode-tabs" aria-label="Review mode">
-            <button type="button" data-webpage-mode="interact" title="Use the Dev and Live previews normally so you can click links, buttons, and other controls." data-tooltip="Use the Dev and Live previews normally so you can click links, buttons, and other controls." class="${compareMode === 'interact' ? 'active' : ''}">Interact</button>
             <button type="button" data-webpage-mode="compare" title="Stack Dev and Live together and drag the slider to compare visual differences." data-tooltip="Stack Dev and Live together and drag the slider to compare visual differences." class="${compareMode === 'compare' ? 'active' : ''}">Compare</button>
             <button type="button" data-webpage-mode="annotate" title="Click a spot on the preview, then save a note pinned to that location." data-tooltip="Click a spot on the preview, then save a note pinned to that location." class="${compareMode === 'annotate' ? 'active' : ''}">Annotate</button>
             <button type="button" data-webpage-diff title="Highlight visible differences when both previews can be inspected by this page." data-tooltip="Highlight visible differences when both previews can be inspected by this page.">Highlight differences</button>
