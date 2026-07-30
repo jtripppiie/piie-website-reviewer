@@ -13,12 +13,12 @@
 
 (function () {
   const PRESETS = {
-    desktop: { label: 'Full desktop', w: 1440, h: 1200, dynamicWidth: true, dynamicHeight: true },
-    'desktop-1440': { label: '1440 desktop', w: 1440, h: 1200 },
-    'laptop-15-6': { label: '15.6 display', w: 1366, h: 1200 },
-    'laptop-14-5': { label: '14.5 display', w: 1280, h: 1200 },
-    'laptop-13': { label: '13 display', w: 1180, h: 1200 },
-    mobile: { label: 'Mobile', w: 390, h: 1200 }
+    desktop: { label: 'Full desktop', w: 1440, h: 1600, dynamicWidth: true, dynamicHeight: true },
+    'desktop-1440': { label: '1440 desktop', w: 1440, h: 1600 },
+    'laptop-15-6': { label: '15.6 display', w: 1366, h: 1600 },
+    'laptop-14-5': { label: '14.5 display', w: 1280, h: 1600 },
+    'laptop-13': { label: '13 display', w: 1180, h: 1600 },
+    mobile: { label: 'Mobile', w: 390, h: 1600 }
   };
 
   const SCALE_MODES = ['100', '75', '50'];
