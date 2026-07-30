@@ -138,6 +138,14 @@ test('primary and advanced admin tools are hidden', () => {
   assert.match(styles, /\.admin-primary-card,[\s\S]*?\.admin-secondary-tools,[\s\S]*?\.advanced-tools\.highlight-admin \{[\s\S]*?display: none !important;/);
 });
 
+test('legacy manual highlights are hidden without disabling difference boxes', () => {
+  const styles = read('public/css/styles.css');
+  const reviewJs = read('public/js/review.js');
+  assert.match(styles, /\.admin-highlight \{[\s\S]*?display: none !important;/);
+  assert.match(reviewJs, /webpage-diff-box/);
+  assert.match(reviewJs, /buildWebpageDiff/);
+});
+
 test('interact mode is hidden from the review interface', () => {
   const review = read('views/review.ejs');
   const demo = read('docs/static-review.js');

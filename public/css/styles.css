@@ -3218,3 +3218,10 @@ button:disabled {
 .advanced-tools.highlight-admin {
   display: none !important;
 }
+
+/* Legacy manual highlight records may still exist on stored packets. Keep
+   them from covering reviews; automatic difference boxes use a separate
+   .webpage-diff-box class and remain available. */
+.admin-highlight {
+  display: none !important;
+}
