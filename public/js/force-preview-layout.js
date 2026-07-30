@@ -155,6 +155,7 @@
     slide.dataset.previewSize = state.size;
 
     const scale = computeScale(slide, preset);
+    const scaledHeight = Math.round(preset.h * scale);
     const isFullDesktop = state.size === 'desktop';
     const isStackedDesktop = state.size === 'desktop' || state.size === 'desktop-1440';
     const isSlider = stage.classList.contains('is-slider');
@@ -175,6 +176,7 @@
     stage.style.setProperty('justify-content', 'center', 'important');
     stage.style.setProperty('width', '100%', 'important');
     stage.style.setProperty('min-width', '0', 'important');
+    stage.style.setProperty('--webpage-height', `${scaledHeight}px`);
     stage.style.setProperty('max-width', stageMaxWidth, 'important');
     stage.style.setProperty('margin-left', isFullDesktop ? '0' : 'auto', 'important');
     stage.style.setProperty('margin-right', isFullDesktop ? '0' : 'auto', 'important');
@@ -204,7 +206,7 @@
       }
 
       scaler.style.setProperty('width', `${scaledWidth}px`, 'important');
-      scaler.style.setProperty('height', `${Math.round(preset.h * scale)}px`, 'important');
+      scaler.style.setProperty('height', `${scaledHeight}px`, 'important');
       scaler.style.setProperty('overflow', 'hidden', 'important');
       scaler.style.setProperty('max-width', '100%', 'important');
     });

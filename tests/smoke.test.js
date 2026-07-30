@@ -221,7 +221,8 @@ test('URL previews remain viewport-height scroll containers', () => {
   assert.match(layout, /mobile: \{ label: 'Mobile', w: 390, h: 1200/);
   assert.match(layout, /Math\.max\(preset\.h,/);
   assert.match(layout, /iframe\.style\.setProperty\('height', `\$\{preset\.h\}px`/);
-  assert.match(layout, /Math\.round\(preset\.h \* scale\)/);
+  assert.match(layout, /const scaledHeight = Math\.round\(preset\.h \* scale\)/);
+  assert.match(layout, /stage\.style\.setProperty\('--webpage-height', `\$\{scaledHeight\}px`/);
 });
 
 test('new reviews support optional automatic URL screenshots', () => {
