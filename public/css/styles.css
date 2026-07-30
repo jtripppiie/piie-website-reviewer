@@ -3210,3 +3210,11 @@ button:disabled {
 .review-body .header-preview-status:empty {
   display: none;
 }
+
+/* Temporarily hide packet creation and advanced admin tooling. The markup and
+   server routes remain intact so these controls can be restored later. */
+.admin-primary-card,
+.admin-secondary-tools,
+.advanced-tools.highlight-admin {
+  display: none !important;
+}

@@ -133,6 +133,11 @@ test('cover pages are removed from creation and review interfaces', () => {
   assert.match(review, /packet\.pages\.filter\(page => page\.type !== 'cover'\)/);
 });
 
+test('primary and advanced admin tools are hidden', () => {
+  const styles = read('public/css/styles.css');
+  assert.match(styles, /\.admin-primary-card,[\s\S]*?\.admin-secondary-tools,[\s\S]*?\.advanced-tools\.highlight-admin \{[\s\S]*?display: none !important;/);
+});
+
 test('interact mode is hidden from the review interface', () => {
   const review = read('views/review.ejs');
   const demo = read('docs/static-review.js');
