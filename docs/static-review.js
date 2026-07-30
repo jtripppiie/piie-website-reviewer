@@ -2,7 +2,7 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '1.3.37';
+const APP_VERSION = '1.3.38';
 
 const PRESETS = {
   desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
@@ -93,7 +93,7 @@ function statusIcon(status) {
 
 function activePages() {
   return Array.isArray(state.packet?.pages)
-    ? state.packet.pages.filter(page => !page.disabled)
+    ? state.packet.pages.filter(page => !page.disabled && page.type !== 'cover')
     : [];
 }
 
@@ -287,19 +287,6 @@ function renderPage(page, index) {
   const activeSize = state.activeSizes[page.pageId] || sizes[0] || 'desktop';
   const compareMode = state.compareModes[page.pageId] || 'compare';
   state.activeSizes[page.pageId] = activeSize;
-
-  if (page.type === 'cover') {
-    return `
-      <section class="review-page">
-        <div class="page-heading">
-          <p class="eyebrow">Page ${index + 1}</p>
-          <h2>${escapeHtml(page.title || 'Cover')}</h2>
-          <p>${escapeHtml(page.subtitle || '')}</p>
-          <p>${escapeHtml(page.body || '')}</p>
-        </div>
-      </section>
-    `;
-  }
 
   if (page.type !== 'urlCompare') {
     return `

@@ -121,6 +121,18 @@ test('quick edit exposes admin settings without replacing website review modes',
   assert.match(read('public/js/review.js'), /Highlight differences is only available for URL previews/);
 });
 
+test('cover pages are removed from creation and review interfaces', () => {
+  const server = read('server.js');
+  const review = read('views/review.ejs');
+  const editor = read('views/edit-packet.ejs');
+
+  assert.doesNotMatch(server, /type: 'cover'/);
+  assert.doesNotMatch(server, /packets\/:packetId\/cover/);
+  assert.doesNotMatch(review, /cover-slide/);
+  assert.doesNotMatch(editor, /Add Cover Page|Add Cover<\/button>/);
+  assert.match(review, /packet\.pages\.filter\(page => page\.type !== 'cover'\)/);
+});
+
 test('interact mode is hidden from the review interface', () => {
   const review = read('views/review.ejs');
   const demo = read('docs/static-review.js');

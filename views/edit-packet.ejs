@@ -122,17 +122,6 @@
           <summary>Additional page types</summary>
 
           <div class="grid">
-            <form class="admin-inline-tool" method="post" action="/admin/packets/<%= packet.packetId %>/cover">
-              <input type="hidden" name="key" value="<%= key %>">
-              <h3>Add Cover Page</h3>
-
-              <label>Title <input type="text" name="title" required></label>
-              <label>Subtitle <input type="text" name="subtitle"></label>
-              <label>Body <textarea name="body"></textarea></label>
-
-              <button type="submit">Add Cover</button>
-            </form>
-
             <form class="admin-inline-tool" method="post" action="/admin/packets/<%= packet.packetId %>/image-compare?key=<%= encodeURIComponent(key) %>" enctype="multipart/form-data">
               <input type="hidden" name="key" value="<%= key %>">
               <h3>Add Image Comparison</h3>
@@ -153,7 +142,7 @@
       <h2>Edit Existing Pages</h2>
 
       <section class="stack">
-        <% packet.pages.forEach((page, index) => { %>
+        <% packet.pages.filter(page => page.type !== 'cover').forEach((page, index) => { %>
           <article class="card" id="page-<%= page.pageId %>">
             <p class="eyebrow">Page <%= index + 1 %>: <%= page.type %></p>
 
@@ -164,18 +153,6 @@
                 Title
                 <input type="text" name="title" value="<%= page.title || '' %>" required>
               </label>
-
-              <% if (page.type === 'cover') { %>
-                <label>
-                  Subtitle
-                  <input type="text" name="subtitle" value="<%= page.subtitle || '' %>">
-                </label>
-
-                <label>
-                  Body
-                  <textarea name="body"><%= page.body || '' %></textarea>
-                </label>
-              <% } %>
 
               <% if (page.type === 'imageCompare') { %>
                 <% const presetList = [['desktop','Full desktop'],['laptop-15-6','15.6 display'],['laptop-14-5','14.5 display'],['laptop-13','13 display'],['mobile','Mobile']]; %>
@@ -419,8 +396,8 @@
           </article>
         <% }) %>
 
-        <% if (!packet.pages.length) { %>
-          <p>No pages yet. Add a cover page first, then add a comparison page.</p>
+        <% if (!packet.pages.some(page => page.type !== 'cover')) { %>
+          <p>No comparison pages yet. Add a Dev vs Live or image comparison page.</p>
         <% } %>
       </section>
     </main>

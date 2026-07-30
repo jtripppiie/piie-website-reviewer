@@ -158,7 +158,7 @@ Current source of truth:
   screen size.
 - The notes panel **follows along as you scroll** on wide screens, and has a
   **Collapse / Expand** button so it never covers the review work.
-- Open **View all notes** (button on the cover page) to see every note grouped
+- Open **View all notes** in the review header to see every note grouped
   by page, then use **Download notes** to save them as a spreadsheet file you
   can open in Excel or Google Sheets. You can filter by page or status first,
   and the download respects that filter.
@@ -168,7 +168,6 @@ Current source of truth:
 The admin dashboard includes **Create local test packet**. It creates a
 published demo packet immediately with:
 
-- a cover page
 - a built-in generic photo comparison page kept in the packet data for image
   testing
 - one same-origin Dev vs Live demo page for the default review flow

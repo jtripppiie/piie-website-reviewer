@@ -59,28 +59,12 @@
           page.type === 'urlCompare' &&
           (page.devUrl || page.liveUrl || page.devShots || page.liveShots || page.devScreenshotPath || page.liveScreenshotPath)
         );
-        const renderedPages = preferredUrlPages.length ? preferredUrlPages : packet.pages;
+        const renderedPages = preferredUrlPages.length
+          ? preferredUrlPages
+          : packet.pages.filter(page => page.type !== 'cover');
         const visiblePageCount = renderedPages.length;
       %>
       <% renderedPages.forEach((page, index) => { %>
-        <% if (page.type === 'cover') { %>
-          <section class="review-page cover-slide" id="<%= page.pageId %>" data-page-title="<%= page.title %>">
-            <% if (isAdminView) { %>
-              <div class="admin-edit-bar">
-                <span class="admin-tag">Admin only</span>
-                <a class="button" href="/admin/packets/<%= packet.packetId %>/edit?key=<%= adminKeyValue %>#page-<%= page.pageId %>">Edit this page</a>
-              </div>
-            <% } %>
-            <h1><%= page.title %></h1>
-            <% if (page.subtitle) { %><h2><%= page.subtitle %></h2><% } %>
-            <% if (page.body) { %><p><%= page.body %></p><% } %>
-            <p class="muted cover-count"><%= visiblePageCount %> <%= visiblePageCount === 1 ? 'page' : 'pages' %> &middot; <%= responses.length %> <%= responses.length === 1 ? 'note' : 'notes' %> so far</p>
-            <p class="cover-notes-link">
-              <a class="button" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>">View all notes</a>
-            </p>
-          </section>
-        <% } %>
-
         <% if (page.type === 'imageCompare') { %>
           <section class="review-page review-page--work" id="<%= page.pageId %>" data-page-title="<%= page.title %>">
             <div class="review-workspace">

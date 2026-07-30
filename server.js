@@ -285,7 +285,6 @@ function makeDemoPacket(titleOverride = '') {
   const packetId = makeId('packet');
   const shareToken = makeId('share');
   const now = new Date().toISOString();
-  const coverPageId = makeId('page');
   const photoCompareId = makeId('page');
   const homepageId = makeId('page');
 
@@ -297,14 +296,6 @@ function makeDemoPacket(titleOverride = '') {
     createdAt: now,
     updatedAt: now,
     pages: [
-      {
-        pageId: coverPageId,
-        type: 'cover',
-        title: 'Website Review Demo',
-        subtitle: 'Generated test packet',
-        body: 'Use this packet to test review notes, screen sizes, filters, clear actions, and the full admin-to-review workflow without entering real project data.',
-        order: 0
-      },
       {
         pageId: photoCompareId,
         type: 'imageCompare',
@@ -320,7 +311,7 @@ function makeDemoPacket(titleOverride = '') {
         afterShots: {
           mobile: '/public/demo/photo-after-mobile.svg'
         },
-        order: 1
+        order: 0
       },
       {
         pageId: homepageId,
@@ -356,7 +347,7 @@ function makeDemoPacket(titleOverride = '') {
             height: 5
           }
         ],
-        order: 2
+        order: 1
       }
     ]
   };
@@ -522,7 +513,7 @@ app.post('/admin/packets', async (req, res) => {
     devUrl: (req.body.devUrl || DEFAULT_DEV_URL).trim(),
     liveUrl: (req.body.liveUrl || DEFAULT_LIVE_URL).trim(),
     screenSizes: DEFAULT_SCREEN_SIZES,
-    order: 1
+    order: 0
   };
 
   const packet = {
@@ -532,17 +523,7 @@ app.post('/admin/packets', async (req, res) => {
     published: false,
     createdAt: now,
     updatedAt: now,
-    pages: [
-      {
-        pageId: makeId('page'),
-        type: 'cover',
-        title,
-        subtitle: 'Website review',
-        body: 'Review the Dev and Live pages, leave notes by screen size, then export or start a new round when ready.',
-        order: 0
-      },
-      comparePage
-    ]
+    pages: [comparePage]
   };
 
   let captureError = '';
@@ -667,11 +648,6 @@ app.post('/admin/packets/:packetId/pages/:pageId/update', requireAdminBeforeUplo
 
   if ('instructions' in req.body) {
     page.instructions = req.body.instructions || '';
-  }
-
-  if (page.type === 'cover') {
-    page.subtitle = req.body.subtitle || '';
-    page.body = req.body.body || '';
   }
 
   if (page.type === 'imageCompare') {
@@ -976,28 +952,6 @@ app.post('/admin/packets/:packetId/pages/:pageId/capture', async (req, res) => {
       <p><a href="/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}#page-${page.pageId}">Back to edit</a></p>
     `);
   }
-});
-
-app.post('/admin/packets/:packetId/cover', async (req, res) => {
-  if (!isAdmin(req)) return res.status(403).send('Forbidden');
-
-  const packets = await getPackets();
-  const packet = packets.find(p => p.packetId === req.params.packetId);
-  if (!packet) return res.status(404).send('Packet not found');
-
-  packet.pages.push({
-    pageId: makeId('page'),
-    type: 'cover',
-    title: req.body.title || 'Cover Page',
-    subtitle: req.body.subtitle || '',
-    body: req.body.body || '',
-    order: packet.pages.length
-  });
-
-  packet.updatedAt = new Date().toISOString();
-  await savePackets(packets);
-
-  res.redirect(`/admin/packets/${packet.packetId}/edit?key=${encodeURIComponent(adminKey(req))}`);
 });
 
 app.post('/admin/packets/:packetId/image-compare', requireAdminBeforeUpload, upload.fields([
