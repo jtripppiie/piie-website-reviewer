@@ -121,16 +121,6 @@ test('quick edit exposes admin settings without replacing website review modes',
   assert.match(read('public/js/review.js'), /Highlight differences is only available for URL previews/);
 });
 
-test('URL comparisons expose proportional synchronized scrolling', () => {
-  const review = read('views/review.ejs');
-  const reviewJs = read('public/js/review.js');
-
-  assert.match(review, /data-sync-scroll/);
-  assert.match(reviewJs, /function setupWebpageScrollSync/);
-  assert.match(reviewJs, /source\.scrollY \/ sourceYRange/);
-  assert.match(reviewJs, /Browser security prevents synchronized scrolling for cross-origin previews/);
-});
-
 test('admin login safely returns quick edit users to the packet edit page', () => {
   const server = read('server.js');
   const login = read('views/login.ejs');

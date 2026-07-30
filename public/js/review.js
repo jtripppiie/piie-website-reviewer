@@ -443,92 +443,12 @@ function autoApplyWebpageDiff(stage, modeGroup) {
   setTimeout(attempt, 500);
 }
 
-// Keep same-origin Dev and Live previews aligned. Relative positions are used
-// so pages with different document heights still track from top to bottom.
-function setupWebpageScrollSync(stage, modeGroup) {
-  const button = modeGroup?.querySelector('[data-sync-scroll]');
-  const frames = Array.from(stage?.querySelectorAll('iframe') || []);
-  if (!button || frames.length !== 2) return;
-
-  let enabled = true;
-  let cleanup = [];
-  const programmaticFrames = new WeakSet();
-
-  function scrollRange(win, axis) {
-    const doc = win.document.documentElement;
-    const body = win.document.body;
-    if (axis === 'x') {
-      return Math.max(0, doc.scrollWidth, body?.scrollWidth || 0) - win.innerWidth;
-    }
-    return Math.max(0, doc.scrollHeight, body?.scrollHeight || 0) - win.innerHeight;
-  }
-
-  function mirrorScroll(source, target) {
-    if (!enabled || programmaticFrames.has(source)) return;
-
-    const sourceXRange = scrollRange(source, 'x');
-    const sourceYRange = scrollRange(source, 'y');
-    const targetXRange = scrollRange(target, 'x');
-    const targetYRange = scrollRange(target, 'y');
-    const nextX = sourceXRange > 0 ? (source.scrollX / sourceXRange) * targetXRange : 0;
-    const nextY = sourceYRange > 0 ? (source.scrollY / sourceYRange) * targetYRange : 0;
-
-    if (Math.abs(target.scrollX - nextX) < 1 && Math.abs(target.scrollY - nextY) < 1) return;
-    programmaticFrames.add(target);
-    target.scrollTo(nextX, nextY);
-    requestAnimationFrame(() => programmaticFrames.delete(target));
-  }
-
-  function attach() {
-    cleanup.forEach(remove => remove());
-    cleanup = [];
-
-    try {
-      const windows = frames.map(frame => {
-        // Accessing document throws for cross-origin previews.
-        void frame.contentWindow.document.documentElement;
-        return frame.contentWindow;
-      });
-
-      windows.forEach((win, index) => {
-        const listener = () => mirrorScroll(win, windows[index === 0 ? 1 : 0]);
-        win.addEventListener('scroll', listener, { passive: true });
-        cleanup.push(() => win.removeEventListener('scroll', listener));
-      });
-
-      button.disabled = false;
-      button.title = 'Keep the Dev and Live previews at the same relative scroll position.';
-      button.textContent = 'Sync scroll';
-      if (enabled) mirrorScroll(windows[0], windows[1]);
-    } catch (error) {
-      button.disabled = true;
-      button.classList.remove('active');
-      button.setAttribute('aria-pressed', 'false');
-      button.textContent = 'Sync unavailable';
-      button.title = 'Browser security prevents synchronized scrolling for cross-origin previews.';
-    }
-  }
-
-  button.addEventListener('click', () => {
-    enabled = !enabled;
-    button.classList.toggle('active', enabled);
-    button.setAttribute('aria-pressed', String(enabled));
-    if (enabled) attach();
-  });
-
-  frames.forEach(frame => frame.addEventListener('load', attach));
-  attach();
-}
-
 document.querySelectorAll('[data-webpage-modes]').forEach(modeGroup => {
   const slide = modeGroup.closest('.review-page');
   const stage = slide?.querySelector('[data-webpage-preview]');
   if (!stage) return;
 
-  setupWebpageScrollSync(stage, modeGroup);
-
   modeGroup.addEventListener('click', event => {
-    if (event.target.closest('[data-sync-scroll]')) return;
     const diffButton = event.target.closest('[data-webpage-diff]');
     if (diffButton) {
       if (stage.classList.contains('is-diffing')) {

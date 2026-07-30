@@ -294,9 +294,6 @@
                       <button type="button" data-webpage-mode="interact" title="<%= useScreenshotPreview ? 'Switch to URL above to interact with the website.' : 'Use the Dev and Live previews normally so you can click links, buttons, and other controls.' %>" data-tooltip="<%= useScreenshotPreview ? 'Switch to URL above to interact with the website.' : 'Use the Dev and Live previews normally so you can click links, buttons, and other controls.' %>" <%= useScreenshotPreview ? 'disabled' : '' %>>Interact</button>
                       <button type="button" class="active" data-webpage-mode="compare" title="Interact with the visible Dev and Live previews; drag the handle to compare visual differences." data-tooltip="Interact with the visible Dev and Live previews; drag the handle to compare visual differences.">Compare</button>
                       <button type="button" data-webpage-mode="annotate" title="Mark a spot on the active screenshot and attach a note." data-tooltip="Mark a spot on the active screenshot and attach a note.">Annotate</button>
-                      <% if (!useScreenshotPreview) { %>
-                        <button type="button" class="active" data-sync-scroll aria-pressed="true" title="Keep the Dev and Live previews at the same relative scroll position." data-tooltip="Keep the Dev and Live previews at the same relative scroll position.">Sync scroll</button>
-                      <% } %>
                       <button type="button" data-webpage-diff>Highlight differences</button>
                     </nav>
                   <% } %>
