@@ -3113,7 +3113,7 @@ button:disabled {
 }
 
 .review-body .review-page--work {
-  padding: 8px;
+  padding: 0;
 }
 
 .review-body .page-heading,
