@@ -121,6 +121,16 @@ test('quick edit exposes admin settings without replacing website review modes',
   assert.match(read('public/js/review.js'), /Highlight differences is only available for URL previews/);
 });
 
+test('URL comparisons expose proportional synchronized scrolling', () => {
+  const review = read('views/review.ejs');
+  const reviewJs = read('public/js/review.js');
+
+  assert.match(review, /data-sync-scroll/);
+  assert.match(reviewJs, /function setupWebpageScrollSync/);
+  assert.match(reviewJs, /source\.scrollY \/ sourceYRange/);
+  assert.match(reviewJs, /Browser security prevents synchronized scrolling for cross-origin previews/);
+});
+
 test('admin login safely returns quick edit users to the packet edit page', () => {
   const server = read('server.js');
   const login = read('views/login.ejs');
@@ -203,11 +213,15 @@ test('annotation opens the notes panel and identifies required note fields', () 
   assert.match(form, /Comment[\s\S]*Required[\s\S]*textarea name="comment" required/);
 });
 
-test('same-origin URL previews grow to the embedded document height', () => {
+test('URL previews remain viewport-height scroll containers', () => {
   const layout = read('public/js/force-preview-layout.js');
-  assert.match(layout, /function sameOriginPageHeight/);
-  assert.match(layout, /documentElement\.scrollHeight/);
-  assert.match(layout, /new ResizeObserver/);
+  assert.doesNotMatch(layout, /function sameOriginPageHeight/);
+  assert.match(layout, /desktop: \{ label: 'Full desktop', w: 1440, h: 1200/);
+  assert.match(layout, /'laptop-13': \{ label: '13 display', w: 1180, h: 1200/);
+  assert.match(layout, /mobile: \{ label: 'Mobile', w: 390, h: 1200/);
+  assert.match(layout, /Math\.max\(preset\.h,/);
+  assert.match(layout, /iframe\.style\.setProperty\('height', `\$\{preset\.h\}px`/);
+  assert.match(layout, /Math\.round\(preset\.h \* scale\)/);
 });
 
 test('new reviews support optional automatic URL screenshots', () => {

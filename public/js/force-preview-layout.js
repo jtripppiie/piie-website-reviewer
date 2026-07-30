@@ -13,12 +13,12 @@
 
 (function () {
   const PRESETS = {
-    desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
-    'desktop-1440': { label: '1440 desktop', w: 1440, h: 900 },
-    'laptop-15-6': { label: '15.6 display', w: 1366, h: 768 },
-    'laptop-14-5': { label: '14.5 display', w: 1280, h: 760 },
-    'laptop-13': { label: '13 display', w: 1180, h: 720 },
-    mobile: { label: 'Mobile', w: 390, h: 844 }
+    desktop: { label: 'Full desktop', w: 1440, h: 1200, dynamicWidth: true, dynamicHeight: true },
+    'desktop-1440': { label: '1440 desktop', w: 1440, h: 1200 },
+    'laptop-15-6': { label: '15.6 display', w: 1366, h: 1200 },
+    'laptop-14-5': { label: '14.5 display', w: 1280, h: 1200 },
+    'laptop-13': { label: '13 display', w: 1180, h: 1200 },
+    mobile: { label: 'Mobile', w: 390, h: 1200 }
   };
 
   const SCALE_MODES = ['100', '75', '50'];
@@ -29,13 +29,19 @@
   }
 
   function resolvedPreset(stage, preset) {
-    if (!preset.dynamicWidth) return preset;
+    if (!preset.dynamicWidth && !preset.dynamicHeight) return preset;
 
-    const availableWidth = Math.max(1024, Math.floor(stage.clientWidth || preset.w));
+    const availableWidth = preset.dynamicWidth
+      ? Math.max(1024, Math.floor(stage.clientWidth || preset.w))
+      : preset.w;
+    const availableHeight = preset.dynamicHeight
+      ? Math.max(preset.h, Math.floor(window.visualViewport?.height || window.innerHeight || preset.h))
+      : preset.h;
 
     return {
       ...preset,
-      w: availableWidth
+      w: availableWidth,
+      h: availableHeight
     };
   }
 
@@ -140,23 +146,6 @@
     return `Set frame element size: ${preset.w} x ${preset.h} CSS px (cross-origin, cannot read inside)`;
   }
 
-  function sameOriginPageHeight(iframe, fallbackHeight) {
-    try {
-      const doc = iframe.contentDocument;
-      if (!doc?.documentElement || !doc.body) return fallbackHeight;
-      return Math.max(
-        fallbackHeight,
-        doc.documentElement.scrollHeight,
-        doc.documentElement.offsetHeight,
-        doc.body.scrollHeight,
-        doc.body.offsetHeight
-      );
-    } catch (error) {
-      // Cross-origin iframe documents cannot be measured by the parent page.
-      return fallbackHeight;
-    }
-  }
-
   function applyLayout(slide) {
     const state = slideState(slide);
     const stage = slide.querySelector('.webpage-preview-stage');
@@ -205,9 +194,8 @@
 
       const iframe = scaler.querySelector('iframe');
       if (iframe) {
-        const frameHeight = sameOriginPageHeight(iframe, preset.h);
         iframe.style.setProperty('width', `${preset.w}px`, 'important');
-        iframe.style.setProperty('height', `${frameHeight}px`, 'important');
+        iframe.style.setProperty('height', `${preset.h}px`, 'important');
         iframe.style.setProperty('max-width', 'none', 'important');
         iframe.style.setProperty('border', '0', 'important');
         iframe.style.setProperty('transform', `scale(${scale})`, 'important');
@@ -216,8 +204,7 @@
       }
 
       scaler.style.setProperty('width', `${scaledWidth}px`, 'important');
-      const contentHeight = iframe ? sameOriginPageHeight(iframe, preset.h) : preset.h;
-      scaler.style.setProperty('height', `${Math.round(contentHeight * scale)}px`, 'important');
+      scaler.style.setProperty('height', `${Math.round(preset.h * scale)}px`, 'important');
       scaler.style.setProperty('overflow', 'hidden', 'important');
       scaler.style.setProperty('max-width', '100%', 'important');
     });
