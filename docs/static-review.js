@@ -2,13 +2,13 @@ const NOTES_KEY = 'piieWebReviewerNotes';
 const CLEARED_KEY = 'piieWebReviewerClearedNoteIds';
 const URLS_KEY = 'piieWebReviewerUrlOverrides';
 
-const APP_VERSION = '1.3.40';
+const APP_VERSION = '1.3.41';
 
 const PRESETS = {
   desktop: { label: 'Full desktop', w: 1440, h: 900, dynamicWidth: true },
-  'laptop-15-6': { label: '15.6 display', w: 1366, h: 768 },
-  'laptop-14-5': { label: '14.5 display', w: 1280, h: 760 },
-  'laptop-13': { label: '13 display', w: 1180, h: 720 },
+  'laptop-15-6': { label: '15.6 display', w: 1536, h: 864 },
+  'laptop-14-5': { label: '14.5 display', w: 1440, h: 900 },
+  'laptop-13': { label: '13 display', w: 1280, h: 800 },
   mobile: { label: 'Mobile', w: 390, h: 844 }
 };
 

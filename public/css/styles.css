@@ -655,15 +655,15 @@ button.secondary {
 }
 
 .review-page[data-preview-size="laptop-15-6"] .review-canvas {
-  --preview-width: 1366px;
+  --preview-width: 1536px;
 }
 
 .review-page[data-preview-size="laptop-14-5"] .review-canvas {
-  --preview-width: 1280px;
+  --preview-width: 1440px;
 }
 
 .review-page[data-preview-size="laptop-13"] .review-canvas {
-  --preview-width: 1180px;
+  --preview-width: 1280px;
 }
 
 .review-page[data-preview-size="tablet"] .review-canvas {
@@ -1083,15 +1083,15 @@ button.secondary {
 }
 
 .review-page[data-preview-size="laptop-15-6"] .webpage-preview-stage {
-  max-width: min(100%, 1366px);
+  max-width: min(100%, 1536px);
 }
 
 .review-page[data-preview-size="laptop-14-5"] .webpage-preview-stage {
-  max-width: min(100%, 1280px);
+  max-width: min(100%, 1440px);
 }
 
 .review-page[data-preview-size="laptop-13"] .webpage-preview-stage {
-  max-width: min(100%, 1180px);
+  max-width: min(100%, 1280px);
 }
 
 .review-page[data-preview-size="tablet"] .webpage-preview-stage {

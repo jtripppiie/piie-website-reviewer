@@ -12,9 +12,9 @@
   const SIZE_WIDTHS = {
     desktop: 1440,
     'desktop-1440': 1440,
-    'laptop-15-6': 1366,
-    'laptop-14-5': 1280,
-    'laptop-13': 1180,
+    'laptop-15-6': 1536,
+    'laptop-14-5': 1440,
+    'laptop-13': 1280,
     mobile: 390
   };
 

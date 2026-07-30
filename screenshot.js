@@ -4,9 +4,9 @@ const objectStorage = require('./object-storage');
 // Honest viewport presets. These match the review page presets.
 const CAPTURE_PRESETS = [
   { size: 'desktop', label: 'Full desktop fallback', width: 1440, height: 900, mobile: false },
-  { size: 'laptop-15-6', label: '15.6 display', width: 1366, height: 768, mobile: false },
-  { size: 'laptop-14-5', label: '14.5 display', width: 1280, height: 760, mobile: false },
-  { size: 'laptop-13', label: '13 display', width: 1180, height: 720, mobile: false },
+  { size: 'laptop-15-6', label: '15.6 display', width: 1536, height: 864, mobile: false },
+  { size: 'laptop-14-5', label: '14.5 display', width: 1440, height: 900, mobile: false },
+  { size: 'laptop-13', label: '13 display', width: 1280, height: 800, mobile: false },
   { size: 'mobile', label: 'Mobile', width: 390, height: 844, mobile: true }
 ];
 

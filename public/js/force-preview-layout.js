@@ -15,9 +15,9 @@
   const PRESETS = {
     desktop: { label: 'Full desktop', w: 1440, h: 4000, dynamicWidth: true, dynamicHeight: true },
     'desktop-1440': { label: '1440 desktop', w: 1440, h: 4000 },
-    'laptop-15-6': { label: '15.6 display', w: 1366, h: 4000 },
-    'laptop-14-5': { label: '14.5 display', w: 1280, h: 4000 },
-    'laptop-13': { label: '13 display', w: 1180, h: 4000 },
+    'laptop-15-6': { label: '15.6 display', w: 1536, h: 4000 },
+    'laptop-14-5': { label: '14.5 display', w: 1440, h: 4000 },
+    'laptop-13': { label: '13 display', w: 1280, h: 4000 },
     mobile: { label: 'Mobile', w: 390, h: 4000 }
   };
 
