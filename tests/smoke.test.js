@@ -216,9 +216,9 @@ test('annotation opens the notes panel and identifies required note fields', () 
 test('URL previews remain viewport-height scroll containers', () => {
   const layout = read('public/js/force-preview-layout.js');
   assert.doesNotMatch(layout, /function sameOriginPageHeight/);
-  assert.match(layout, /desktop: \{ label: 'Full desktop', w: 1440, h: 2500/);
-  assert.match(layout, /'laptop-13': \{ label: '13 display', w: 1180, h: 2500/);
-  assert.match(layout, /mobile: \{ label: 'Mobile', w: 390, h: 2500/);
+  assert.match(layout, /desktop: \{ label: 'Full desktop', w: 1440, h: 4000/);
+  assert.match(layout, /'laptop-13': \{ label: '13 display', w: 1180, h: 4000/);
+  assert.match(layout, /mobile: \{ label: 'Mobile', w: 390, h: 4000/);
   assert.match(layout, /Math\.max\(preset\.h,/);
   assert.match(layout, /iframe\.style\.setProperty\('height', `\$\{preset\.h\}px`/);
   assert.match(layout, /const scaledHeight = Math\.round\(preset\.h \* scale\)/);
