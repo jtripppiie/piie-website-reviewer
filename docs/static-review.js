@@ -203,7 +203,7 @@ function renderFeedbackPanel(page, activeSize) {
   return `
     <aside class="feedback-panel${collapsed ? ' is-collapsed' : ''}" data-feedback-panel data-feedback-page="${escapeHtml(page.pageId)}">
       <div class="feedback-panel__bar">
-        <h3>Add Notes</h3>
+        <h3>Add notes</h3>
         <button type="button" class="feedback-panel__toggle" data-feedback-toggle aria-expanded="${collapsed ? 'false' : 'true'}">
           ${collapsed ? 'Expand' : 'Collapse'}
         </button>

@@ -324,7 +324,7 @@ test('static demo hides interact mode and keeps compare mode', () => {
   assert.match(demo, /data-webpage-mode="compare" title=.*data-tooltip=/);
   assert.match(demo, /data-webpage-mode="annotate" title=.*data-tooltip=/);
   assert.match(demo, />Annotate<\/button>/);
-  assert.match(demo, /<h3>Add Notes<\/h3>/);
+  assert.match(demo, /<h3>Add notes<\/h3>/);
   assert.match(demo, /data-annotation-layer/);
   assert.match(demo, /data-webpage-diff/);
   assert.match(demo, />Highlight differences<\/button>/);

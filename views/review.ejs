@@ -11,9 +11,9 @@
           </span>
         </div>
         <a class="button review-header-action" href="/r/<%= packet.shareToken %>/notes<%= adminKeyValue ? '?key=' + adminKeyValue : '' %>"><%= isAdminView ? 'Manage notes' : 'View all notes' %></a>
-        <button type="button" class="button review-header-action" data-clear-local-notes data-clear-mine-url="/r/<%= packet.shareToken %>/clear-mine<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">Clear My Notes</button>
+        <button type="button" class="button review-header-action" data-clear-local-notes data-clear-mine-url="/r/<%= packet.shareToken %>/clear-mine<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">Clear my notes</button>
         <% if (canQuickEdit) { %>
-          <button type="button" class="button danger quick-edit-only review-header-action" data-clear-all-notes data-clear-all-url="/r/<%= packet.shareToken %>/clear-all<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">Clear All Notes</button>
+          <button type="button" class="button danger quick-edit-only review-header-action" data-clear-all-notes data-clear-all-url="/r/<%= packet.shareToken %>/clear-all<%= adminKeyValue ? '?key=' + encodeURIComponent(adminKeyValue) : '' %>">Clear all notes</button>
           <% const packetEditPath = `/admin/packets/${packet.packetId}/edit`; %>
           <a class="button quick-edit-only review-header-action" href="<%= isAdminView ? packetEditPath + '?key=' + encodeURIComponent(adminKeyValue) : '/admin?next=' + encodeURIComponent(packetEditPath) %>">Edit packet</a>
         <% } %>
@@ -179,7 +179,7 @@
               <div class="feedback-dock">
               <aside class="feedback-panel" data-feedback-panel>
                 <div class="feedback-panel__bar">
-                  <h3>Add Notes</h3>
+                  <h3>Add notes</h3>
                   <button type="button" class="feedback-panel__toggle" data-feedback-toggle aria-expanded="true" aria-label="Collapse notes">Collapse</button>
                 </div>
                 <p class="muted">Pick a screen size, then leave your notes for it.</p>
@@ -531,7 +531,7 @@
               <div class="feedback-dock">
               <aside class="feedback-panel" data-feedback-panel>
                 <div class="feedback-panel__bar">
-                  <h3>Add Notes</h3>
+                  <h3>Add notes</h3>
                   <button type="button" class="feedback-panel__toggle" data-feedback-toggle aria-expanded="true" aria-label="Collapse notes">Collapse</button>
                 </div>
                 <p class="muted">Pick a screen size, then leave your notes for it.</p>
